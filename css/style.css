@@ -1,25 +1,25 @@
 /* ============================================================
    SYMO PRINT — DESIGN SYSTEM
-   Charte : #1F7A8C (Bleu pétrole) | #F4A62A (Orange CTA)
+   Charte : #2D6E8F (Bleu teal SYMO) | #E8912A (Orange PRINT)
               #FFFFFF (Blanc) | #F5F5F5 (Gris clair)
    ============================================================ */
 
 /* ── DESIGN TOKENS ── */
 :root {
-  /* Couleurs principales */
-  --primary:        #1F7A8C;
-  --primary-dark:   #165c6b;
-  --primary-deeper: #0e3d48;
-  --primary-light:  #2998b0;
-  --primary-50:     rgba(31,122,140,.05);
-  --primary-100:    rgba(31,122,140,.12);
-  --primary-200:    rgba(31,122,140,.25);
+  /* Couleurs principales — extraites du logo SYMO PRINT */
+  --primary:        #2D6E8F;
+  --primary-dark:   #1E5470;
+  --primary-deeper: #0F3348;
+  --primary-light:  #4090B5;
+  --primary-50:     rgba(45,110,143,.05);
+  --primary-100:    rgba(45,110,143,.12);
+  --primary-200:    rgba(45,110,143,.25);
 
-  /* Couleur CTA (orange — uniquement pour les boutons d'action) */
-  --cta:            #F4A62A;
-  --cta-dark:       #d48f1a;
-  --cta-light:      #f7bc55;
-  --cta-100:        rgba(244,166,42,.12);
+  /* Couleur CTA (orange PRINT — uniquement pour les boutons d'action) */
+  --cta:            #E8912A;
+  --cta-dark:       #C97820;
+  --cta-light:      #F0AA55;
+  --cta-100:        rgba(232,145,42,.12);
 
   /* Neutres */
   --white:          #FFFFFF;
@@ -310,6 +310,32 @@ address { font-style: normal; }
   flex-shrink: 0; text-decoration: none;
 }
 
+/* Logo image */
+.logo-img {
+  height: 46px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.logo:hover .logo-img { opacity: .88; transform: scale(1.02); }
+
+/* Logo footer (fond sombre → fond blanc autour du logo) */
+.logo-img-footer {
+  height: 40px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.logo:hover .logo-img-footer { opacity: .9; }
+
+/* Logo-mark (fallback héritage pour footer text) */
 .logo-mark {
   width: 42px; height: 42px;
   background: var(--primary);
@@ -334,6 +360,17 @@ address { font-style: normal; }
 
 .logo-white .logo-symo { color: var(--white); }
 .logo-white .logo-print { color: var(--cta); }
+
+/* Navbar-logo variant (pages catégories) */
+.navbar-logo {
+  display: flex; align-items: center; gap: .6rem;
+  flex-shrink: 0; text-decoration: none;
+}
+
+.navbar-logo .logo-img {
+  height: 46px;
+  width: auto;
+}
 
 /* Nav menu */
 .nav-list {
