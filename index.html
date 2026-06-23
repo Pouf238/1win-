@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Symo Print – Imprimerie professionnelle : impression grand format, papeterie, textile, signalétique. Devis gratuit sous 2h. Qualité garantie." />
+  <meta name="keywords" content="imprimerie professionnelle, impression grand format, cartes de visite, flyers, roll-up, textile personnalisé, signalétique" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="Symo Print – Imprimerie Professionnelle" />
+  <meta property="og:description" content="Impression professionnelle haut de gamme. Devis gratuit en 2h. Livraison express." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#1F7A8C" />
+
+  <!-- Sécurité : Content Security Policy déclarée ici (à compléter côté serveur avec les headers HTTP) -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+
+  <title>Symo Print – Imprimerie Professionnelle | Grand Format, Papeterie, Textile</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Schema.org LocalBusiness pour le référencement local -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Symo Print",
+    "description": "Imprimerie professionnelle spécialisée en impression grand format, papeterie, textile et signalétique.",
+    "image": "/assets/logo.png",
+    "telephone": "+33-1-00-00-00-00",
+    "email": "contact@symoprint.fr",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "12 Rue de l'Imprimerie",
+      "addressLocality": "Paris",
+      "postalCode": "75000",
+      "addressCountry": "FR"
+    },
+    "openingHours": ["Mo-Fr 09:00-18:30", "Sa 10:00-14:00"],
+    "priceRange": "€€"
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════
+       COOKIE BANNER RGPD
+  ════════════════════════════════════════ -->
+  <div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Consentement aux cookies">
+    <div class="cookie-inner">
+      <div class="cookie-text">
+        <i class="fas fa-cookie-bite"></i>
+        <div>
+          <strong>Nous respectons votre vie privée.</strong>
+          <p>Ce site utilise des cookies strictement nécessaires à son fonctionnement. Nous ne collectons aucune donnée publicitaire sans votre accord. <a href="politique-confidentialite.html">En savoir plus</a></p>
+        </div>
+      </div>
+      <div class="cookie-actions">
+        <button class="btn-cookie-refuse" id="cookieRefuse">Refuser</button>
+        <button class="btn-cookie-accept" id="cookieAccept">Accepter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       BARRE SUPÉRIEURE
+  ════════════════════════════════════════ -->
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="topbar-left">
+        <span><i class="fas fa-phone-alt"></i> +33 (0)1 00 00 00 00</span>
+        <span><i class="fas fa-envelope"></i> contact@symoprint.fr</span>
+        <span><i class="fas fa-clock"></i> Lun–Ven 9h–18h30 | Sam 10h–14h</span>
+      </div>
+      <div class="topbar-right">
+        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        <span class="topbar-separator"></span>
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="cgv.html">CGV</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       NAVBAR + MEGA-MENU
+  ════════════════════════════════════════ -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+
+      <!-- Logo -->
+      <a href="index.html" class="logo" aria-label="Symo Print – Accueil">
+        <img src="assets/logo.jpg" alt="Symo Print" class="logo-img" />
+      </a>
+
+      <!-- Navigation principale -->
+      <nav class="nav-menu" id="navMenu" aria-label="Navigation principale">
+        <ul class="nav-list">
+
+          <li class="nav-item">
+            <a href="index.html" class="nav-link active">Accueil</a>
+          </li>
+
+          <!-- Mega-menu Grand Format -->
+          <li class="nav-item has-mega">
+            <a href="grand-format/index.html" class="nav-link nav-link-drop">
+              Grand Format <i class="fas fa-chevron-down nav-arrow"></i>
+            </a>
+            <div class="mega-menu" role="region" aria-label="Sous-menu Grand Format">
+              <div class="container mega-inner">
+                <div class="mega-col">
+                  <div class="mega-heading">
+                    <div class="mega-heading-icon" style="background:#1F7A8C1a;color:#1F7A8C">
+                      <i class="fas fa-expand-arrows-alt"></i>
+                    </div>
+                    <h3>Impression Grand Format</h3>
+                  </div>
+                  <ul class="mega-links">
+                    <li><a href="grand-format/baches-banderoles.html"><i class="fas fa-wind"></i> Bâches &amp; Banderoles</a></li>
+                    <li><a href="grand-format/panneaux-publicitaires.html"><i class="fas fa-sign"></i> Panneaux publicitaires</a>
+                      <ul class="mega-sub">
+                        <li><a href="#">Dibond</a></li>
+                        <li><a href="#">Akylux</a></li>
+                        <li><a href="#">PVC Expansé</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="grand-format/roll-up-kakemonos.html"><i class="fas fa-scroll"></i> Roll-up &amp; Kakemonos</a></li>
+                    <li><a href="grand-format/vinyles-lettrage.html"><i class="fas fa-cut"></i> Vinyles &amp; Lettrage adhésif</a></li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-heading">
+                    <div class="mega-heading-icon" style="background:#F4A62A1a;color:#F4A62A">
+                      <i class="fas fa-star"></i>
+                    </div>
+                    <h3>Le + populaire</h3>
+                  </div>
+                  <div class="mega-promo">
+                    <div class="mega-promo-badge">Bestseller</div>
+                    <div class="mega-promo-icon"><i class="fas fa-scroll"></i></div>
+                    <h4>Roll-up Premium</h4>
+                    <p>85×200 cm – Impression HD<br />Sac de transport inclus</p>
+                    <a href="devis/index.html" class="mega-promo-btn">Devis rapide</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <!-- Mega-menu Papeterie -->
+          <li class="nav-item has-mega">
+            <a href="papeterie/index.html" class="nav-link nav-link-drop">
+              Papeterie &amp; Imprimés <i class="fas fa-chevron-down nav-arrow"></i>
+            </a>
+            <div class="mega-menu" role="region" aria-label="Sous-menu Papeterie">
+              <div class="container mega-inner">
+                <div class="mega-col">
+                  <div class="mega-heading">
+                    <div class="mega-heading-icon" style="background:#1F7A8C1a;color:#1F7A8C">
+                      <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3>Papeterie &amp; Imprimés Commerciaux</h3>
+                  </div>
+                  <ul class="mega-links">
+                    <li><a href="papeterie/cartes-de-visite.html"><i class="fas fa-id-card"></i> Cartes de visite</a>
+                      <ul class="mega-sub">
+                        <li><a href="#">Classiques</a></li>
+                        <li><a href="#">Haut de gamme</a></li>
+                        <li><a href="#">Vernis sélectif</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="papeterie/flyers-depliants.html"><i class="fas fa-file"></i> Flyers &amp; Dépliants</a></li>
+                    <li><a href="papeterie/brochures-catalogues.html"><i class="fas fa-book-open"></i> Brochures &amp; Catalogues</a></li>
+                    <li><a href="papeterie/papier-entete-enveloppes.html"><i class="fas fa-envelope-open-text"></i> Papier à en-tête &amp; Enveloppes</a></li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-heading">
+                    <div class="mega-heading-icon" style="background:#F4A62A1a;color:#F4A62A">
+                      <i class="fas fa-fire"></i>
+                    </div>
+                    <h3>Offre spéciale</h3>
+                  </div>
+                  <div class="mega-promo">
+                    <div class="mega-promo-badge" style="background:#F4A62A">Promo</div>
+                    <div class="mega-promo-icon"><i class="fas fa-id-card"></i></div>
+                    <h4>500 Cartes de visite</h4>
+                    <p>Papier 400g – Recto/Verso<br />Finition pelliculage mat</p>
+                    <a href="devis/index.html" class="mega-promo-btn">Devis rapide</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <!-- Mega-menu Textile -->
+          <li class="nav-item has-mega">
+            <a href="textile/index.html" class="nav-link nav-link-drop">
+              Textile &amp; Objets <i class="fas fa-chevron-down nav-arrow"></i>
+            </a>
+            <div class="mega-menu" role="region" aria-label="Sous-menu Textile">
+              <div class="container mega-inner">
+                <div class="mega-col">
+                  <div class="mega-heading">
+                    <div class="mega-heading-icon" style="background:#1F7A8C1a;color:#1F7A8C">
+                      <i class="fas fa-tshirt"></i>
+                    </div>
+                    <h3>Textile &amp; Objets Publicitaires</h3>
+                  </div>
+                  <ul class="mega-links">
+                    <li><a href="textile/vetements-personnalises.html"><i class="fas fa-tshirt"></i> Vêtements personnalisés</a>
+                      <ul class="mega-sub">
+                        <li><a href="#">T-shirts (DTF / Sérigraphie)</a></li>
+                        <li><a href="#">Sweats &amp; Hoodies</a></li>
+                        <li><a href="#">Totebags</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="textile/goodies.html"><i class="fas fa-gift"></i> Goodies publicitaires</a>
+                      <ul class="mega-sub">
+                        <li><a href="#">Stylos personnalisés</a></li>
+                        <li><a href="#">Mugs &amp; Thermos</a></li>
+                        <li><a href="#">Gourdes</a></li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-heading">
+                    <div class="mega-heading-icon" style="background:#F4A62A1a;color:#F4A62A">
+                      <i class="fas fa-tags"></i>
+                    </div>
+                    <h3>Nouvelle collection</h3>
+                  </div>
+                  <div class="mega-promo">
+                    <div class="mega-promo-icon"><i class="fas fa-gift"></i></div>
+                    <h4>Pack Goodies Entreprise</h4>
+                    <p>T-shirt + Mug + Stylo<br />À partir de 50 pièces</p>
+                    <a href="devis/index.html" class="mega-promo-btn">Devis rapide</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <!-- Mega-menu Signalétique -->
+          <li class="nav-item has-mega">
+            <a href="signaletique/index.html" class="nav-link nav-link-drop">
+              Signalétique <i class="fas fa-chevron-down nav-arrow"></i>
+            </a>
+            <div class="mega-menu" role="region" aria-label="Sous-menu Signalétique">
+              <div class="container mega-inner">
+                <div class="mega-col">
+                  <div class="mega-heading">
+                    <div class="mega-heading-icon" style="background:#1F7A8C1a;color:#1F7A8C">
+                      <i class="fas fa-flag"></i>
+                    </div>
+                    <h3>Signalétique &amp; Événementiel</h3>
+                  </div>
+                  <ul class="mega-links">
+                    <li><a href="signaletique/drapeaux-oriflammes.html"><i class="fas fa-flag"></i> Drapeaux &amp; Oriflammes</a></li>
+                    <li><a href="signaletique/stands-exposition.html"><i class="fas fa-store"></i> Stands d'exposition</a></li>
+                    <li><a href="signaletique/comptoirs-accueil.html"><i class="fas fa-concierge-bell"></i> Comptoirs d'accueil</a></li>
+                    <li><a href="signaletique/signaletique-int-ext.html"><i class="fas fa-map-signs"></i> Signalétique intérieure / extérieure</a></li>
+                  </ul>
+                </div>
+                <div class="mega-col">
+                  <div class="mega-heading">
+                    <div class="mega-heading-icon" style="background:#F4A62A1a;color:#F4A62A">
+                      <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Pour vos événements</h3>
+                  </div>
+                  <div class="mega-promo">
+                    <div class="mega-promo-icon"><i class="fas fa-store"></i></div>
+                    <h4>Kit Stand Événement</h4>
+                    <p>Roll-up + Comptoir + Drapeaux<br />Pack complet clé en main</p>
+                    <a href="devis/index.html" class="mega-promo-btn">Devis rapide</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <li class="nav-item">
+            <a href="catalogue.html" class="nav-link">Catalogue A–Z</a>
+          </li>
+
+          <li class="nav-item">
+            <a href="contact/index.html" class="nav-link">Contact</a>
+          </li>
+
+        </ul>
+      </nav>
+
+      <!-- CTA + Hamburger -->
+      <div class="nav-actions">
+        <a href="devis/index.html" class="btn-devis">
+          <i class="fas fa-file-invoice"></i>
+          <span>Devis Gratuit</span>
+        </a>
+        <button class="hamburger" id="hamburger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navMenu">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+  <!-- Overlay menu mobile -->
+  <div class="nav-overlay" id="navOverlay"></div>
+
+  <main id="main-content">
+
+  <!-- ═══════════════════════════════════════
+       ZONE 2 — HERO BANNER
+  ════════════════════════════════════════ -->
+  <section class="hero" id="home" aria-label="Bannière principale">
+    <div class="hero-bg-pattern" aria-hidden="true"></div>
+    <div class="container hero-grid">
+
+      <!-- Colonne gauche : contenu -->
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          Imprimerie Professionnelle depuis 2014
+        </div>
+        <h1 class="hero-title">
+          L'impression qui<br />
+          <span class="hero-title-accent">propulse</span> votre<br />
+          image de marque
+        </h1>
+        <p class="hero-subtitle">
+          Du flyer à l'affiche grand format, de la carte de visite au stand d'exposition — Symo Print conçoit et imprime chaque support avec une exigence absolue de qualité.
+        </p>
+        <div class="hero-ctas">
+          <a href="devis/index.html" class="btn-cta-primary">
+            <i class="fas fa-file-invoice"></i>
+            Demander un devis gratuit
+          </a>
+          <a href="#categories" class="btn-cta-secondary">
+            <i class="fas fa-th-large"></i>
+            Voir nos produits
+          </a>
+        </div>
+        <div class="hero-trust">
+          <div class="trust-item">
+            <div class="trust-stars" aria-label="5 étoiles sur 5">
+              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+            </div>
+            <span><strong>4.9/5</strong> – 320+ avis vérifiés</span>
+          </div>
+          <div class="trust-separator" aria-hidden="true"></div>
+          <div class="trust-item">
+            <i class="fas fa-shield-alt trust-icon"></i>
+            <span>Paiement 100% sécurisé</span>
+          </div>
+          <div class="trust-separator" aria-hidden="true"></div>
+          <div class="trust-item">
+            <i class="fas fa-award trust-icon"></i>
+            <span>Certifié ISO 9001</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Colonne droite : illustration -->
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-card hero-card-main">
+          <div class="hc-header">
+            <span class="hc-dot hc-dot-r"></span><span class="hc-dot hc-dot-o"></span><span class="hc-dot hc-dot-g"></span>
+            <span class="hc-title">Projet en cours</span>
+          </div>
+          <div class="hc-preview">
+            <div class="hc-preview-shape hc-shape-1"></div>
+            <div class="hc-preview-lines">
+              <div class="hc-line hc-line-title"></div>
+              <div class="hc-line hc-line-sub"></div>
+              <div class="hc-line hc-line-sub hc-line-short"></div>
+            </div>
+          </div>
+          <div class="hc-colors">
+            <div class="hc-swatch" style="background:#1F7A8C"></div>
+            <div class="hc-swatch" style="background:#F4A62A"></div>
+            <div class="hc-swatch" style="background:#0D1F2D"></div>
+            <div class="hc-swatch" style="background:#F5F5F5;border:1px solid #ddd"></div>
+          </div>
+          <div class="hc-footer">
+            <span class="hc-status"><i class="fas fa-circle"></i> En impression...</span>
+            <span class="hc-progress">
+              <span class="hc-progress-bar"></span>
+            </span>
+          </div>
+        </div>
+        <div class="hero-card hero-card-stat hero-card-stat-1">
+          <i class="fas fa-rocket"></i>
+          <div>
+            <strong>Livraison express</strong>
+            <span>Dès 24h</span>
+          </div>
+        </div>
+        <div class="hero-card hero-card-stat hero-card-stat-2">
+          <i class="fas fa-check-circle" style="color:#22c55e"></i>
+          <div>
+            <strong>1 500+ clients</strong>
+            <span>satisfaits</span>
+          </div>
+        </div>
+        <div class="hero-orb hero-orb-1" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb-2" aria-hidden="true"></div>
+      </div>
+
+    </div>
+    <!-- Vague de séparation -->
+    <div class="hero-wave" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#ffffff"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 3 — BANDE DE RÉASSURANCE
+  ════════════════════════════════════════ -->
+  <section class="reassurance" aria-label="Nos engagements">
+    <div class="container reassurance-grid">
+      <div class="reassurance-item">
+        <div class="reassurance-icon"><i class="fas fa-medal"></i></div>
+        <div class="reassurance-text">
+          <strong>Qualité Premium</strong>
+          <span>Encres Certifiées &amp; Papiers FSC</span>
+        </div>
+      </div>
+      <div class="reassurance-sep" aria-hidden="true"></div>
+      <div class="reassurance-item">
+        <div class="reassurance-icon"><i class="fas fa-bolt"></i></div>
+        <div class="reassurance-text">
+          <strong>Livraison Express</strong>
+          <span>Sous 24h sur demande</span>
+        </div>
+      </div>
+      <div class="reassurance-sep" aria-hidden="true"></div>
+      <div class="reassurance-item">
+        <div class="reassurance-icon"><i class="fas fa-file-invoice"></i></div>
+        <div class="reassurance-text">
+          <strong>Devis Rapide</strong>
+          <span>Réponse garantie sous 2h</span>
+        </div>
+      </div>
+      <div class="reassurance-sep" aria-hidden="true"></div>
+      <div class="reassurance-item">
+        <div class="reassurance-icon"><i class="fas fa-map-marker-alt"></i></div>
+        <div class="reassurance-text">
+          <strong>Fabrication Locale</strong>
+          <span>Atelier basé en France</span>
+        </div>
+      </div>
+      <div class="reassurance-sep" aria-hidden="true"></div>
+      <div class="reassurance-item">
+        <div class="reassurance-icon"><i class="fas fa-headset"></i></div>
+        <div class="reassurance-text">
+          <strong>Expert Dédié</strong>
+          <span>Conseiller personnel attitré</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 4 — CATÉGORIES
+  ════════════════════════════════════════ -->
+  <section class="section categories-section" id="categories">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">Nos domaines d'expertise</span>
+        <h2 class="section-title">Tout ce dont vous avez besoin,<br /><span class="accent-text">au même endroit</span></h2>
+        <p class="section-desc">De la conception à la livraison, nous prenons en charge chaque étape de votre projet d'impression avec soin et précision.</p>
+      </div>
+      <div class="categories-grid">
+
+        <article class="cat-card" aria-label="Impression Grand Format">
+          <div class="cat-card-visual cat-visual-1" aria-hidden="true">
+            <div class="cat-icon-wrap"><i class="fas fa-expand-arrows-alt"></i></div>
+            <div class="cat-decoration cat-deco-1" aria-hidden="true"></div>
+          </div>
+          <div class="cat-card-body">
+            <h3 class="cat-title">Impression Grand Format</h3>
+            <p class="cat-desc">Bâches, panneaux, roll-up, vinyles — des formats qui impactent et qui durent.</p>
+            <ul class="cat-links">
+              <li><a href="grand-format/baches-banderoles.html">Bâches &amp; Banderoles</a></li>
+              <li><a href="grand-format/panneaux-publicitaires.html">Panneaux Dibond / PVC</a></li>
+              <li><a href="grand-format/roll-up-kakemonos.html">Roll-up &amp; Kakemonos</a></li>
+              <li><a href="grand-format/vinyles-lettrage.html">Vinyles &amp; Lettrage</a></li>
+            </ul>
+            <a href="grand-format/index.html" class="cat-cta">
+              Découvrir <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </article>
+
+        <article class="cat-card" aria-label="Papeterie et Imprimés">
+          <div class="cat-card-visual cat-visual-2" aria-hidden="true">
+            <div class="cat-icon-wrap"><i class="fas fa-file-alt"></i></div>
+            <div class="cat-decoration cat-deco-2" aria-hidden="true"></div>
+          </div>
+          <div class="cat-card-body">
+            <h3 class="cat-title">Papeterie &amp; Imprimés</h3>
+            <p class="cat-desc">Cartes de visite, flyers, brochures — des imprimés commerciaux à votre image.</p>
+            <ul class="cat-links">
+              <li><a href="papeterie/cartes-de-visite.html">Cartes de visite</a></li>
+              <li><a href="papeterie/flyers-depliants.html">Flyers &amp; Dépliants</a></li>
+              <li><a href="papeterie/brochures-catalogues.html">Brochures &amp; Catalogues</a></li>
+              <li><a href="papeterie/papier-entete-enveloppes.html">Papier à en-tête</a></li>
+            </ul>
+            <a href="papeterie/index.html" class="cat-cta">
+              Découvrir <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </article>
+
+        <article class="cat-card" aria-label="Textile et Objets Publicitaires">
+          <div class="cat-card-visual cat-visual-3" aria-hidden="true">
+            <div class="cat-icon-wrap"><i class="fas fa-tshirt"></i></div>
+            <div class="cat-decoration cat-deco-3" aria-hidden="true"></div>
+          </div>
+          <div class="cat-card-body">
+            <h3 class="cat-title">Textile &amp; Objets Publicitaires</h3>
+            <p class="cat-desc">T-shirts, mugs, goodies — personnalisez chaque objet avec votre identité visuelle.</p>
+            <ul class="cat-links">
+              <li><a href="textile/vetements-personnalises.html">T-shirts &amp; Sweats</a></li>
+              <li><a href="textile/vetements-personnalises.html">Totebags</a></li>
+              <li><a href="textile/goodies.html">Mugs &amp; Gourdes</a></li>
+              <li><a href="textile/goodies.html">Stylos publicitaires</a></li>
+            </ul>
+            <a href="textile/index.html" class="cat-cta">
+              Découvrir <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </article>
+
+        <article class="cat-card" aria-label="Signalétique et Événementiel">
+          <div class="cat-card-visual cat-visual-4" aria-hidden="true">
+            <div class="cat-icon-wrap"><i class="fas fa-flag"></i></div>
+            <div class="cat-decoration cat-deco-4" aria-hidden="true"></div>
+          </div>
+          <div class="cat-card-body">
+            <h3 class="cat-title">Signalétique &amp; Événementiel</h3>
+            <p class="cat-desc">Drapeaux, stands, comptoirs — marquez les esprits sur chaque événement.</p>
+            <ul class="cat-links">
+              <li><a href="signaletique/drapeaux-oriflammes.html">Drapeaux &amp; Oriflammes</a></li>
+              <li><a href="signaletique/stands-exposition.html">Stands d'exposition</a></li>
+              <li><a href="signaletique/comptoirs-accueil.html">Comptoirs d'accueil</a></li>
+              <li><a href="signaletique/signaletique-int-ext.html">Signalétique int. / ext.</a></li>
+            </ul>
+            <a href="signaletique/index.html" class="cat-cta">
+              Découvrir <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 5 — COMMENT ÇA MARCHE
+  ════════════════════════════════════════ -->
+  <section class="section process-section" aria-label="Processus de commande">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">Simple &amp; Rapide</span>
+        <h2 class="section-title">Votre commande en <span class="accent-text">4 étapes</span></h2>
+      </div>
+      <div class="process-track">
+        <div class="process-connector" aria-hidden="true"></div>
+        <div class="process-steps">
+
+          <div class="process-step" data-step="1">
+            <div class="step-bubble" aria-hidden="true">
+              <i class="fas fa-comments"></i>
+              <span class="step-num">01</span>
+            </div>
+            <div class="step-content">
+              <h3>Échangez avec nous</h3>
+              <p>Remplissez notre formulaire de devis en ligne ou appelez-nous. Un conseiller expert analyse votre besoin sous 2h.</p>
+            </div>
+          </div>
+
+          <div class="process-step" data-step="2">
+            <div class="step-bubble" aria-hidden="true">
+              <i class="fas fa-pencil-ruler"></i>
+              <span class="step-num">02</span>
+            </div>
+            <div class="step-content">
+              <h3>Validez votre BAT</h3>
+              <p>Envoyez vos fichiers ou faites appel à nos graphistes. Nous vous soumettons un Bon À Tirer avant tout lancement.</p>
+            </div>
+          </div>
+
+          <div class="process-step" data-step="3">
+            <div class="step-bubble" aria-hidden="true">
+              <i class="fas fa-print"></i>
+              <span class="step-num">03</span>
+            </div>
+            <div class="step-content">
+              <h3>Impression &amp; Contrôle</h3>
+              <p>Production sur nos équipements de dernière génération. Chaque commande passe un contrôle qualité rigoureux avant expédition.</p>
+            </div>
+          </div>
+
+          <div class="process-step" data-step="4">
+            <div class="step-bubble" aria-hidden="true">
+              <i class="fas fa-truck"></i>
+              <span class="step-num">04</span>
+            </div>
+            <div class="step-content">
+              <h3>Livraison &amp; Satisfaction</h3>
+              <p>Livraison sécurisée à votre adresse ou retrait en atelier. Suivi de colis inclus. Satisfaction 100% garantie.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="process-cta-wrap">
+        <a href="devis/index.html" class="btn-orange">
+          <i class="fas fa-file-invoice"></i>
+          Démarrer mon projet maintenant
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 6 — PRODUITS VEDETTES
+  ════════════════════════════════════════ -->
+  <section class="section products-section" aria-label="Produits populaires">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">Les plus commandés</span>
+        <h2 class="section-title">Produits <span class="accent-text">vedettes</span></h2>
+        <p class="section-desc">Les best-sellers de notre catalogue, plébiscités par nos clients professionnels.</p>
+      </div>
+      <div class="products-grid">
+
+        <article class="product-card">
+          <div class="product-visual pv-1" aria-hidden="true">
+            <div class="product-icon"><i class="fas fa-id-card"></i></div>
+            <div class="product-badge">Populaire</div>
+          </div>
+          <div class="product-body">
+            <span class="product-cat">Papeterie</span>
+            <h3>Cartes de Visite Premium</h3>
+            <p>Papier 400g, pelliculage mat ou brillant, vernis sélectif disponible.</p>
+            <div class="product-footer">
+              <div class="product-price">À partir de <strong>29 €</strong> / 250 ex.</div>
+              <a href="devis/index.html" class="product-btn" aria-label="Devis cartes de visite">
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-visual pv-2" aria-hidden="true">
+            <div class="product-icon"><i class="fas fa-scroll"></i></div>
+            <div class="product-badge">Bestseller</div>
+          </div>
+          <div class="product-body">
+            <span class="product-cat">Grand Format</span>
+            <h3>Roll-up Premium 85×200</h3>
+            <p>Impression HD, enrouleur aluminium, sac de transport inclus.</p>
+            <div class="product-footer">
+              <div class="product-price">À partir de <strong>79 €</strong></div>
+              <a href="devis/index.html" class="product-btn" aria-label="Devis roll-up">
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-visual pv-3" aria-hidden="true">
+            <div class="product-icon"><i class="fas fa-file-alt"></i></div>
+          </div>
+          <div class="product-body">
+            <span class="product-cat">Papeterie</span>
+            <h3>Flyers A5 Quadrichromie</h3>
+            <p>Papier couché 170g, impression recto-verso, finition brillante.</p>
+            <div class="product-footer">
+              <div class="product-price">À partir de <strong>39 €</strong> / 500 ex.</div>
+              <a href="devis/index.html" class="product-btn" aria-label="Devis flyers">
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-visual pv-4" aria-hidden="true">
+            <div class="product-icon"><i class="fas fa-wind"></i></div>
+          </div>
+          <div class="product-body">
+            <span class="product-cat">Grand Format</span>
+            <h3>Bâche PVC 510g</h3>
+            <p>Impression UV résistante, oeillets inox, bordure soudée. Toutes dimensions.</p>
+            <div class="product-footer">
+              <div class="product-price">À partir de <strong>49 €</strong></div>
+              <a href="devis/index.html" class="product-btn" aria-label="Devis bâche">
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-visual pv-5" aria-hidden="true">
+            <div class="product-icon"><i class="fas fa-tshirt"></i></div>
+          </div>
+          <div class="product-body">
+            <span class="product-cat">Textile</span>
+            <h3>T-shirt Personnalisé DTF</h3>
+            <p>100% coton, impression DTF pleine couleur, résistant 60 lavages.</p>
+            <div class="product-footer">
+              <div class="product-price">À partir de <strong>12 €</strong> / pièce</div>
+              <a href="devis/index.html" class="product-btn" aria-label="Devis t-shirt">
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-visual pv-6" aria-hidden="true">
+            <div class="product-icon"><i class="fas fa-store"></i></div>
+            <div class="product-badge product-badge-new">Nouveau</div>
+          </div>
+          <div class="product-body">
+            <span class="product-cat">Signalétique</span>
+            <h3>Stand Pop-up 3×3m</h3>
+            <p>Structure aluminium légère, impression HD, sac de transport renforcé.</p>
+            <div class="product-footer">
+              <div class="product-price">Sur devis</div>
+              <a href="devis/index.html" class="product-btn" aria-label="Devis stand">
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+      </div>
+      <div class="products-all-cta">
+        <a href="devis/index.html" class="btn-orange">
+          <i class="fas fa-th-large"></i>
+          Voir tout le catalogue &amp; demander un devis
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 7 — CTA MILIEU DE PAGE
+  ════════════════════════════════════════ -->
+  <section class="cta-mid" aria-label="Appel à l'action">
+    <div class="cta-mid-bg" aria-hidden="true">
+      <div class="cta-mid-shape cta-s1"></div>
+      <div class="cta-mid-shape cta-s2"></div>
+    </div>
+    <div class="container cta-mid-inner">
+      <div class="cta-mid-text">
+        <span class="cta-mid-eyebrow">Votre projet mérite le meilleur</span>
+        <h2>Un projet sur-mesure ?<br />Parlons-en dès aujourd'hui.</h2>
+        <p>Notre équipe de conseillers experts répond à chaque demande sous 2h. Devis 100% gratuit, sans engagement.</p>
+        <ul class="cta-mid-checks">
+          <li><i class="fas fa-check"></i> Devis détaillé sous 2h</li>
+          <li><i class="fas fa-check"></i> Accompagnement graphique inclus</li>
+          <li><i class="fas fa-check"></i> Livraison partout en France</li>
+          <li><i class="fas fa-check"></i> Satisfaction ou remboursement</li>
+        </ul>
+      </div>
+      <div class="cta-mid-action">
+        <a href="devis/index.html" class="btn-cta-orange-lg">
+          <i class="fas fa-file-invoice"></i>
+          Demander mon devis gratuit
+        </a>
+        <a href="contact/index.html" class="cta-mid-phone">
+          <i class="fas fa-phone-alt"></i>
+          <div>
+            <span>Appelez-nous directement</span>
+            <strong>+33 (0)1 00 00 00 00</strong>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 8 — AVIS CLIENTS
+  ════════════════════════════════════════ -->
+  <section class="section testimonials-section" aria-label="Avis clients">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">Ce qu'ils disent de nous</span>
+        <h2 class="section-title">La confiance de nos <span class="accent-text">clients</span></h2>
+        <div class="global-rating" aria-label="Note globale 4.9 sur 5">
+          <div class="global-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+          </div>
+          <strong>4.9 / 5</strong>
+          <span>basé sur 320 avis vérifiés</span>
+        </div>
+      </div>
+      <div class="testimonials-wrapper">
+        <div class="testimonials-track-outer" id="testiTrack">
+          <div class="testimonials-track" id="testiCards">
+
+            <blockquote class="testi-card">
+              <div class="testi-stars" aria-label="5 étoiles">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+              </div>
+              <p class="testi-text">« Nos 1 000 cartes de visite avec vernis sélectif sont absolument bluffantes. Le rendu est digne des grandes marques. Délai respecté, équipe réactive. Symo Print est devenu notre imprimeur de référence. »</p>
+              <footer class="testi-author">
+                <div class="testi-avatar av-teal">MK</div>
+                <div>
+                  <cite class="testi-name">Mohamed K.</cite>
+                  <span class="testi-role">Directeur – Agence Créative</span>
+                </div>
+                <div class="testi-verified" title="Avis vérifié"><i class="fas fa-check-circle"></i></div>
+              </footer>
+            </blockquote>
+
+            <blockquote class="testi-card">
+              <div class="testi-stars" aria-label="5 étoiles">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+              </div>
+              <p class="testi-text">« 5 000 flyers A5 commandés pour notre ouverture — impression parfaite, couleurs fidèles à notre charte. Livrés en 48h. Le rapport qualité/prix est imbattable. Je recommande sans hésitation ! »</p>
+              <footer class="testi-author">
+                <div class="testi-avatar av-orange">SB</div>
+                <div>
+                  <cite class="testi-name">Sarah B.</cite>
+                  <span class="testi-role">Gérante – Boutique Mode</span>
+                </div>
+                <div class="testi-verified" title="Avis vérifié"><i class="fas fa-check-circle"></i></div>
+              </footer>
+            </blockquote>
+
+            <blockquote class="testi-card">
+              <div class="testi-stars" aria-label="5 étoiles">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+              </div>
+              <p class="testi-text">« Notre kit événementiel complet — roll-up, comptoir et drapeaux — réalisé dans des délais très courts. La qualité d'impression est impressionnante. Le conseiller dédié a su anticiper chaque besoin. »</p>
+              <footer class="testi-author">
+                <div class="testi-avatar av-dark">AL</div>
+                <div>
+                  <cite class="testi-name">Antoine L.</cite>
+                  <span class="testi-role">Chef de Projet – Événementiel</span>
+                </div>
+                <div class="testi-verified" title="Avis vérifié"><i class="fas fa-check-circle"></i></div>
+              </footer>
+            </blockquote>
+
+            <blockquote class="testi-card">
+              <div class="testi-stars" aria-label="5 étoiles">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+              </div>
+              <p class="testi-text">« Le packaging de mes créations a été transformé. Boîtes personnalisées avec pelliculage mat doré — mes clients sont émerveillés. Symo Print comprend l'importance du détail dans le monde du luxe. »</p>
+              <footer class="testi-author">
+                <div class="testi-avatar av-teal">FD</div>
+                <div>
+                  <cite class="testi-name">Fatima D.</cite>
+                  <span class="testi-role">Créatrice – Bijoux Artisanaux</span>
+                </div>
+                <div class="testi-verified" title="Avis vérifié"><i class="fas fa-check-circle"></i></div>
+              </footer>
+            </blockquote>
+
+            <blockquote class="testi-card">
+              <div class="testi-stars" aria-label="5 étoiles">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+              </div>
+              <p class="testi-text">« Commande passée le lundi matin, affiches grand format livrées le lendemain à 9h. Une réactivité incroyable. La bâche pour notre devanture de magasin est parfaite depuis 2 ans, aucune décoloration. »</p>
+              <footer class="testi-author">
+                <div class="testi-avatar av-orange">RC</div>
+                <div>
+                  <cite class="testi-name">Raphaël C.</cite>
+                  <span class="testi-role">Gérant – Commerce de proximité</span>
+                </div>
+                <div class="testi-verified" title="Avis vérifié"><i class="fas fa-check-circle"></i></div>
+              </footer>
+            </blockquote>
+
+          </div>
+        </div>
+        <div class="testi-controls" role="group" aria-label="Navigation du carrousel">
+          <button class="testi-btn" id="testiPrev" aria-label="Témoignage précédent">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="testi-dots" id="testiDots" aria-label="Position dans le carrousel"></div>
+          <button class="testi-btn" id="testiNext" aria-label="Témoignage suivant">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       ZONE 9 — POURQUOI NOUS CHOISIR
+  ════════════════════════════════════════ -->
+  <section class="section why-section" aria-label="Pourquoi choisir Symo Print">
+    <div class="container">
+      <div class="why-grid">
+        <div class="why-content">
+          <span class="section-eyebrow">Notre engagement</span>
+          <h2 class="section-title">Pourquoi les professionnels<br />nous font <span class="accent-text">confiance</span></h2>
+          <p class="why-intro">Depuis 2014, nous accompagnons TPE, PME, agences et grandes entreprises dans tous leurs projets d'impression. Notre force : combiner technologie de pointe et exigence artisanale.</p>
+          <div class="why-counters">
+            <div class="why-counter">
+              <span class="counter-num" data-target="1500">0</span><span class="counter-suffix">+</span>
+              <span class="counter-label">Clients actifs</span>
+            </div>
+            <div class="why-counter">
+              <span class="counter-num" data-target="50000">0</span><span class="counter-suffix">+</span>
+              <span class="counter-label">Projets réalisés</span>
+            </div>
+            <div class="why-counter">
+              <span class="counter-num" data-target="10">0</span><span class="counter-suffix">ans</span>
+              <span class="counter-label">D'expérience</span>
+            </div>
+            <div class="why-counter">
+              <span class="counter-num" data-target="98">0</span><span class="counter-suffix">%</span>
+              <span class="counter-label">De satisfaction</span>
+            </div>
+          </div>
+          <a href="devis/index.html" class="btn-orange">
+            <i class="fas fa-file-invoice"></i>
+            Obtenir mon devis personnalisé
+          </a>
+        </div>
+        <div class="why-features">
+          <div class="why-feature">
+            <div class="why-feat-icon">
+              <i class="fas fa-microscope"></i>
+            </div>
+            <div class="why-feat-body">
+              <h3>Contrôle Qualité à Chaque Étape</h3>
+              <p>De la réception des fichiers à l'emballage final, chaque commande est vérifiée selon notre protocole qualité ISO 9001. Zéro tolérance pour les défauts.</p>
+            </div>
+          </div>
+          <div class="why-feature">
+            <div class="why-feat-icon">
+              <i class="fas fa-palette"></i>
+            </div>
+            <div class="why-feat-body">
+              <h3>Fidélité des Couleurs Garantie</h3>
+              <p>Nos presses sont calibrées en profils ICC certifiés. Vos couleurs Pantone et CMJN sont reproduites avec une précision infaillible sur chaque support.</p>
+            </div>
+          </div>
+          <div class="why-feature">
+            <div class="why-feat-icon">
+              <i class="fas fa-leaf"></i>
+            </div>
+            <div class="why-feat-body">
+              <h3>Impression Éco-Responsable</h3>
+              <p>Encres végétales certifiées, papiers labellisés FSC, recyclage des déchets d'impression. Nous imprimons avec conscience pour l'avenir.</p>
+            </div>
+          </div>
+          <div class="why-feature">
+            <div class="why-feat-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="why-feat-body">
+              <h3>Données Clients Protégées</h3>
+              <p>Vos fichiers et informations personnelles sont chiffrés et stockés sur des serveurs sécurisés. Conformité RGPD totale. Aucune revente de données.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       LOGOS CLIENTS (confiance sociale)
+  ════════════════════════════════════════ -->
+  <section class="clients-section" aria-label="Nos clients">
+    <div class="container">
+      <p class="clients-label">Ils nous font confiance</p>
+      <div class="clients-logos">
+        <div class="client-logo-item" aria-label="Client entreprise A">
+          <div class="client-logo-placeholder">Entreprise A</div>
+        </div>
+        <div class="client-logo-item" aria-label="Client entreprise B">
+          <div class="client-logo-placeholder">Groupe B</div>
+        </div>
+        <div class="client-logo-item" aria-label="Client entreprise C">
+          <div class="client-logo-placeholder">Marque C</div>
+        </div>
+        <div class="client-logo-item" aria-label="Client entreprise D">
+          <div class="client-logo-placeholder">Agence D</div>
+        </div>
+        <div class="client-logo-item" aria-label="Client entreprise E">
+          <div class="client-logo-placeholder">Société E</div>
+        </div>
+        <div class="client-logo-item" aria-label="Client entreprise F">
+          <div class="client-logo-placeholder">Studio F</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main><!-- /main -->
+
+  <!-- ═══════════════════════════════════════
+       ZONE 10 — FOOTER
+  ════════════════════════════════════════ -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-top">
+      <div class="container footer-grid">
+
+        <!-- Col 1 : Brand -->
+        <div class="footer-brand">
+          <a href="index.html" class="logo" aria-label="Symo Print – Accueil">
+            <img src="assets/logo.jpg" alt="Symo Print" class="logo-img-footer" />
+          </a>
+          <p>L'imprimerie de confiance des professionnels depuis 2014. Qualité, rapidité et accompagnement personnalisé pour chaque projet.</p>
+          <div class="footer-socials">
+            <a href="#" aria-label="Facebook Symo Print"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" aria-label="Instagram Symo Print"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="LinkedIn Symo Print"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="WhatsApp Symo Print"><i class="fab fa-whatsapp"></i></a>
+          </div>
+          <div class="footer-certif">
+            <span class="certif-badge"><i class="fas fa-leaf"></i> Éco-responsable</span>
+            <span class="certif-badge"><i class="fas fa-award"></i> ISO 9001</span>
+            <span class="certif-badge"><i class="fas fa-shield-alt"></i> RGPD</span>
+          </div>
+        </div>
+
+        <!-- Col 2 : Services -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Nos Services</h4>
+          <ul class="footer-links">
+            <li><a href="grand-format/index.html">Impression Grand Format</a></li>
+            <li><a href="grand-format/baches-banderoles.html">Bâches &amp; Banderoles</a></li>
+            <li><a href="grand-format/roll-up-kakemonos.html">Roll-up &amp; Kakemonos</a></li>
+            <li><a href="papeterie/cartes-de-visite.html">Cartes de visite</a></li>
+            <li><a href="papeterie/flyers-depliants.html">Flyers &amp; Dépliants</a></li>
+            <li><a href="textile/vetements-personnalises.html">Textile personnalisé</a></li>
+            <li><a href="signaletique/index.html">Signalétique événementielle</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3 : Informations -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Informations</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Accueil</a></li>
+            <li><a href="devis/index.html">Devis sur-mesure</a></li>
+            <li><a href="contact/index.html">Contact &amp; Accès</a></li>
+            <li><a href="#">Nos réalisations</a></li>
+            <li><a href="#">Blog imprimerie</a></li>
+            <li><a href="#">Préparer mes fichiers</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4 : Contact -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">Nous contacter</h4>
+          <address class="footer-address">
+            <p><i class="fas fa-map-marker-alt"></i> 12 Rue de l'Imprimerie<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;75000 Paris, France</p>
+            <p><i class="fas fa-phone-alt"></i> <a href="tel:+33100000000">+33 (0)1 00 00 00 00</a></p>
+            <p><i class="fas fa-envelope"></i> <a href="mailto:contact@symoprint.fr">contact@symoprint.fr</a></p>
+            <p><i class="fas fa-clock"></i> Lun–Ven : 9h00 – 18h30<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sam : 10h00 – 14h00</p>
+          </address>
+          <div class="footer-newsletter">
+            <h5>Newsletter professionnelle</h5>
+            <p>Offres exclusives &amp; nouveautés</p>
+            <form class="newsletter-form" id="newsletterForm" novalidate>
+              <label for="nlEmail" class="visually-hidden">Votre adresse email</label>
+              <input type="email" id="nlEmail" name="email" placeholder="votre@email.fr" required autocomplete="email" />
+              <button type="submit" aria-label="S'abonner à la newsletter">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <p class="footer-copyright">&copy; 2024 Symo Print – Tous droits réservés.</p>
+        <nav class="footer-legal" aria-label="Liens légaux">
+          <a href="mentions-legales.html">Mentions légales</a>
+          <a href="politique-confidentialite.html">Politique de confidentialité</a>
+          <a href="cgv.html">CGV</a>
+          <button class="footer-cookie-btn" id="reopenCookies" type="button">Gestion des cookies</button>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════
+       BOUTONS FLOTTANTS
+  ════════════════════════════════════════ -->
+  <a href="#" class="fab-top" id="fabTop" aria-label="Retour en haut de page" title="Retour en haut">
+    <i class="fas fa-chevron-up"></i>
+  </a>
+  <a href="https://wa.me/33100000000" class="fab-whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Nous contacter sur WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+    <span class="fab-whatsapp-label">WhatsApp</span>
+  </a>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
