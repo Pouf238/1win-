@@ -20,7 +20,7 @@ import {
   type UserRow,
   type VehicleRow,
 } from "@/lib/supabase/rows";
-import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle, StorageBucket, VehicleOcr } from "./types";
+import type { AdminData, AuthResult, Backend, ChatMessage, ChatReply, NewClaim, NewVehicle, StorageBucket, VehicleOcr } from "./types";
 import type { AdminStats, Contract, Offer, User, VerifyResult } from "@/lib/types";
 
 let companiesCache: CompanyRow[] = [];
@@ -293,6 +293,12 @@ export const supabaseBackend: Backend = {
     });
     if (res.error) throw new Error(res.error);
     return { ...(res.fields ?? {}), simulated: res.simulated };
+  },
+
+  async chat(messages: ChatMessage[], lang: string): Promise<ChatReply> {
+    const res = await callFn<{ error?: string; reply?: string; simulated?: boolean }>("ai-assistant", { messages, lang });
+    if (res.error && !res.reply) throw new Error(res.error);
+    return { reply: res.reply ?? "", simulated: res.simulated };
   },
 
   // --- Realtime ---

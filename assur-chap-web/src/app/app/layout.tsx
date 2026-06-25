@@ -18,6 +18,7 @@ const NAV: { href: string; icon: IconName; key: string }[] = [
   { href: "/app/contracts", icon: "file", key: "app.contracts" },
   { href: "/app/claims", icon: "warning", key: "app.claims" },
   { href: "/app/payments", icon: "wallet", key: "app.payments" },
+  { href: "/app/assistant", icon: "sparkle", key: "app.assistant" },
   { href: "/app/profile", icon: "users", key: "app.profile" },
 ];
 

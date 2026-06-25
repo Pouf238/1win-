@@ -40,6 +40,16 @@ export interface NewClaim {
 
 export type StorageBucket = "documents" | "claims";
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatReply {
+  reply: string;
+  simulated?: boolean;
+}
+
 /** Champs extraits d'une carte grise par l'OCR (tous optionnels). */
 export interface VehicleOcr {
   brand?: string;
@@ -101,6 +111,8 @@ export interface Backend {
   // --- OCR / IA ---
   /** Extrait les champs d'une carte grise depuis une image (OpenAI Vision). */
   ocrVehicleDoc(file: File): Promise<VehicleOcr>;
+  /** Assistant conversationnel (OpenAI) — répond dans la langue donnée. */
+  chat(messages: ChatMessage[], lang: string): Promise<ChatReply>;
 
   // --- Realtime ---
   /** S'abonne aux changements de tables (re-fetch côté page). Renvoie une fonction de désabonnement. */

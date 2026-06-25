@@ -80,8 +80,11 @@ automatique quand Supabase n'est pas configuré.
 9. **OCR carte grise** : ✅ **Fait** — Edge Function `ocr-document` (OpenAI Vision)
    + `Backend.ocrVehicleDoc()` ; analyse auto à l'ajout véhicule (pré-remplissage).
    Mode simulé sans `OPENAI_API_KEY`.
-10. **Intégrations restantes** : Assistant IA (chat), WhatsApp, Resend, Google Maps,
-    détection de fraude, signature électronique, app React Native.
+10. **Assistant IA (chat)** : ✅ **Fait** — Edge Function `ai-assistant` (OpenAI) +
+    `Backend.chat()` + page `/app/assistant` (FR/EN, suggestions). Mode simulé
+    (règles) sans `OPENAI_API_KEY`.
+11. **Intégrations restantes** : WhatsApp, Resend (emails), Google Maps, détection
+    de fraude, signature électronique, app React Native.
 
 ---
 

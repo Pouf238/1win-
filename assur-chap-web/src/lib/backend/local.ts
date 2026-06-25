@@ -5,7 +5,7 @@
 // ==========================================================================
 import { getStore } from "@/lib/store";
 import { daysUntil } from "@/lib/format";
-import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle, StorageBucket, VehicleOcr } from "./types";
+import type { AdminData, AuthResult, Backend, ChatMessage, ChatReply, NewClaim, NewVehicle, StorageBucket, VehicleOcr } from "./types";
 import type { Offer, User, VerifyResult } from "@/lib/types";
 
 export const localBackend: Backend = {
@@ -93,6 +93,28 @@ export const localBackend: Backend = {
   async ocrVehicleDoc(_file: File): Promise<VehicleOcr> {
     await new Promise((r) => setTimeout(r, 800));
     return { brand: "Toyota", model: "Corolla", year: 2019, plate: "AB-4521-CI", vin: "JTDBR32E720123456", power: 8, fuel: "essence", simulated: true };
+  },
+
+  // Assistant simulé (mode démo) : règles simples par mots-clés
+  async chat(messages: ChatMessage[], lang: string): Promise<ChatReply> {
+    await new Promise((r) => setTimeout(r, 600));
+    const last = [...messages].reverse().find((m) => m.role === "user")?.content.toLowerCase() ?? "";
+    const en = lang === "en";
+    let reply: string;
+    if (/(bonjour|salut|hello|hi|hey)/.test(last))
+      reply = en ? "Hi! I'm the Assur Chap assistant. I can recommend a plan, explain coverage or help you file a claim." : "Bonjour ! Je suis l'assistant Assur Chap. Je peux vous recommander une formule, expliquer les garanties ou vous aider à déclarer un sinistre.";
+    else if (/(sinistre|accident|claim)/.test(last))
+      reply = en ? "To file a claim: Claims → New claim, describe the accident, add photos/videos and GPS, then submit and track it live." : "Pour déclarer un sinistre : Sinistres → Déclarer, décrivez l'accident, ajoutez photos/vidéos et la position GPS, puis envoyez et suivez le traitement en direct.";
+    else if (/(tous risques|tous-risques|comprehensive)/.test(last))
+      reply = en ? "Comprehensive covers all-accident damage, theft, fire, glass, disasters and a replacement vehicle — best for newer cars." : "Le Tous Risques couvre dommages tous accidents, vol, incendie, bris de glace, catastrophes et véhicule de remplacement — idéal pour un véhicule récent.";
+    else if (/(tiers|third party)/.test(last))
+      reply = en ? "Third-party covers your liability; Tiers Étendu adds theft, fire, glass and 24/7 assistance." : "Le Tiers couvre votre responsabilité civile ; le Tiers Étendu ajoute vol, incendie, bris de glace et assistance 24/7.";
+    else if (/(prix|tarif|combien|price|cost)/.test(last))
+      reply = en ? "Pricing depends on your vehicle and the insurer. Add your vehicle to get an instant comparative quote." : "Le prix dépend de votre véhicule et de l'assureur. Ajoutez votre véhicule pour un devis comparatif instantané.";
+    else if (/(recommand|conseil|quelle formule|which plan|recommend)/.test(last))
+      reply = en ? "Recent daily car → Comprehensive; older car on a budget → Tiers Étendu; legal minimum → Tiers. Want a quote?" : "Voiture récente du quotidien → Tous Risques ; voiture ancienne et budget serré → Tiers Étendu ; minimum légal → Tiers. Voulez-vous un devis ?";
+    else reply = en ? "I can help with plans, coverage, pricing and claims. (Demo mode — configure OpenAI for full answers.)" : "Je peux vous aider sur les formules, garanties, tarifs et sinistres. (Mode démo — configurez OpenAI pour des réponses complètes.)";
+    return { reply, simulated: true };
   },
 
   // Pas de realtime en mode local
