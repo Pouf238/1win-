@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Devis & Comparateur — Assur Chap</title>
+  <meta name="description" content="Obtenez un devis d'assurance auto et comparez les offres de plus de 15 assureurs en quelques secondes." />
+  <meta name="theme-color" content="#2f6dff" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/app.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232f6dff' d='M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z'/%3E%3C/svg%3E" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="container">
+      <a href="../index.html" class="brand">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <span>Assur<b>Chap</b></span>
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="../index.html#fonctions" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
+        <a href="../index.html#comment" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a>
+        <a href="../dashboard/index.html" data-fr="Espace client" data-en="Dashboard">Espace client</a>
+        <a href="../verification/index.html" data-fr="Vérifier un contrat" data-en="Verify a contract">Vérifier un contrat</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="lang-toggle" onclick="toggleLang()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg><span class="lang-current">FR</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Thème">
+          <svg class="moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <button class="nav-burger" onclick="toggleNav()" aria-label="Menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="container">
+      <div class="breadcrumb"><a href="../index.html">Accueil</a> / <span data-fr="Devis & comparateur" data-en="Quote & comparator">Devis & comparateur</span></div>
+
+      <!-- STEPPER -->
+      <div class="stepper" id="stepper">
+        <div class="st active" data-step="1"><span class="dot">1</span><span class="lbl" data-fr="Véhicule" data-en="Vehicle">Véhicule</span></div>
+        <div class="st" data-step="2"><span class="dot">2</span><span class="lbl" data-fr="Profil & durée" data-en="Profile & term">Profil & durée</span></div>
+        <div class="st" data-step="3"><span class="dot">3</span><span class="lbl" data-fr="Comparateur" data-en="Compare">Comparateur</span></div>
+        <div class="st" data-step="4"><span class="dot">4</span><span class="lbl" data-fr="Paiement" data-en="Payment">Paiement</span></div>
+        <div class="st" data-step="5"><span class="dot">5</span><span class="lbl" data-fr="Contrat" data-en="Contract">Contrat</span></div>
+      </div>
+
+      <div class="app-grid">
+        <!-- LEFT: panes -->
+        <div>
+          <!-- STEP 1: vehicle -->
+          <section class="step-pane active" data-pane="1">
+            <div class="panel">
+              <h2 data-fr="Votre véhicule" data-en="Your vehicle">Votre véhicule</h2>
+              <p class="sub" data-fr="Prenez en photo votre carte grise — l'IA remplit le formulaire pour vous." data-en="Take a photo of your registration card — the AI fills the form for you.">Prenez en photo votre carte grise — l'IA remplit le formulaire pour vous.</p>
+
+              <div class="ocr-drop" id="ocrDrop" onclick="AC.simulateOCR()">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
+                <b data-fr="Scanner la carte grise (OCR)" data-en="Scan registration card (OCR)">Scanner la carte grise (OCR)</b>
+                <small data-fr="JPG, PNG ou PDF — vérification anti-fraude automatique" data-en="JPG, PNG or PDF — automatic fraud check">JPG, PNG ou PDF — vérification anti-fraude automatique</small>
+              </div>
+              <div class="ocr-status hidden" id="ocrStatus"></div>
+
+              <div class="form-row" style="margin-top:20px">
+                <div class="field"><label data-fr="Marque" data-en="Make">Marque <span class="req">*</span></label><input id="f_make" placeholder="Toyota" data-fr-ph="Toyota" data-en-ph="Toyota" /></div>
+                <div class="field"><label data-fr="Modèle" data-en="Model">Modèle <span class="req">*</span></label><input id="f_model" placeholder="Corolla" /></div>
+              </div>
+              <div class="form-row">
+                <div class="field"><label data-fr="Année" data-en="Year">Année <span class="req">*</span></label><input id="f_year" type="number" placeholder="2019" /></div>
+                <div class="field"><label data-fr="Immatriculation" data-en="Plate">Immatriculation <span class="req">*</span></label><input id="f_plate" placeholder="AA-123-BC" /></div>
+              </div>
+              <div class="form-row">
+                <div class="field"><label data-fr="Numéro de châssis" data-en="Chassis number">Numéro de châssis</label><input id="f_vin" placeholder="VIN…" /></div>
+                <div class="field"><label data-fr="Puissance fiscale" data-en="Fiscal power">Puissance fiscale (CV) <span class="req">*</span></label><input id="f_power" type="number" placeholder="7" /></div>
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label data-fr="Carburant" data-en="Fuel">Carburant</label>
+                  <select id="f_fuel"><option value="essence">Essence</option><option value="diesel">Diesel</option><option value="hybride">Hybride</option><option value="electrique">Électrique</option></select>
+                </div>
+                <div class="field"><label data-fr="Valeur du véhicule (FCFA)" data-en="Vehicle value (FCFA)">Valeur du véhicule (FCFA) <span class="req">*</span></label><input id="f_value" type="number" placeholder="6 500 000" /></div>
+              </div>
+
+              <div class="form-nav">
+                <span></span>
+                <button class="btn btn-grad" onclick="AC.goStep(2)"><span data-fr="Continuer" data-en="Continue">Continuer</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 2: profile & duration -->
+          <section class="step-pane" data-pane="2">
+            <div class="panel">
+              <h2 data-fr="Usage & durée" data-en="Usage & term">Usage & durée</h2>
+              <p class="sub" data-fr="Ces informations affinent votre tarif grâce à notre moteur de tarification." data-en="This refines your price via our pricing engine.">Ces informations affinent votre tarif grâce à notre moteur de tarification.</p>
+
+              <div class="field">
+                <label data-fr="Usage du véhicule" data-en="Vehicle usage">Usage du véhicule</label>
+                <div class="opt-grid" style="grid-template-columns:1fr 1fr">
+                  <div class="opt sel" data-usage="perso" onclick="AC.pick(this,'usage','perso')"><b data-fr="Personnel" data-en="Personal">Personnel</b><small data-fr="Trajets privés" data-en="Private trips">Trajets privés</small></div>
+                  <div class="opt" data-usage="pro" onclick="AC.pick(this,'usage','pro')"><b data-fr="Professionnel" data-en="Professional">Professionnel</b><small data-fr="Usage commercial" data-en="Commercial use">Usage commercial</small></div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label data-fr="Historique de conduite" data-en="Driving history">Historique de conduite</label>
+                <select id="f_history">
+                  <option value="1" data-fr="Aucun sinistre (bonus)" data-en="No claims (bonus)">Aucun sinistre (bonus)</option>
+                  <option value="1.1" data-fr="1 sinistre en 2 ans" data-en="1 claim in 2 years">1 sinistre en 2 ans</option>
+                  <option value="1.25" data-fr="2 sinistres ou plus" data-en="2+ claims">2 sinistres ou plus</option>
+                  <option value="1.15" data-fr="Jeune conducteur (< 2 ans)" data-en="New driver (< 2 yrs)">Jeune conducteur (< 2 ans)</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label data-fr="Durée de couverture" data-en="Coverage duration">Durée de couverture</label>
+                <div class="opt-grid">
+                  <div class="opt" data-dur="1" onclick="AC.pick(this,'dur','1')"><b>1</b><small data-fr="mois" data-en="month">mois</small></div>
+                  <div class="opt" data-dur="3" onclick="AC.pick(this,'dur','3')"><b>3</b><small data-fr="mois" data-en="months">mois</small></div>
+                  <div class="opt" data-dur="6" onclick="AC.pick(this,'dur','6')"><b>6</b><small data-fr="mois" data-en="months">mois</small></div>
+                  <div class="opt sel" data-dur="12" onclick="AC.pick(this,'dur','12')"><b>12</b><small data-fr="mois" data-en="months">mois</small></div>
+                </div>
+                <p class="hint" data-fr="Astuce : 6 et 12 mois bénéficient d'une remise automatique." data-en="Tip: 6 and 12 months get an automatic discount.">Astuce : 6 et 12 mois bénéficient d'une remise automatique.</p>
+              </div>
+
+              <div class="form-nav">
+                <button class="btn btn-ghost" onclick="AC.goStep(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span data-fr="Retour" data-en="Back">Retour</span></button>
+                <button class="btn btn-grad" onclick="AC.goStep(3)"><span data-fr="Comparer les offres" data-en="Compare offers">Comparer les offres</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 3: comparator -->
+          <section class="step-pane" data-pane="3">
+            <div class="panel">
+              <div class="results-head">
+                <div>
+                  <h2 data-fr="Vos offres personnalisées" data-en="Your personalised offers">Vos offres personnalisées</h2>
+                  <p class="sub" style="margin:4px 0 0" id="resultsSummary"></p>
+                </div>
+                <div class="sort-pills" id="sortPills">
+                  <button class="sort-pill active" data-sort="ai" onclick="AC.sortOffers('ai',this)" data-fr="★ Recommandé IA" data-en="★ AI pick">★ Recommandé IA</button>
+                  <button class="sort-pill" data-sort="price" onclick="AC.sortOffers('price',this)" data-fr="Moins cher" data-en="Cheapest">Moins cher</button>
+                  <button class="sort-pill" data-sort="cover" onclick="AC.sortOffers('cover',this)" data-fr="Meilleure couverture" data-en="Best cover">Meilleure couverture</button>
+                </div>
+              </div>
+              <div class="compare-grid" id="offersList"></div>
+              <div class="form-nav">
+                <button class="btn btn-ghost" onclick="AC.goStep(2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span data-fr="Retour" data-en="Back">Retour</span></button>
+                <span></span>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 4: payment -->
+          <section class="step-pane" data-pane="4">
+            <div class="panel">
+              <h2 data-fr="Paiement sécurisé" data-en="Secure payment">Paiement sécurisé</h2>
+              <p class="sub" data-fr="Choisissez votre moyen de paiement. Transaction chiffrée et confirmation instantanée." data-en="Choose your payment method. Encrypted transaction and instant confirmation.">Choisissez votre moyen de paiement. Transaction chiffrée et confirmation instantanée.</p>
+
+              <div class="field">
+                <label data-fr="Moyen de paiement" data-en="Payment method">Moyen de paiement</label>
+                <div class="pay-method" id="payMethods">
+                  <div class="pay-opt sel" data-pay="Orange Money" onclick="AC.pick(this,'pay','Orange Money')"><span class="lg" style="background:#ff7900">OM</span><small>Orange Money</small></div>
+                  <div class="pay-opt" data-pay="MTN MoMo" onclick="AC.pick(this,'pay','MTN MoMo')"><span class="lg" style="background:#ffcc00;color:#222">MTN</span><small>MTN MoMo</small></div>
+                  <div class="pay-opt" data-pay="Moov Money" onclick="AC.pick(this,'pay','Moov Money')"><span class="lg" style="background:#0066ff">Moov</span><small>Moov Money</small></div>
+                  <div class="pay-opt" data-pay="Wave" onclick="AC.pick(this,'pay','Wave')"><span class="lg" style="background:#1dc8ff">Wave</span><small>Wave</small></div>
+                  <div class="pay-opt" data-pay="Visa" onclick="AC.pick(this,'pay','Visa')"><span class="lg" style="background:#1a1f71">VISA</span><small>Visa</small></div>
+                  <div class="pay-opt" data-pay="Mastercard" onclick="AC.pick(this,'pay','Mastercard')"><span class="lg" style="background:#eb001b">MC</span><small>Mastercard</small></div>
+                </div>
+              </div>
+              <div class="field" id="phoneField">
+                <label data-fr="Numéro Mobile Money" data-en="Mobile Money number">Numéro Mobile Money <span class="req">*</span></label>
+                <input id="f_phone" placeholder="+225 07 00 00 00 00" />
+                <p class="hint" data-fr="Vous recevrez une demande de confirmation (OTP) sur ce numéro." data-en="You'll receive a confirmation request (OTP) on this number.">Vous recevrez une demande de confirmation (OTP) sur ce numéro.</p>
+              </div>
+
+              <div class="form-nav">
+                <button class="btn btn-ghost" onclick="AC.goStep(3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span data-fr="Retour" data-en="Back">Retour</span></button>
+                <button class="btn btn-grad" id="payBtn" onclick="AC.pay()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span id="payBtnLabel" data-fr="Payer maintenant" data-en="Pay now">Payer maintenant</span></button>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 5: success -->
+          <section class="step-pane" data-pane="5">
+            <div class="panel">
+              <div class="success-card">
+                <div class="success-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></div>
+                <h2 data-fr="Félicitations, vous êtes assuré !" data-en="Congratulations, you're covered!">Félicitations, vous êtes assuré !</h2>
+                <p class="sub" data-fr="Votre contrat a été généré, signé électroniquement et archivé automatiquement." data-en="Your contract has been generated, e-signed and auto-archived.">Votre contrat a été généré, signé électroniquement et archivé automatiquement.</p>
+
+                <div class="contract-meta">
+                  <div class="cm"><small data-fr="N° de contrat" data-en="Contract no.">N° de contrat</small><b id="r_contract">—</b></div>
+                  <div class="cm"><small data-fr="Assureur" data-en="Insurer">Assureur</small><b id="r_insurer">—</b></div>
+                  <div class="cm"><small data-fr="Véhicule" data-en="Vehicle">Véhicule</small><b id="r_vehicle">—</b></div>
+                  <div class="cm"><small data-fr="Valable jusqu'au" data-en="Valid until">Valable jusqu'au</small><b id="r_until">—</b></div>
+                </div>
+
+                <div class="qr-box" id="qrBox"></div>
+                <p class="hint center" style="margin-top:10px" data-fr="QR Code sécurisé & horodaté — vérifiable publiquement" data-en="Secure timestamped QR — publicly verifiable">QR Code sécurisé & horodaté — vérifiable publiquement</p>
+
+                <div class="delivery-row">
+                  <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>WhatsApp</span>
+                  <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>Email</span>
+                  <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>Notification push</span>
+                </div>
+
+                <div class="hero-cta" style="justify-content:center;margin-top:26px">
+                  <button class="btn btn-grad" onclick="showToast('Téléchargement du contrat PDF…')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span data-fr="Télécharger le contrat PDF" data-en="Download contract PDF">Télécharger le contrat PDF</span></button>
+                  <a href="../dashboard/index.html" class="btn btn-ghost" data-fr="Voir mon espace" data-en="Go to dashboard">Voir mon espace</a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT: summary -->
+        <aside>
+          <div class="panel summary" id="summaryPanel">
+            <h3 data-fr="Récapitulatif" data-en="Summary">Récapitulatif</h3>
+            <div class="s-row"><span data-fr="Véhicule" data-en="Vehicle">Véhicule</span><b id="sum_vehicle">—</b></div>
+            <div class="s-row"><span data-fr="Usage" data-en="Usage">Usage</span><b id="sum_usage" data-fr="Personnel" data-en="Personal">Personnel</b></div>
+            <div class="s-row"><span data-fr="Durée" data-en="Term">Durée</span><b id="sum_dur">12 mois</b></div>
+            <div class="s-row"><span data-fr="Formule" data-en="Plan">Formule</span><b id="sum_plan">—</b></div>
+            <div class="s-total">
+              <span style="color:var(--text-mut);font-weight:700" data-fr="Total" data-en="Total">Total</span>
+              <span class="amt" id="sum_total">—</span>
+            </div>
+            <p class="hint" id="sum_note" data-fr="Sélectionnez une offre pour voir le total." data-en="Select an offer to see the total.">Sélectionnez une offre pour voir le total.</p>
+
+            <div class="assist-card" style="margin-top:18px">
+              <span class="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 1 3 3v1a3 3 0 0 1 3 3 3 3 0 0 1 0 6 3 3 0 0 1-3 3v1a3 3 0 0 1-6 0v-1a3 3 0 0 1-3-3 3 3 0 0 1 0-6 3 3 0 0 1 3-3V5a3 3 0 0 1 3-3z"/></svg></span>
+              <div><b data-fr="Assistant IA" data-en="AI assistant">Assistant IA</b><p data-fr="Une question sur les garanties ? Je vous réponds 24/7, en français ou anglais." data-en="A question about coverage? I answer 24/7, in French or English.">Une question sur les garanties ? Je vous réponds 24/7, en français ou anglais.</p></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/main.js"></script>
+  <script src="../js/devis.js"></script>
+</body>
+</html>

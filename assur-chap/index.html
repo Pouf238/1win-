@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assur Chap — Votre assurance auto, 100% en ligne en 3 minutes</title>
+  <meta name="description" content="Souscrivez, payez et recevez votre assurance automobile entièrement en ligne. Comparez les assureurs, payez par Mobile Money et recevez votre contrat instantanément. La meilleure assurance digitale d'Afrique francophone." />
+  <meta name="theme-color" content="#2f6dff" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232f6dff' d='M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z'/%3E%3C/svg%3E" />
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <header class="nav" id="nav">
+    <div class="container">
+      <a href="index.html" class="brand" aria-label="Assur Chap">
+        <span class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>Assur<b>Chap</b></span>
+      </a>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="#fonctions" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
+        <a href="#comment" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a>
+        <a href="#offres" data-fr="Comparateur" data-en="Compare">Comparateur</a>
+        <a href="#parrainage" data-fr="Parrainage" data-en="Referral">Parrainage</a>
+        <a href="verification/index.html" data-fr="Vérifier un contrat" data-en="Verify a contract">Vérifier un contrat</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="lang-toggle" onclick="toggleLang()" aria-label="Changer de langue">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>
+          <span class="lang-current">FR</span>
+        </button>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Mode sombre / clair">
+          <svg class="moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <a href="devis/index.html" class="btn btn-primary btn-sm btn-desktop" data-fr="Obtenir un devis" data-en="Get a quote">Obtenir un devis</a>
+        <button class="nav-burger" onclick="toggleNav()" aria-label="Menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-glow g1"></div>
+    <div class="hero-glow g2"></div>
+    <div class="container">
+      <div class="hero-copy reveal">
+        <span class="h-eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>
+          <span data-fr="Assurance auto 100% digitale" data-en="100% digital car insurance">Assurance auto 100% digitale</span>
+        </span>
+        <h1 data-fr="Votre assurance auto, souscrite en moins de 3 minutes." data-en="Your car insurance, subscribed in under 3 minutes.">Votre assurance auto, souscrite en moins de 3 minutes.</h1>
+        <p class="lead" data-fr="Comparez les assureurs, payez par Mobile Money et recevez votre contrat instantanément. Sans agence, sans paperasse, sans attente." data-en="Compare insurers, pay with Mobile Money and receive your contract instantly. No agency, no paperwork, no waiting.">Comparez les assureurs, payez par Mobile Money et recevez votre contrat instantanément. Sans agence, sans paperasse, sans attente.</p>
+        <div class="hero-cta">
+          <a href="devis/index.html" class="btn btn-grad btn-lg">
+            <span data-fr="Comparer les offres" data-en="Compare offers">Comparer les offres</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="#comment" class="btn btn-ghost btn-lg" data-fr="Voir comment ça marche" data-en="See how it works">Voir comment ça marche</a>
+        </div>
+        <div class="hero-trust">
+          <div><b>3 min</b><small data-fr="Pour être assuré" data-en="To get covered">Pour être assuré</small></div>
+          <div><b>+15</b><small data-fr="Assureurs partenaires" data-en="Partner insurers">Assureurs partenaires</small></div>
+          <div><b>24/7</b><small data-fr="Assistant IA & support" data-en="AI assistant & support">Assistant IA & support</small></div>
+        </div>
+      </div>
+
+      <!-- Phone mockup -->
+      <div class="phone-wrap reveal">
+        <div class="phone-float float-1">
+          <span class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></span>
+          <div><b data-fr="Paiement réussi" data-en="Payment successful">Paiement réussi</b><small>Orange Money</small></div>
+        </div>
+        <div class="phone-float float-2">
+          <span class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h4M7 12h10M7 16h10"/></svg></span>
+          <div><b data-fr="Contrat généré" data-en="Contract issued">Contrat généré</b><small>PDF · QR Code</small></div>
+        </div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="phone-top">
+              <small data-fr="Contrat actif" data-en="Active policy">Contrat actif</small>
+              <h4>Toyota Corolla 2019</h4>
+              <div class="phone-amount">14 500 <span>FCFA / mois</span></div>
+            </div>
+            <div class="phone-body">
+              <div class="phone-row">
+                <span class="phone-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3v-5l2-5h11l4 5v5h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></span>
+                <div class="meta"><b>Tous risques</b><small data-fr="Police N° AC-2026-08421" data-en="Policy AC-2026-08421">Police N° AC-2026-08421</small></div>
+                <span class="phone-badge badge-ok" data-fr="Valide" data-en="Valid">Valide</span>
+              </div>
+              <div class="phone-row">
+                <span class="phone-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+                <div class="meta"><b data-fr="Prochaine échéance" data-en="Next renewal">Prochaine échéance</b><small>12 Juil. 2026</small></div>
+                <span class="phone-badge badge-warn">17 j</span>
+              </div>
+              <div class="phone-row">
+                <span class="phone-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 7v6c0 5 8 9 8 9s8-4 8-9V7z"/></svg></span>
+                <div class="meta"><b data-fr="Aucun sinistre" data-en="No claims">Aucun sinistre</b><small data-fr="Bonus fidélité actif" data-en="Loyalty bonus active">Bonus fidélité actif</small></div>
+                <span class="phone-badge badge-ok">−12%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PAYMENT LOGOS ===== -->
+  <section class="logos">
+    <div class="container">
+      <p data-fr="Payez avec vos moyens préférés" data-en="Pay with your preferred methods">Payez avec vos moyens préférés</p>
+      <div class="logos-row">
+        <span class="pay-chip"><span class="pay-dot" style="background:#ff7900"></span>Orange Money</span>
+        <span class="pay-chip"><span class="pay-dot" style="background:#ffcc00"></span>MTN MoMo</span>
+        <span class="pay-chip"><span class="pay-dot" style="background:#0066ff"></span>Moov Money</span>
+        <span class="pay-chip"><span class="pay-dot" style="background:#1dc8ff"></span>Wave</span>
+        <span class="pay-chip"><span class="pay-dot" style="background:#1a1f71"></span>Visa</span>
+        <span class="pay-chip"><span class="pay-dot" style="background:#eb001b"></span>Mastercard</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES ===== -->
+  <section class="section" id="fonctions">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="h-eyebrow" data-fr="Tout-en-un" data-en="All-in-one">Tout-en-un</span>
+        <h2 data-fr="Une plateforme qui fait tout, à votre place" data-en="A platform that does it all, for you">Une plateforme qui fait <span class="text-grad">tout</span>, à votre place</h2>
+        <p data-fr="De la photo de votre carte grise jusqu'au contrat signé électroniquement — chaque étape est automatisée et intelligente." data-en="From a photo of your registration card to the e-signed contract — every step is automated and intelligent.">De la photo de votre carte grise jusqu'au contrat signé électroniquement — chaque étape est automatisée et intelligente.</p>
+      </div>
+
+      <div class="grid grid-3">
+        <article class="card reveal">
+          <div class="card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
+          <h3 data-fr="OCR & IA documentaire" data-en="OCR & document AI">OCR & IA documentaire</h3>
+          <p data-fr="Photographiez votre carte grise, permis ou pièce d'identité : l'IA extrait et pré-remplit tout, et détecte les documents expirés." data-en="Photograph your registration, license or ID: the AI extracts and pre-fills everything, and flags expired documents.">Photographiez votre carte grise, permis ou pièce d'identité : l'IA extrait et pré-remplit tout, et détecte les documents expirés.</p>
+        </article>
+        <article class="card reveal">
+          <div class="card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></div>
+          <h3 data-fr="Comparateur multi-assureurs" data-en="Multi-insurer comparator">Comparateur multi-assureurs</h3>
+          <p data-fr="Comparez prix, garanties et franchises de plus de 15 compagnies. Triez par le moins cher, la meilleure couverture ou la recommandation IA." data-en="Compare prices, coverage and deductibles from 15+ companies. Sort by cheapest, best coverage or AI recommendation.">Comparez prix, garanties et franchises de plus de 15 compagnies. Triez par le moins cher, la meilleure couverture ou la recommandation IA.</p>
+        </article>
+        <article class="card reveal">
+          <div class="card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+          <h3 data-fr="Paiement Mobile Money" data-en="Mobile Money payment">Paiement Mobile Money</h3>
+          <p data-fr="Orange, MTN, Moov, Wave, Visa ou Mastercard. Confirmation instantanée, facture PDF et contrat généré automatiquement." data-en="Orange, MTN, Moov, Wave, Visa or Mastercard. Instant confirmation, PDF invoice and contract generated automatically.">Orange, MTN, Moov, Wave, Visa ou Mastercard. Confirmation instantanée, facture PDF et contrat généré automatiquement.</p>
+        </article>
+        <article class="card reveal">
+          <div class="card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg></div>
+          <h3 data-fr="Contrat instantané & signé" data-en="Instant signed contract">Contrat instantané & signé</h3>
+          <p data-fr="Numéro unique, signature électronique, QR Code sécurisé et horodatage. Archivé automatiquement, vérifiable publiquement." data-en="Unique number, e-signature, secure QR code and timestamp. Auto-archived, publicly verifiable.">Numéro unique, signature électronique, QR Code sécurisé et horodatage. Archivé automatiquement, vérifiable publiquement.</p>
+        </article>
+        <article class="card reveal">
+          <div class="card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <h3 data-fr="Assistant IA 24/7" data-en="24/7 AI assistant">Assistant IA 24/7</h3>
+          <p data-fr="Posez vos questions, faites-vous recommander une formule ou déclarez un sinistre. En français et en anglais, à toute heure." data-en="Ask questions, get a plan recommended or file a claim. In French and English, any time.">Posez vos questions, faites-vous recommander une formule ou déclarez un sinistre. En français et en anglais, à toute heure.</p>
+        </article>
+        <article class="card reveal">
+          <div class="card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <h3 data-fr="Détection de fraude IA" data-en="AI fraud detection">Détection de fraude IA</h3>
+          <p data-fr="Détection des faux documents, des modifications, des doublons et des informations incohérentes pour des contrats fiables." data-en="Detects fake documents, alterations, duplicates and inconsistent data for trustworthy contracts.">Détection des faux documents, des modifications, des doublons et des informations incohérentes pour des contrats fiables.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="section" id="comment" style="background:var(--bg-soft);border-block:1px solid var(--border)">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="h-eyebrow" data-fr="Simple & rapide" data-en="Simple & fast">Simple & rapide</span>
+        <h2 data-fr="Assuré en 4 étapes" data-en="Covered in 4 steps">Assuré en <span class="text-grad">4 étapes</span></h2>
+        <p data-fr="Aucune compétence requise. Votre téléphone et 3 minutes suffisent." data-en="No skills required. Your phone and 3 minutes are enough.">Aucune compétence requise. Votre téléphone et 3 minutes suffisent.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><h3 data-fr="Ajoutez votre véhicule" data-en="Add your vehicle">Ajoutez votre véhicule</h3><p data-fr="Photo de la carte grise : l'IA remplit les informations automatiquement." data-en="Photo of the registration: the AI fills in the details automatically.">Photo de la carte grise : l'IA remplit les informations automatiquement.</p></div>
+        <div class="step reveal"><h3 data-fr="Comparez les offres" data-en="Compare offers">Comparez les offres</h3><p data-fr="Plus de 15 assureurs comparés en temps réel, triés selon vos priorités." data-en="15+ insurers compared in real time, sorted by your priorities.">Plus de 15 assureurs comparés en temps réel, triés selon vos priorités.</p></div>
+        <div class="step reveal"><h3 data-fr="Payez en ligne" data-en="Pay online">Payez en ligne</h3><p data-fr="Mobile Money ou carte bancaire. Confirmation instantanée et sécurisée." data-en="Mobile Money or bank card. Instant, secure confirmation.">Mobile Money ou carte bancaire. Confirmation instantanée et sécurisée.</p></div>
+        <div class="step reveal"><h3 data-fr="Recevez votre contrat" data-en="Receive your contract">Recevez votre contrat</h3><p data-fr="Par WhatsApp, email et dans l'app. Avec QR Code et signature électronique." data-en="By WhatsApp, email and in-app. With QR code and e-signature.">Par WhatsApp, email et dans l'app. Avec QR Code et signature électronique.</p></div>
+      </div>
+      <div class="center mt-40 reveal">
+        <a href="devis/index.html" class="btn btn-primary btn-lg">
+          <span data-fr="Commencer maintenant" data-en="Start now">Commencer maintenant</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== COMPARATOR PREVIEW ===== -->
+  <section class="section" id="offres">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="h-eyebrow" data-fr="Comparateur" data-en="Comparator">Comparateur</span>
+        <h2 data-fr="Le meilleur prix, la meilleure couverture" data-en="The best price, the best coverage">Le meilleur prix, la <span class="text-grad">meilleure couverture</span></h2>
+        <p data-fr="Un aperçu de ce que vous verrez. Les tarifs sont calculés selon votre véhicule, votre usage et la durée choisie." data-en="A preview of what you'll see. Prices are calculated from your vehicle, usage and chosen duration.">Un aperçu de ce que vous verrez. Les tarifs sont calculés selon votre véhicule, votre usage et la durée choisie.</p>
+      </div>
+
+      <div class="compare-grid">
+        <div class="offer reveal">
+          <div class="offer-head">
+            <span class="offer-logo" style="background:linear-gradient(135deg,#00824b,#06b585)">NSIA</span>
+            <div><b>NSIA Assurances</b><small class="stars">★★★★☆ 4.3</small></div>
+          </div>
+          <div class="offer-price">11 900 <span>FCFA / mois</span></div>
+          <ul class="feat">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Tiers + Dommages" data-en="Third-party + Damage">Tiers + Dommages</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Vol & Incendie" data-en="Theft & Fire">Vol & Incendie</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Franchise 50 000 FCFA" data-en="50,000 FCFA deductible">Franchise 50 000 FCFA</span></li>
+          </ul>
+          <a href="devis/index.html" class="btn btn-ghost btn-block">Choisir</a>
+        </div>
+
+        <div class="offer featured reveal">
+          <span class="offer-tag" data-fr="★ Recommandé par l'IA" data-en="★ AI recommended">★ Recommandé par l'IA</span>
+          <div class="offer-head">
+            <span class="offer-logo" style="background:linear-gradient(135deg,#2f6dff,#6a3cff)">AX</span>
+            <div><b>Axa Côte d'Ivoire</b><small class="stars">★★★★★ 4.8</small></div>
+          </div>
+          <div class="offer-price">14 500 <span>FCFA / mois</span></div>
+          <ul class="feat">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Tous risques" data-en="All risks">Tous risques</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Assistance 24/7 + remorquage" data-en="24/7 assistance + towing">Assistance 24/7 + remorquage</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Franchise 25 000 FCFA" data-en="25,000 FCFA deductible">Franchise 25 000 FCFA</span></li>
+          </ul>
+          <a href="devis/index.html" class="btn btn-grad btn-block">Choisir</a>
+        </div>
+
+        <div class="offer reveal">
+          <div class="offer-head">
+            <span class="offer-logo" style="background:linear-gradient(135deg,#ff7900,#ffb020)">SA</span>
+            <div><b>Saham Assurance</b><small class="stars">★★★★☆ 4.1</small></div>
+          </div>
+          <div class="offer-price">9 500 <span>FCFA / mois</span></div>
+          <ul class="feat">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Responsabilité civile" data-en="Third-party liability">Responsabilité civile</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Défense & recours" data-en="Legal defence">Défense & recours</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Sans franchise" data-en="No deductible">Sans franchise</span></li>
+          </ul>
+          <a href="devis/index.html" class="btn btn-ghost btn-block">Choisir</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== REFERRAL / AGENTS ===== -->
+  <section class="section" id="parrainage" style="background:var(--bg-soft);border-block:1px solid var(--border)">
+    <div class="container">
+      <div class="grid grid-2" style="align-items:center;gap:46px">
+        <div class="reveal">
+          <span class="h-eyebrow" data-fr="Parrainage & Agents" data-en="Referral & Agents">Parrainage & Agents</span>
+          <h2 style="font-size:clamp(1.8rem,4vw,2.5rem);margin:16px 0 14px" data-fr="Gagnez en partageant Assur Chap" data-en="Earn by sharing Assur Chap">Gagnez en partageant <span class="text-grad">Assur Chap</span></h2>
+          <p style="color:var(--text-soft);font-size:1.05rem;margin-bottom:22px" data-fr="Chaque utilisateur dispose d'un code et d'un lien personnel. Parrainez vos proches et touchez du cashback, des réductions et des commissions. Les courtiers partenaires disposent d'un espace dédié pour suivre leurs ventes et leur portefeuille." data-en="Every user gets a personal code and link. Refer friends and earn cashback, discounts and commissions. Partner brokers get a dedicated space to track sales and their portfolio.">Chaque utilisateur dispose d'un code et d'un lien personnel. Parrainez vos proches et touchez du cashback, des réductions et des commissions. Les courtiers partenaires disposent d'un espace dédié pour suivre leurs ventes et leur portefeuille.</p>
+          <div class="badge-row">
+            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>Cashback</span>
+            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Réductions" data-en="Discounts">Réductions</span></span>
+            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>Commissions</span>
+            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg><span data-fr="Espace agent" data-en="Agent space">Espace agent</span></span>
+          </div>
+        </div>
+        <div class="reveal">
+          <div class="card" style="padding:30px">
+            <small style="color:var(--text-mut);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.78rem" data-fr="Votre code de parrainage" data-en="Your referral code">Votre code de parrainage</small>
+            <div style="display:flex;align-items:center;gap:12px;margin:12px 0 20px">
+              <code style="flex:1;font-size:1.5rem;font-weight:800;letter-spacing:2px;background:var(--surface-2);border:1.5px dashed var(--border-2);border-radius:14px;padding:14px 18px;text-align:center">CHAP-K7F9</code>
+              <button class="btn btn-primary btn-sm" onclick="showToast('Code copié !')" data-fr="Copier" data-en="Copy">Copier</button>
+            </div>
+            <div class="s-row" style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border)"><span style="color:var(--text-mut)" data-fr="Filleuls actifs" data-en="Active referrals">Filleuls actifs</span><b>8</b></div>
+            <div class="s-row" style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border)"><span style="color:var(--text-mut)" data-fr="Cashback gagné" data-en="Cashback earned">Cashback gagné</span><b>24 000 FCFA</b></div>
+            <div class="s-row" style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border)"><span style="color:var(--text-mut)" data-fr="Commissions ce mois" data-en="Commissions this month">Commissions ce mois</span><b style="color:var(--accent-600)">+ 41 500 FCFA</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="section">
+    <div class="container">
+      <div class="cta-band reveal">
+        <span class="cta-glow a"></span><span class="cta-glow b"></span>
+        <h2 data-fr="Prêt à être assuré en 3 minutes ?" data-en="Ready to get covered in 3 minutes?">Prêt à être assuré en 3 minutes ?</h2>
+        <p data-fr="Rejoignez les milliers de conducteurs qui ont digitalisé leur assurance auto avec Assur Chap." data-en="Join the thousands of drivers who digitised their car insurance with Assur Chap.">Rejoignez les milliers de conducteurs qui ont digitalisé leur assurance auto avec Assur Chap.</p>
+        <div class="hero-cta">
+          <a href="devis/index.html" class="btn btn-light btn-lg" data-fr="Obtenir mon devis gratuit" data-en="Get my free quote">Obtenir mon devis gratuit</a>
+          <a href="dashboard/index.html" class="btn btn-light btn-lg" data-fr="Voir mon espace" data-en="See my dashboard">Voir mon espace</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="index.html" class="brand">
+            <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
+            <span>Assur<b>Chap</b></span>
+          </a>
+          <p data-fr="La meilleure plateforme digitale d'assurance automobile en Afrique francophone. Simple, rapide, automatisée." data-en="The best digital car insurance platform in French-speaking Africa. Simple, fast, automated.">La meilleure plateforme digitale d'assurance automobile en Afrique francophone. Simple, rapide, automatisée.</p>
+        </div>
+        <div>
+          <h5 data-fr="Produit" data-en="Product">Produit</h5>
+          <ul>
+            <li><a href="devis/index.html" data-fr="Obtenir un devis" data-en="Get a quote">Obtenir un devis</a></li>
+            <li><a href="#offres" data-fr="Comparateur" data-en="Comparator">Comparateur</a></li>
+            <li><a href="dashboard/index.html" data-fr="Espace client" data-en="Client area">Espace client</a></li>
+            <li><a href="verification/index.html" data-fr="Vérifier un contrat" data-en="Verify a contract">Vérifier un contrat</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 data-fr="Société" data-en="Company">Société</h5>
+          <ul>
+            <li><a href="#parrainage" data-fr="Devenir agent" data-en="Become an agent">Devenir agent</a></li>
+            <li><a href="#parrainage" data-fr="Parrainage" data-en="Referral">Parrainage</a></li>
+            <li><a href="#fonctions" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a></li>
+            <li><a href="#comment" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 data-fr="Support" data-en="Support">Support</h5>
+          <ul>
+            <li><a href="#" data-fr="Assistant IA 24/7" data-en="24/7 AI assistant">Assistant IA 24/7</a></li>
+            <li><a href="#" data-fr="WhatsApp" data-en="WhatsApp">WhatsApp</a></li>
+            <li><a href="#" data-fr="Déclarer un sinistre" data-en="File a claim">Déclarer un sinistre</a></li>
+            <li><a href="#" data-fr="Confidentialité (RGPD)" data-en="Privacy (GDPR)">Confidentialité (RGPD)</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> Assur Chap. <span data-fr="Tous droits réservés." data-en="All rights reserved.">Tous droits réservés.</span></span>
+        <div class="footer-social">
+          <a href="#" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.51 5.26l-.999 3.648 3.978-1.607z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.1c.5-.9 1.8-1.9 3.6-1.9 3.9 0 4.5 2.5 4.5 5.8V21h-4v-5c0-1.2 0-2.8-1.7-2.8s-2 1.3-2 2.7V21H9z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
