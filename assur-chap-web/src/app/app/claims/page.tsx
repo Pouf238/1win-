@@ -1,0 +1,172 @@
+"use client";
+// ==========================================================================
+// Assur Chap — Déclaration & suivi des sinistres
+// ==========================================================================
+import { useEffect, useState } from "react";
+import { Icon } from "@/components/Icons";
+import { Modal } from "@/components/ui";
+import { useToast } from "@/components/Toast";
+import { getStore } from "@/lib/store";
+import { formatDate } from "@/lib/format";
+import type { Claim, Contract } from "@/lib/types";
+
+const TYPES = ["Collision", "Vol", "Incendie", "Bris de glace", "Catastrophe naturelle", "Autre"];
+
+export default function ClaimsPage() {
+  const { toast } = useToast();
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState(TYPES[0]);
+  const [contractId, setContractId] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [gps, setGps] = useState(false);
+
+  function refresh() {
+    setClaims(getStore().claims());
+    const cs = getStore().contracts().filter((c) => c.status === "active");
+    setContracts(cs);
+    if (cs[0]) setContractId(cs[0].id);
+  }
+  useEffect(refresh, []);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!contractId || !description) {
+      toast("Contrat et description requis.", "err");
+      return;
+    }
+    const c = contracts.find((x) => x.id === contractId);
+    getStore().addClaim({
+      contractId,
+      vehicleId: c?.vehicleId || "",
+      type,
+      description,
+      location: location || "Position non précisée",
+      photos: 0,
+    });
+    toast("Sinistre déclaré ✅", "ok");
+    setOpen(false);
+    setDescription("");
+    setLocation("");
+    setGps(false);
+    refresh();
+  }
+
+  return (
+    <div className="stack">
+      <div className="hello">
+        <div>
+          <h2>Sinistres</h2>
+          <p className="soft">Déclarez un sinistre et suivez son traitement en temps réel.</p>
+        </div>
+        <button className="btn btn-accent" onClick={() => setOpen(true)} disabled={contracts.length === 0}>
+          <Icon.plus size={18} /> Déclarer un sinistre
+        </button>
+      </div>
+
+      {contracts.length === 0 && (
+        <div className="card card-2">
+          <span className="soft">Vous devez avoir un contrat actif pour déclarer un sinistre.</span>
+        </div>
+      )}
+
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px,1fr))" }}>
+        {claims.map((cl) => (
+          <article className="card stack" key={cl.id}>
+            <div className="row-between">
+              <strong>{cl.type}</strong>
+              <span className="badge badge-warning">
+                <span className="dot" /> {cl.status}
+              </span>
+            </div>
+            <p className="soft" style={{ fontSize: ".9rem" }}>
+              {cl.description}
+            </p>
+            <div className="row gap-sm soft" style={{ fontSize: ".84rem" }}>
+              <Icon.mapPin size={15} /> {cl.location}
+            </div>
+            <div className="timeline" style={{ marginTop: 6 }}>
+              {cl.updates.map((u, i) => (
+                <div className={`tl-item ${i === cl.updates.length - 1 ? "" : "muted-dot"}`} key={i}>
+                  <strong style={{ fontSize: ".9rem" }}>{u.label}</strong>
+                  <div className="soft" style={{ fontSize: ".8rem" }}>
+                    {formatDate(u.date)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+        {claims.length === 0 && (
+          <div className="card empty">
+            <span className="icon-tile">
+              <Icon.shield size={24} />
+            </span>
+            <p>Aucun sinistre déclaré. Tant mieux !</p>
+          </div>
+        )}
+      </div>
+
+      {open && (
+        <Modal title="Déclarer un sinistre" onClose={() => setOpen(false)}>
+          <form onSubmit={submit}>
+            <div className="modal-body stack">
+              <div className="field">
+                <label className="label">Contrat concerné</label>
+                <select className="select" value={contractId} onChange={(e) => setContractId(e.target.value)}>
+                  {contracts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.insurer} · {c.number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label className="label">Type de sinistre</label>
+                <select className="select" value={type} onChange={(e) => setType(e.target.value)}>
+                  {TYPES.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label className="label">Description</label>
+                <textarea className="textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Décrivez les circonstances de l'accident…" />
+              </div>
+              <div className="field">
+                <label className="label">Lieu</label>
+                <input className="input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Boulevard VGE, Abidjan" />
+              </div>
+              <div className="upload-zone" onClick={() => toast("Upload photos/vidéos (Phase 3)", "info")}>
+                <span className="icon-tile accent">
+                  <Icon.file size={22} />
+                </span>
+                <strong>Ajouter photos & vidéos</strong>
+                <div className="soft" style={{ fontSize: ".84rem" }}>
+                  Cliquez pour joindre des fichiers (simulé)
+                </div>
+              </div>
+              <label className="row gap-sm" style={{ cursor: "pointer" }}>
+                <span className="switch">
+                  <input type="checkbox" checked={gps} onChange={(e) => setGps(e.target.checked)} />
+                  <span className="track" />
+                </span>
+                <span>Joindre ma localisation GPS</span>
+              </label>
+            </div>
+            <div className="modal-foot">
+              <button type="button" className="btn btn-ghost btn-block" onClick={() => setOpen(false)}>
+                Annuler
+              </button>
+              <button type="submit" className="btn btn-primary btn-block">
+                Envoyer le dossier
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}

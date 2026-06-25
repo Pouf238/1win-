@@ -1,0 +1,94 @@
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AuthShell } from "@/components/AuthShell";
+import { Icon } from "@/components/Icons";
+import { useAuth } from "@/providers/AuthProvider";
+import { useI18n } from "@/i18n/LanguageProvider";
+import { useToast } from "@/components/Toast";
+
+export default function LoginPage() {
+  const { t } = useI18n();
+  const { login, loginAs } = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const res = login(identifier, password);
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    toast("Connexion réussie 👋", "ok");
+    router.push(res.user?.role === "admin" ? "/admin" : "/app");
+  }
+
+  function demo() {
+    loginAs("u_demo");
+    toast("Bienvenue sur le compte démo", "ok");
+    router.push("/app");
+  }
+
+  return (
+    <AuthShell>
+      <h2 style={{ marginTop: 18 }}>{t("auth.loginTitle")}</h2>
+      <p className="soft" style={{ marginTop: 6 }}>
+        {t("auth.loginSub")}
+      </p>
+
+      <form onSubmit={submit} className="stack" style={{ marginTop: 22 }}>
+        <div className={`field ${error ? "has-error" : ""}`}>
+          <label className="label">{t("auth.email")}</label>
+          <input
+            className="input"
+            placeholder="demo@assurchap.com"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            autoComplete="username"
+          />
+        </div>
+        <div className={`field ${error ? "has-error" : ""}`}>
+          <label className="label">{t("auth.password")}</label>
+          <input
+            className="input"
+            type="password"
+            placeholder="••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+          {error && <span className="input-error">{error}</span>}
+        </div>
+        <button className="btn btn-primary btn-block btn-lg" type="submit">
+          {t("auth.login")} <Icon.arrowRight size={18} />
+        </button>
+      </form>
+
+      <div className="divider" style={{ margin: "18px 0" }}>
+        {t("auth.or")}
+      </div>
+
+      <div className="social-btns">
+        <button className="btn btn-ghost" onClick={() => toast("Google : disponible en Phase 3", "info")}>
+          <Icon.google size={18} /> Google
+        </button>
+        <button className="btn btn-ghost" onClick={() => toast("Apple : disponible en Phase 3", "info")}>
+          Apple
+        </button>
+      </div>
+
+      <button className="btn btn-soft btn-block" style={{ marginTop: 12 }} onClick={demo}>
+        <Icon.sparkle size={18} /> {t("auth.demo")}
+      </button>
+
+      <p className="soft center" style={{ marginTop: 20 }}>
+        {t("auth.noAccount")} <Link href="/register">{t("auth.register")}</Link>
+      </p>
+    </AuthShell>
+  );
+}

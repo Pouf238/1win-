@@ -1,0 +1,12 @@
+{
+  "name": "Assur Chap",
+  "short_name": "Assur Chap",
+  "description": "L'assurance auto digitale de l'Afrique francophone.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1F7A8C",
+  "icons": [
+    { "src": "/icon-512.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
