@@ -5,7 +5,6 @@
   "use strict";
 
   UI.Theme.init();
-  Store.init();
   var I = UI.icon, esc = UI.escapeHtml, fcfa = UI.fcfa, fdate = UI.fdate;
   var root = document.getElementById("root");
 
@@ -19,13 +18,13 @@
 
   function render() {
     var h = location.hash.replace(/^#/, "") || "login";
-    var user = Store.currentUser();
+    var user = DB.currentUser();
 
     // Public auth routes
     if (h === "login") return user ? nav("#dashboard") : viewAuth("login");
     if (h === "signup") return user ? nav("#dashboard") : viewAuth("signup");
     if (h === "agent") return user ? nav("#dashboard") : viewAuth("login");
-    if (h === "demo") { Store.loginDemo(); return nav("#dashboard"); }
+    if (h === "demo") { DB.loginDemo().then(function () { nav("#dashboard"); }); return; }
 
     if (!user) return viewAuth("login");
 
@@ -60,9 +59,9 @@
   ];
 
   function shell(opts) {
-    var user = Store.currentUser();
+    var user = DB.currentUser();
     var active = opts.active;
-    var unread = Store.notifications().filter(function (n) { return !n.read; }).length;
+    var unread = DB.notifications().filter(function (n) { return !n.read; }).length;
     var sideLinks = NAVS.map(function (n) {
       return '<a class="side-link ' + (active === n.key ? "is-active" : "") + '" href="#' + n.key + '">' +
         I(n.icon, 20) + "<span>" + n.label + "</span>" +
@@ -114,7 +113,7 @@
 
     // bindings
     var lo = document.getElementById("logoutBtn");
-    if (lo) lo.addEventListener("click", function () { Store.logout(); UI.toast("Déconnecté", "info"); nav("#login"); });
+    if (lo) lo.addEventListener("click", function () { DB.logout(); UI.toast("Déconnecté", "info"); nav("#login"); });
     document.getElementById("themeBtn").addEventListener("click", function () { UI.Theme.toggle(); render(); });
     document.getElementById("langBtn").addEventListener("click", function () { I18N.toggle(); render(); });
     document.getElementById("notifBtn").addEventListener("click", function () { nav("#notifications"); });
@@ -151,25 +150,29 @@
     });
 
     if (isSignup) {
-      document.getElementById("suForm").addEventListener("submit", function (e) {
+      document.getElementById("suForm").addEventListener("submit", async function (e) {
         e.preventDefault();
-        var f = e.target;
-        var r = Store.register({ name: f.name.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), password: f.password.value });
+        var f = e.target; var btn = f.querySelector("button");
+        btn.classList.add("is-loading");
+        var r = await DB.register({ name: f.name.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), password: f.password.value });
+        btn.classList.remove("is-loading");
         if (r.error) return UI.toast(r.error, "error");
         UI.toast("Compte créé. Bienvenue !", "success");
         nav("#dashboard");
       });
     } else {
-      document.getElementById("liForm").addEventListener("submit", function (e) {
+      document.getElementById("liForm").addEventListener("submit", async function (e) {
         e.preventDefault();
-        var f = e.target;
-        var r = Store.login(f.id.value.trim(), f.password.value);
+        var f = e.target; var btn = f.querySelector("button");
+        btn.classList.add("is-loading");
+        var r = await DB.login(f.id.value.trim(), f.password.value);
+        btn.classList.remove("is-loading");
         if (r.error) return UI.toast(r.error, "error");
         UI.toast("Bon retour, " + r.user.name.split(" ")[0] + " !", "success");
         nav("#dashboard");
       });
       var demo = document.getElementById("demoBtn");
-      if (demo) demo.addEventListener("click", function () { Store.loginDemo(); nav("#dashboard"); });
+      if (demo) demo.addEventListener("click", async function () { demo.classList.add("is-loading"); await DB.loginDemo(); nav("#dashboard"); });
     }
   }
 
@@ -205,10 +208,10 @@
 
   /* -------------------------------------------------------------- Dashboard */
   function viewDashboard(user) {
-    var vehicles = Store.vehicles();
-    var contracts = Store.contracts();
+    var vehicles = DB.vehicles();
+    var contracts = DB.contracts();
     var active = contracts.filter(function (c) { return c.status === "active"; });
-    var claims = Store.claims();
+    var claims = DB.claims();
     var expiringSoon = active.filter(function (c) { return UI.daysBetween(new Date(), c.endDate) <= 30; });
     var firstName = user.name.split(" ")[0];
 
@@ -220,7 +223,7 @@
         kpi("shield", "brand", active.length, "Contrats actifs") +
         kpi("car", "brand", vehicles.length, "Véhicules") +
         kpi("warning", "accent", claims.length, "Sinistres") +
-        kpi("wallet", "brand", Store.payments().length, "Paiements") +
+        kpi("wallet", "brand", DB.payments().length, "Paiements") +
       '</div>' +
       '<div class="dash-grid">' +
         '<div class="card card-pad-lg">' +
@@ -254,7 +257,7 @@
   function emptyMini(t, d) { return '<div class="empty" style="padding:26px 10px"><div class="muted">' + t + '</div><div class="muted" style="font-size:.85rem;margin-top:4px">' + d + '</div></div>'; }
   function contractMini(c) {
     var ins = PRICING.INSURERS.filter(function (x) { return x.id === c.insurerId; })[0] || { accent: "#1F7A8C" };
-    var v = Store.vehicle(c.vehicleId) || {};
+    var v = DB.vehicle(c.vehicleId) || {};
     var days = UI.daysBetween(new Date(), c.endDate);
     return '<a href="#contract/' + c.id + '" class="list-row" style="text-decoration:none">' +
       '<span class="cc-logo" style="background:' + ins.accent + ';width:42px;height:42px">' + esc((c.insurer || "?").slice(0, 1)) + '</span>' +
@@ -266,7 +269,7 @@
 
   /* --------------------------------------------------------------- Vehicles */
   function viewVehicles(user) {
-    var vehicles = Store.vehicles();
+    var vehicles = DB.vehicles();
     var content =
       '<div class="hello"><div><h2>Mes véhicules</h2><p class="muted">' + vehicles.length + ' véhicule(s) enregistré(s).</p></div>' +
       '<a href="#vehicle-add" class="btn btn-primary">' + I("plus", 18) + ' Ajouter</a></div>' +
@@ -277,7 +280,7 @@
         b.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation();
           var id = b.getAttribute("data-del");
-          Store.removeVehicle(id); UI.toast("Véhicule supprimé", "info"); render();
+          DB.removeVehicle(id); UI.toast("Véhicule supprimé", "info"); render();
         });
       });
       root.querySelectorAll("[data-quote]").forEach(function (b) {
@@ -325,7 +328,7 @@
       document.getElementById("ocrZone").addEventListener("click", simulateOCR);
       document.getElementById("vForm").addEventListener("submit", function (e) {
         e.preventDefault(); var f = e.target;
-        var v = Store.addVehicle({ brand: f.brand.value.trim(), model: f.model.value.trim(), year: +f.year.value, plate: f.plate.value.trim().toUpperCase(), vin: f.vin.value.trim().toUpperCase(), power: +f.power.value, fuel: f.fuel.value, usage: f.usage.value, value: +f.value.value });
+        var v = DB.addVehicle({ brand: f.brand.value.trim(), model: f.model.value.trim(), year: +f.year.value, plate: f.plate.value.trim().toUpperCase(), vin: f.vin.value.trim().toUpperCase(), power: +f.power.value, fuel: f.fuel.value, usage: f.usage.value, value: +f.value.value });
         UI.toast("Véhicule ajouté ✅", "success");
         wiz = newWiz(); wiz.vehicleId = v.id; wiz.step = 1; nav("#quote");
       });
@@ -348,7 +351,7 @@
   /* ----------------------------------------------------------------- Quote */
   function viewQuote(user) {
     if (!wiz) wiz = newWiz();
-    var vehicles = Store.vehicles();
+    var vehicles = DB.vehicles();
     if (!vehicles.length) {
       return shell({ title: "Devis", active: "quote", content:
         emptyState("car", "Ajoutez d'abord un véhicule", "Vous devez enregistrer un véhicule avant d'obtenir un devis.", "#vehicle-add", "Ajouter un véhicule") });
@@ -402,7 +405,7 @@
       '<div class="row" style="justify-content:space-between;margin-top:22px"><button class="btn btn-ghost" data-prev="0">' + I("arrowLeft", 16) + ' Retour</button><button class="btn btn-primary" data-next="2">Comparer les offres ' + I("arrowRight", 16) + '</button></div></div>';
   }
   function quoteStepCompare() {
-    var v = Store.vehicle(wiz.vehicleId);
+    var v = DB.vehicle(wiz.vehicleId);
     var offers = PRICING.sortOffers(PRICING.computeQuotes(v, wiz.coverageId, wiz.months), wiz.sort);
     var recommendedId = PRICING.sortOffers(offers, "ai")[0].insurerId;
     var sorts = [["ai", "Recommandé IA", "robot"], ["cheapest", "Moins cher", "wallet"], ["coverage", "Meilleure couverture", "shield"]];
@@ -424,7 +427,7 @@
       '<div class="row" style="margin-top:18px"><button class="btn btn-ghost" data-prev="1">' + I("arrowLeft", 16) + ' Modifier la formule</button></div></div>';
   }
   function quoteStepPayment() {
-    var v = Store.vehicle(wiz.vehicleId);
+    var v = DB.vehicle(wiz.vehicleId);
     var o = wiz.offer;
     var methods = [
       ["orange", "Orange Money", "#ff6600"], ["mtn", "MTN MoMo", "#ffcc00"], ["moov", "Moov Money", "#00a0e3"],
@@ -435,7 +438,7 @@
         '<div class="pay-grid">' + methods.map(function (m) {
           return '<div class="pay-opt ' + (m[0] === wiz.payMethod ? "is-active" : "") + '" data-pay="' + m[0] + '"><div class="pay-logo" style="background:' + m[2] + (m[0] === "mtn" ? ";color:#000" : "") + '">' + m[1].split(" ")[0] + '</div>' + m[1] + '</div>';
         }).join("") + '</div>' +
-        '<div class="field" style="margin-top:16px"><span class="label">Numéro de téléphone / carte</span><div class="input-group"><span class="ig-icon">' + I("phone", 18) + '</span><input class="input" id="payNumber" placeholder="+225 07 00 00 00" value="' + esc(Store.currentUser().phone || "") + '" /></div></div>' +
+        '<div class="field" style="margin-top:16px"><span class="label">Numéro de téléphone / carte</span><div class="input-group"><span class="ig-icon">' + I("phone", 18) + '</span><input class="input" id="payNumber" placeholder="+225 07 00 00 00" value="' + esc(DB.currentUser().phone || "") + '" /></div></div>' +
         '<button class="btn btn-primary btn-block btn-lg" id="payBtn" style="margin-top:18px">' + I("lock", 18) + ' Payer ' + fcfa(o.price) + '</button>' +
         '<p class="center muted" style="font-size:.8rem;margin-top:10px">' + I("lock", 13) + ' Paiement chiffré · démo (aucun débit réel)</p>' +
       '</div>' +
@@ -463,7 +466,7 @@
     root.querySelectorAll("[data-pick]").forEach(function (b) {
       b.addEventListener("click", function () {
         var id = b.getAttribute("data-pick");
-        var v = Store.vehicle(wiz.vehicleId);
+        var v = DB.vehicle(wiz.vehicleId);
         var offers = PRICING.computeQuotes(v, wiz.coverageId, wiz.months);
         wiz.offer = offers.filter(function (o) { return o.insurerId === id; })[0];
         wiz.step = 3; render();
@@ -478,7 +481,7 @@
     btn.classList.add("is-loading");
     btn.innerHTML = I("refresh", 18) + " Traitement du paiement…";
     setTimeout(function () {
-      var c = Store.createContract(wiz.offer, wiz.vehicleId, wiz.payMethod);
+      var c = DB.createContract(wiz.offer, wiz.vehicleId, wiz.payMethod);
       UI.toast("Paiement réussi — contrat généré !", "success");
       var id = c.id; wiz = null; nav("#contract/" + id);
     }, 1700);
@@ -486,7 +489,7 @@
 
   /* ------------------------------------------------------------- Contracts */
   function viewContracts(user) {
-    var contracts = Store.contracts();
+    var contracts = DB.contracts();
     var active = contracts.filter(function (c) { return c.status === "active"; });
     var expired = contracts.filter(function (c) { return c.status !== "active"; });
     var content =
@@ -501,7 +504,7 @@
   }
   function contractFull(c) {
     var ins = PRICING.INSURERS.filter(function (x) { return x.id === c.insurerId; })[0] || { accent: "#1F7A8C" };
-    var v = Store.vehicle(c.vehicleId) || {};
+    var v = DB.vehicle(c.vehicleId) || {};
     var days = UI.daysBetween(new Date(), c.endDate);
     return '<a href="#contract/' + c.id + '" class="card card-hover" style="display:block;text-decoration:none;color:inherit"><div class="contract-card">' +
       '<div class="cc-head"><span class="cc-logo" style="background:' + ins.accent + '">' + esc((c.insurer || "?").slice(0, 1)) + '</span>' +
@@ -515,9 +518,9 @@
   }
 
   function viewContract(id) {
-    var c = Store.contracts().filter(function (x) { return x.id === id; })[0];
+    var c = DB.contracts().filter(function (x) { return x.id === id; })[0];
     if (!c) return shell({ title: "Contrat", active: "contracts", content: emptyState("file", "Contrat introuvable", "", "#contracts", "Retour aux contrats") });
-    var v = Store.vehicle(c.vehicleId) || {};
+    var v = DB.vehicle(c.vehicleId) || {};
     var ins = PRICING.INSURERS.filter(function (x) { return x.id === c.insurerId; })[0] || { accent: "#1F7A8C" };
     var days = UI.daysBetween(new Date(), c.endDate);
     var verifyUrl = location.origin + location.pathname.replace(/[^/]*$/, "") + "verify.html?n=" + encodeURIComponent(c.number) + "&t=" + encodeURIComponent(c.verifyToken);
@@ -531,7 +534,7 @@
       '<div class="doc-body"><div class="doc-grid">' +
         di("N° de contrat", esc(c.number)) +
         di("Assureur", esc(c.insurer)) +
-        di("Assuré", esc(Store.currentUser().name)) +
+        di("Assuré", esc(DB.currentUser().name)) +
         di("Véhicule", esc(v.brand + " " + v.model + " (" + v.year + ")")) +
         di("Immatriculation", esc(v.plate)) +
         di("Prime payée", fcfa(c.price)) +
@@ -557,13 +560,13 @@
       if (rb) rb.addEventListener("click", function () {
         UI.modal({ title: "Renouveler le contrat", body: '<p>Renouveler <b>' + esc(c.number) + '</b> pour <b>' + c.months + ' mois</b> au tarif de <b>' + fcfa(c.price) + '</b> ?</p>',
           foot: '<button class="btn btn-ghost" data-close style="flex:1">Annuler</button><button class="btn btn-accent" id="doRenew" style="flex:1">Confirmer & payer</button>',
-          onMount: function (bd, close) { bd.querySelector("#doRenew").addEventListener("click", function () { var nc = Store.renewContract(c.id); close(); UI.toast("Contrat renouvelé ✅", "success"); nav("#contract/" + nc.id); }); } });
+          onMount: function (bd, close) { bd.querySelector("#doRenew").addEventListener("click", function () { var nc = DB.renewContract(c.id); close(); UI.toast("Contrat renouvelé ✅", "success"); nav("#contract/" + nc.id); }); } });
       });
     }});
   }
   function di(k, v) { return '<div class="di"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; }
   function downloadContract(c, v) {
-    var u = Store.currentUser();
+    var u = DB.currentUser();
     var txt = "ASSUR CHAP — ATTESTATION D'ASSURANCE AUTOMOBILE\n" +
       "==================================================\n\n" +
       "N° de contrat : " + c.number + "\nAssureur : " + c.insurer + "\nFormule : " + c.coverageName + "\n\n" +
@@ -579,7 +582,7 @@
 
   /* ---------------------------------------------------------------- Claims */
   function viewClaims(user) {
-    var claims = Store.claims();
+    var claims = DB.claims();
     var content =
       '<div class="hello"><div><h2>Sinistres</h2><p class="muted">Déclarez et suivez vos sinistres en temps réel.</p></div>' +
       '<a href="#claim-new" class="btn btn-accent">' + I("plus", 18) + ' Déclarer</a></div>' +
@@ -588,7 +591,7 @@
     shell({ title: "Sinistres", active: "claims", content: content });
   }
   function claimCard(c) {
-    var v = Store.vehicle(c.vehicleId) || {};
+    var v = DB.vehicle(c.vehicleId) || {};
     return '<div class="card"><div class="row-between" style="flex-wrap:wrap;gap:10px"><div class="row"><span class="icon-tile accent">' + I("warning", 22) + '</span>' +
       '<div><div style="font-weight:700">' + esc(c.type) + ' · ' + esc(v.brand + " " + v.model) + '</div><div class="muted" style="font-size:.85rem">' + fdate(c.createdAt) + ' · ' + esc(c.location || "—") + '</div></div></div>' +
       '<span class="badge badge-warning"><span class="dot"></span>' + esc(c.status) + '</span></div>' +
@@ -598,13 +601,13 @@
       }).join("") + '</div></div>';
   }
   function viewClaimNew(user) {
-    var contracts = Store.contracts().filter(function (c) { return c.status === "active"; });
+    var contracts = DB.contracts().filter(function (c) { return c.status === "active"; });
     var content =
       '<a href="#claims" class="btn btn-ghost btn-sm" style="margin-bottom:16px">' + I("arrowLeft", 16) + ' Retour</a>' +
       '<div class="wizard-head"><h2>Déclarer un sinistre</h2><p class="muted">L\'assistant IA analyse votre dossier pour accélérer l\'indemnisation.</p></div>' +
       (contracts.length ?
       '<form id="clForm" class="card" style="max-width:680px"><div class="form-grid">' +
-        field2("Contrat concerné", '<select class="select" name="contractId">' + contracts.map(function (c) { var v = Store.vehicle(c.vehicleId) || {}; return '<option value="' + c.id + '">' + esc(c.number + " · " + v.brand + " " + v.model) + '</option>'; }).join("") + '</select>', "full") +
+        field2("Contrat concerné", '<select class="select" name="contractId">' + contracts.map(function (c) { var v = DB.vehicle(c.vehicleId) || {}; return '<option value="' + c.id + '">' + esc(c.number + " · " + v.brand + " " + v.model) + '</option>'; }).join("") + '</select>', "full") +
         field2("Type de sinistre", select("type", ["Collision", "Vol", "Incendie", "Bris de glace", "Vandalisme", "Catastrophe naturelle"])) +
         field2("Localisation (GPS)", '<div class="input-group"><span class="ig-icon">' + I("location", 18) + '</span><input class="input" name="location" placeholder="Abidjan, Cocody" /></div>') +
         field2("Description de l\'accident", '<textarea class="textarea" name="description" placeholder="Décrivez les circonstances…" required></textarea>', "full") +
@@ -618,8 +621,8 @@
       if (up) up.addEventListener("click", function () { nbFiles += Math.floor(Math.random() * 2) + 1; document.getElementById("claimFiles").innerHTML = I("checkCircle", 15) + " " + nbFiles + " fichier(s) ajouté(s) · analysés par l'IA (aucune fraude détectée)"; });
       var form = document.getElementById("clForm");
       if (form) form.addEventListener("submit", function (e) {
-        e.preventDefault(); var f = e.target; var ct = Store.contracts().filter(function (x) { return x.id === f.contractId.value; })[0];
-        Store.addClaim({ contractId: f.contractId.value, vehicleId: ct ? ct.vehicleId : null, type: f.type.value, location: f.location.value.trim(), description: f.description.value.trim(), photos: nbFiles });
+        e.preventDefault(); var f = e.target; var ct = DB.contracts().filter(function (x) { return x.id === f.contractId.value; })[0];
+        DB.addClaim({ contractId: f.contractId.value, vehicleId: ct ? ct.vehicleId : null, type: f.type.value, location: f.location.value.trim(), description: f.description.value.trim(), photos: nbFiles });
         UI.toast("Sinistre déclaré — suivi disponible", "success"); nav("#claims");
       });
     }});
@@ -685,8 +688,8 @@
 
   /* --------------------------------------------------------- Notifications */
   function viewNotifications(user) {
-    var notifs = Store.notifications();
-    Store.markAllRead();
+    var notifs = DB.notifications();
+    DB.markAllRead();
     var content =
       '<div class="hello"><div><h2>Notifications</h2><p class="muted">WhatsApp · SMS · Email · Push</p></div></div>' +
       (notifs.length ? '<div class="card">' + notifs.map(function (n) {
@@ -721,10 +724,10 @@
           '<button class="btn btn-ghost btn-block" style="justify-content:flex-start;margin-top:8px" id="resetData">' + I("refresh", 18) + ' Réinitialiser les données démo</button></div>' +
       '</div></div>';
     shell({ title: "Profil", active: "dashboard", content: content, onMount: function () {
-      document.getElementById("profForm").addEventListener("submit", function (e) { e.preventDefault(); var f = e.target; user.name = f.name.value; user.email = f.email.value; user.phone = f.phone.value; Store._save(); UI.toast("Profil mis à jour", "success"); render(); });
+      document.getElementById("profForm").addEventListener("submit", function (e) { e.preventDefault(); var f = e.target; user.name = f.name.value; user.email = f.email.value; user.phone = f.phone.value; DB._save(); UI.toast("Profil mis à jour", "success"); render(); });
       document.getElementById("prefTheme").addEventListener("change", function () { UI.Theme.toggle(); render(); });
       document.getElementById("prefLang").addEventListener("click", function () { I18N.toggle(); render(); });
-      document.getElementById("resetData").addEventListener("click", function () { Store.reset(); UI.toast("Données démo réinitialisées", "info"); nav("#dashboard"); });
+      document.getElementById("resetData").addEventListener("click", function () { DB.reset(); UI.toast("Données démo réinitialisées", "info"); nav("#dashboard"); });
     }});
   }
   function prefRow(label, control) { return '<div class="list-row"><span style="flex:1;font-weight:500">' + label + '</span>' + control + '</div>'; }
