@@ -1,19 +1,23 @@
 "use client";
 // ==========================================================================
-// Assur Chap — Provider d'authentification (mock store, prêt pour Supabase)
+// Assur Chap — Provider d'authentification
+// Supabase Auth en production, repli local (store) en mode démo.
 // ==========================================================================
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { getStore } from "@/lib/store";
+import { getBackend, backendMode } from "@/lib/backend";
+import { getSupabase } from "@/lib/supabase/client";
+import type { AuthResult } from "@/lib/backend/types";
 import type { User } from "@/lib/types";
 
 interface AuthContext {
   user: User | null;
   ready: boolean;
-  login: (identifier: string, password: string) => { user?: User; error?: string };
-  loginAs: (id: string) => void;
-  register: (data: { name: string; email: string; phone?: string; password?: string }) => { user?: User; error?: string };
-  logout: () => void;
-  refresh: () => void;
+  mode: "supabase" | "local";
+  login: (identifier: string, password: string) => Promise<AuthResult>;
+  register: (data: { name: string; email: string; phone?: string; password?: string; referredBy?: string | null }) => Promise<AuthResult>;
+  loginDemo: () => Promise<AuthResult>;
+  logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const Ctx = createContext<AuthContext | null>(null);
@@ -21,39 +25,62 @@ const Ctx = createContext<AuthContext | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  const mode = backendMode();
+
+  const refresh = useCallback(async () => {
+    setUser(await getBackend().getCurrentUser());
+  }, []);
 
   useEffect(() => {
-    const s = getStore();
-    s.reload();
-    setUser(s.currentUser());
-    setReady(true);
+    let active = true;
+    getBackend()
+      .getCurrentUser()
+      .then((u) => {
+        if (active) {
+          setUser(u);
+          setReady(true);
+        }
+      })
+      .catch(() => active && setReady(true));
+
+    // Garde la session synchronisée avec Supabase (refresh token, multi-onglets)
+    const client = getSupabase();
+    const sub = client?.auth.onAuthStateChange(() => {
+      getBackend()
+        .getCurrentUser()
+        .then((u) => active && setUser(u))
+        .catch(() => {});
+    });
+    return () => {
+      active = false;
+      sub?.data.subscription.unsubscribe();
+    };
   }, []);
 
-  const refresh = useCallback(() => setUser(getStore().currentUser()), []);
-
-  const login = useCallback((identifier: string, password: string) => {
-    const res = getStore().login(identifier, password);
+  const login = useCallback(async (identifier: string, password: string) => {
+    const res = await getBackend().login(identifier, password);
     if (res.user) setUser(res.user);
     return res;
   }, []);
 
-  const loginAs = useCallback((id: string) => {
-    const u = getStore().loginAs(id);
-    setUser(u);
-  }, []);
-
-  const register = useCallback((data: { name: string; email: string; phone?: string; password?: string }) => {
-    const res = getStore().register(data);
+  const register = useCallback(async (data: { name: string; email: string; phone?: string; password?: string; referredBy?: string | null }) => {
+    const res = await getBackend().register(data);
     if (res.user) setUser(res.user);
     return res;
   }, []);
 
-  const logout = useCallback(() => {
-    getStore().logout();
+  const loginDemo = useCallback(async () => {
+    const res = await getBackend().loginDemo();
+    if (res.user) setUser(res.user);
+    return res;
+  }, []);
+
+  const logout = useCallback(async () => {
+    await getBackend().logout();
     setUser(null);
   }, []);
 
-  return <Ctx.Provider value={{ user, ready, login, loginAs, register, logout, refresh }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, ready, mode, login, register, loginDemo, logout, refresh }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth(): AuthContext {

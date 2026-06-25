@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthShell } from "@/components/AuthShell";
 import { Icon } from "@/components/Icons";
 import { useAuth } from "@/providers/AuthProvider";
@@ -18,16 +18,31 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [referredBy, setReferredBy] = useState<string | null>(null);
 
-  function submit(e: React.FormEvent) {
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) setReferredBy(ref);
+  }, []);
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     if (!name || !email) {
       setError("Nom et email requis.");
       return;
     }
-    const res = register({ name, email, phone, password });
+    setBusy(true);
+    const res = await register({ name, email, phone, password, referredBy });
+    setBusy(false);
     if (res.error) {
       setError(res.error);
+      return;
+    }
+    if (res.info && !res.user) {
+      toast(res.info, "info");
+      router.push("/login");
       return;
     }
     toast("Compte créé 🎉", "ok");
@@ -59,7 +74,7 @@ export default function RegisterPage() {
           <input className="input" type="password" placeholder="••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
           {error && <span className="input-error">{error}</span>}
         </div>
-        <button className="btn btn-primary btn-block btn-lg" type="submit">
+        <button className={`btn btn-primary btn-block btn-lg ${busy ? "is-loading" : ""}`} type="submit" disabled={busy}>
           {t("auth.register")} <Icon.arrowRight size={18} />
         </button>
       </form>

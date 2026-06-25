@@ -9,7 +9,7 @@ import { Modal } from "@/components/ui";
 import { ContractCard } from "@/components/cards";
 import { ContractDoc } from "@/components/ContractDoc";
 import { useToast } from "@/components/Toast";
-import { getStore } from "@/lib/store";
+import { getBackend } from "@/lib/backend";
 import { INSURERS } from "@/lib/pricing";
 import type { Contract, Vehicle } from "@/lib/types";
 
@@ -24,16 +24,24 @@ export default function ContractsPage() {
   const [view, setView] = useState<Contract | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "expired">("all");
 
-  function refresh() {
-    setContracts(getStore().contracts());
-    setVehicles(getStore().vehicles());
+  async function refresh() {
+    const b = getBackend();
+    const [c, v] = await Promise.all([b.getContracts(), b.getVehicles()]);
+    setContracts(c);
+    setVehicles(v);
   }
-  useEffect(refresh, []);
-
-  function renew(id: string) {
-    getStore().renewContract(id);
-    toast("Contrat renouvelé 🔁", "ok");
+  useEffect(() => {
     refresh();
+  }, []);
+
+  async function renew(id: string) {
+    try {
+      await getBackend().renewContract(id);
+      toast("Contrat renouvelé 🔁", "ok");
+      await refresh();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Erreur lors du renouvellement", "err");
+    }
   }
 
   const filtered = contracts.filter((c) => (filter === "all" ? true : c.status === filter));

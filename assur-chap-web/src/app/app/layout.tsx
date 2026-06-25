@@ -29,7 +29,7 @@ const BOTTOM: { href: string; icon: IconName; key: string }[] = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, ready, logout } = useAuth();
+  const { user, ready, logout, mode } = useAuth();
   const { t } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
@@ -78,8 +78,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="side-foot">
           <button
             className="side-link"
-            onClick={() => {
-              logout();
+            onClick={async () => {
+              await logout();
               router.push("/");
             }}
           >
@@ -94,6 +94,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="main">
         <header className="topbar">
           <h1>{current ? t(current.key) : "Assur Chap"}</h1>
+          {mode === "local" && (
+            <span className="badge badge-warning" title="Supabase non configuré — données locales de démonstration">
+              <span className="dot" /> Démo
+            </span>
+          )}
           <span className="spacer" />
           <LangToggle />
           <ThemeToggle />

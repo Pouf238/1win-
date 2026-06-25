@@ -4,7 +4,7 @@
 // ==========================================================================
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icons";
-import { getStore } from "@/lib/store";
+import { getBackend } from "@/lib/backend";
 import { fcfa, formatDate } from "@/lib/format";
 import type { Contract, Payment } from "@/lib/types";
 
@@ -22,8 +22,11 @@ export default function PaymentsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
 
   useEffect(() => {
-    setPayments(getStore().payments());
-    setContracts(getStore().contracts());
+    const b = getBackend();
+    Promise.all([b.getPayments(), b.getContracts()]).then(([p, c]) => {
+      setPayments(p);
+      setContracts(c);
+    });
   }, []);
 
   const total = payments.reduce((s, p) => s + p.amount, 0);

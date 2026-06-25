@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icons";
 import { Modal } from "@/components/ui";
 import { useToast } from "@/components/Toast";
-import { getStore } from "@/lib/store";
+import { getBackend } from "@/lib/backend";
 import { formatDate } from "@/lib/format";
 import type { Claim, Contract } from "@/lib/types";
 
@@ -23,35 +23,43 @@ export default function ClaimsPage() {
   const [location, setLocation] = useState("");
   const [gps, setGps] = useState(false);
 
-  function refresh() {
-    setClaims(getStore().claims());
-    const cs = getStore().contracts().filter((c) => c.status === "active");
+  async function refresh() {
+    const b = getBackend();
+    const [cl, all] = await Promise.all([b.getClaims(), b.getContracts()]);
+    setClaims(cl);
+    const cs = all.filter((c) => c.status === "active");
     setContracts(cs);
     if (cs[0]) setContractId(cs[0].id);
   }
-  useEffect(refresh, []);
+  useEffect(() => {
+    refresh();
+  }, []);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!contractId || !description) {
       toast("Contrat et description requis.", "err");
       return;
     }
     const c = contracts.find((x) => x.id === contractId);
-    getStore().addClaim({
-      contractId,
-      vehicleId: c?.vehicleId || "",
-      type,
-      description,
-      location: location || "Position non précisée",
-      photos: 0,
-    });
-    toast("Sinistre déclaré ✅", "ok");
-    setOpen(false);
-    setDescription("");
-    setLocation("");
-    setGps(false);
-    refresh();
+    try {
+      await getBackend().addClaim({
+        contractId,
+        vehicleId: c?.vehicleId || "",
+        type,
+        description,
+        location: location || "Position non précisée",
+        photos: 0,
+      });
+      toast("Sinistre déclaré ✅", "ok");
+      setOpen(false);
+      setDescription("");
+      setLocation("");
+      setGps(false);
+      await refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur lors de la déclaration", "err");
+    }
   }
 
   return (

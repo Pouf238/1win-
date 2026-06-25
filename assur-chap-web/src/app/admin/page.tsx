@@ -9,8 +9,8 @@ import { Icon, type IconName } from "@/components/Icons";
 import { Logo, ThemeToggle, LangToggle } from "@/components/ui";
 import { StatusBadge } from "@/components/cards";
 import { useAuth } from "@/providers/AuthProvider";
-import { getStore } from "@/lib/store";
-import { fcfa, formatDate, initials } from "@/lib/format";
+import { getBackend } from "@/lib/backend";
+import { fcfa, initials } from "@/lib/format";
 import type { AdminStats, Claim, Contract, User } from "@/lib/types";
 
 export default function AdminPage() {
@@ -29,11 +29,13 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (user?.role !== "admin") return;
-    const s = getStore();
-    setStats(s.adminStats());
-    setContracts([...s.db.contracts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    setUsers(s.db.users);
-    setClaims(s.db.claims);
+    const b = getBackend();
+    Promise.all([b.adminStats(), b.adminData()]).then(([s, d]) => {
+      setStats(s);
+      setContracts(d.contracts);
+      setUsers(d.users);
+      setClaims(d.claims);
+    });
   }, [user]);
 
   if (!ready || user?.role !== "admin" || !stats) {

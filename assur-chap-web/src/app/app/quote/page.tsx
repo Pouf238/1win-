@@ -9,7 +9,7 @@ import { Icon } from "@/components/Icons";
 import { OfferCard } from "@/components/cards";
 import { ContractDoc } from "@/components/ContractDoc";
 import { useToast } from "@/components/Toast";
-import { getStore } from "@/lib/store";
+import { getBackend } from "@/lib/backend";
 import { COVERAGES, DURATIONS, computeQuotes, sortOffers, type SortMode } from "@/lib/pricing";
 import { fcfa } from "@/lib/format";
 import type { CoverageId, Contract, Offer, Vehicle } from "@/lib/types";
@@ -42,15 +42,23 @@ function QuoteWizard() {
   const [contract, setContract] = useState<Contract | null>(null);
 
   useEffect(() => {
-    const vs = getStore().vehicles();
-    setVehicles(vs);
-    const pre = params.get("vehicle");
-    if (pre && vs.some((v) => v.id === pre)) {
-      setVehicleId(pre);
-      setStep(1);
-    } else if (vs.length > 0) {
-      setVehicleId(vs[0].id);
-    }
+    let active = true;
+    getBackend()
+      .getVehicles()
+      .then((vs) => {
+        if (!active) return;
+        setVehicles(vs);
+        const pre = params.get("vehicle");
+        if (pre && vs.some((v) => v.id === pre)) {
+          setVehicleId(pre);
+          setStep(1);
+        } else if (vs.length > 0) {
+          setVehicleId(vs[0].id);
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, [params]);
 
   const vehicle = vehicles.find((v) => v.id === vehicleId);
@@ -65,16 +73,23 @@ function QuoteWizard() {
     return sortOffers(computeQuotes(vehicle, coverage, months), "ai")[0]?.insurerId;
   }, [vehicle, coverage, months]);
 
-  function pay() {
+  async function pay() {
     if (!chosen || !vehicle) return;
     setPaying(true);
-    setTimeout(() => {
-      const c = getStore().createContract(chosen, vehicle.id, method);
+    try {
+      const c = await getBackend().createContract(chosen, vehicle.id, method);
+      if (!c) {
+        // Redirection vers la page de paiement du prestataire (paiement réel)
+        return;
+      }
       setContract(c);
-      setPaying(false);
       setStep(4);
       toast("Paiement confirmé ✅ Contrat généré", "ok");
-    }, 1400);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Échec du paiement", "err");
+    } finally {
+      setPaying(false);
+    }
   }
 
   if (vehicles.length === 0) {

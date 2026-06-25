@@ -9,7 +9,7 @@ import { Icon, type IconName } from "@/components/Icons";
 import { ContractCard, VehicleCard } from "@/components/cards";
 import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/components/Toast";
-import { getStore } from "@/lib/store";
+import { getBackend } from "@/lib/backend";
 import { INSURERS } from "@/lib/pricing";
 import { fcfa, daysUntil } from "@/lib/format";
 import type { Contract, Notification, Payment, Vehicle } from "@/lib/types";
@@ -30,17 +30,20 @@ export default function Dashboard() {
     notifs: Notification[];
   }>({ contracts: [], vehicles: [], payments: [], notifs: [] });
 
-  function refresh() {
-    const s = getStore();
-    setData({
-      contracts: s.contracts(),
-      vehicles: s.vehicles(),
-      payments: s.payments(),
-      notifs: s.notifications(),
-    });
+  async function refresh() {
+    const b = getBackend();
+    const [contracts, vehicles, payments, notifs] = await Promise.all([
+      b.getContracts(),
+      b.getVehicles(),
+      b.getPayments(),
+      b.getNotifications(),
+    ]);
+    setData({ contracts, vehicles, payments, notifs });
   }
 
-  useEffect(refresh, []);
+  useEffect(() => {
+    refresh();
+  }, []);
 
   const active = data.contracts.filter((c) => c.status === "active");
   const expiring = active.filter((c) => daysUntil(c.endDate) <= 30);
@@ -53,11 +56,15 @@ export default function Dashboard() {
     { v: String(expiring.length), l: "À renouveler", icon: "clock" },
   ];
 
-  function renew(id: string) {
-    getStore().renewContract(id);
-    toast("Contrat renouvelé 🔁", "ok");
-    refresh();
-    setTick((t) => t + 1);
+  async function renew(id: string) {
+    try {
+      await getBackend().renewContract(id);
+      toast("Contrat renouvelé 🔁", "ok");
+      await refresh();
+      setTick((t) => t + 1);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Erreur lors du renouvellement", "err");
+    }
   }
 
   return (

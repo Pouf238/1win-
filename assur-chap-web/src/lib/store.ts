@@ -219,6 +219,16 @@ class StoreImpl {
     this._save();
   }
 
+  updateProfile(d: { name: string; email: string; phone: string }): User | null {
+    const u = this.currentUser();
+    if (!u) return null;
+    u.name = d.name;
+    u.email = d.email;
+    u.phone = d.phone;
+    this._save();
+    return u;
+  }
+
   /* ---- Véhicules ---- */
   vehicles(userId?: string): Vehicle[] {
     const id = userId || this.db.session;

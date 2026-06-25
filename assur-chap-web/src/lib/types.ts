@@ -9,7 +9,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  password: string;
+  password?: string; // mode local uniquement (jamais renseigné en Supabase)
   role: Role;
   referralCode: string;
   referredBy?: string | null;
@@ -76,7 +76,20 @@ export interface Offer {
   aiScore: number;
 }
 
-export type ContractStatus = "active" | "expired" | "cancelled";
+export type ContractStatus = "pending" | "active" | "expired" | "cancelled";
+
+export interface VerifyResult {
+  valid: boolean;
+  contract_number: string;
+  insurer: string;
+  coverage_name: string;
+  insured_name: string;
+  vehicle: string;
+  plate: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+}
 
 export interface Contract {
   id: string;

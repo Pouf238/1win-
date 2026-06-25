@@ -10,8 +10,8 @@ import type { Contract, Vehicle } from "@/lib/types";
 
 export function ContractDoc({ contract, vehicle, onDownload }: { contract: Contract; vehicle?: Vehicle; onDownload?: () => void }) {
   const [qr, setQr] = useState("");
-  const verifyUrl =
-    (typeof window !== "undefined" ? window.location.origin : "") + "/verify/" + contract.verifyToken;
+  const verifyPath = `/verify?n=${encodeURIComponent(contract.number)}&t=${encodeURIComponent(contract.verifyToken)}`;
+  const verifyUrl = (typeof window !== "undefined" ? window.location.origin : "") + verifyPath;
 
   useEffect(() => {
     qrDataUrl(verifyUrl).then(setQr);
@@ -86,7 +86,7 @@ export function ContractDoc({ contract, vehicle, onDownload }: { contract: Contr
               Scannez le QR code ou visitez la page de vérification pour confirmer la validité de ce contrat.
             </div>
             <div className="row gap-sm wrap" style={{ marginTop: 10 }}>
-              <a className="btn btn-soft btn-sm" href={"/verify/" + contract.verifyToken} target="_blank" rel="noreferrer">
+              <a className="btn btn-soft btn-sm" href={verifyPath} target="_blank" rel="noreferrer">
                 <Icon.qr size={15} /> Page de vérification
               </a>
               {onDownload && (

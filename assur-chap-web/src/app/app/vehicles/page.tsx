@@ -8,7 +8,7 @@ import { Icon } from "@/components/Icons";
 import { Modal } from "@/components/ui";
 import { VehicleCard } from "@/components/cards";
 import { useToast } from "@/components/Toast";
-import { getStore } from "@/lib/store";
+import { getBackend } from "@/lib/backend";
 import type { Usage, Vehicle } from "@/lib/types";
 
 const EMPTY = {
@@ -30,32 +30,42 @@ export default function VehiclesPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
-  function refresh() {
-    setVehicles(getStore().vehicles());
+  async function refresh() {
+    setVehicles(await getBackend().getVehicles());
   }
-  useEffect(refresh, []);
+  useEffect(() => {
+    refresh();
+  }, []);
 
   function set<K extends keyof typeof EMPTY>(k: K, v: (typeof EMPTY)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  function save(e: React.FormEvent) {
+  async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!form.brand || !form.model || !form.plate) {
       toast("Marque, modèle et immatriculation requis.", "err");
       return;
     }
-    getStore().addVehicle(form);
-    toast("Véhicule ajouté 🚗", "ok");
-    setOpen(false);
-    setForm(EMPTY);
-    refresh();
+    try {
+      await getBackend().addVehicle(form);
+      toast("Véhicule ajouté 🚗", "ok");
+      setOpen(false);
+      setForm(EMPTY);
+      await refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur lors de l'ajout", "err");
+    }
   }
 
-  function remove(id: string) {
-    getStore().removeVehicle(id);
-    toast("Véhicule retiré.", "info");
-    refresh();
+  async function remove(id: string) {
+    try {
+      await getBackend().removeVehicle(id);
+      toast("Véhicule retiré.", "info");
+      await refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur lors de la suppression", "err");
+    }
   }
 
   return (

@@ -10,16 +10,20 @@ import { useToast } from "@/components/Toast";
 
 export default function LoginPage() {
   const { t } = useI18n();
-  const { login, loginAs } = useAuth();
+  const { login, loginDemo } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const res = login(identifier, password);
+    setError("");
+    setBusy(true);
+    const res = await login(identifier, password);
+    setBusy(false);
     if (res.error) {
       setError(res.error);
       return;
@@ -28,8 +32,14 @@ export default function LoginPage() {
     router.push(res.user?.role === "admin" ? "/admin" : "/app");
   }
 
-  function demo() {
-    loginAs("u_demo");
+  async function demo() {
+    setBusy(true);
+    const res = await loginDemo();
+    setBusy(false);
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
     toast("Bienvenue sur le compte démo", "ok");
     router.push("/app");
   }
@@ -64,7 +74,7 @@ export default function LoginPage() {
           />
           {error && <span className="input-error">{error}</span>}
         </div>
-        <button className="btn btn-primary btn-block btn-lg" type="submit">
+        <button className={`btn btn-primary btn-block btn-lg ${busy ? "is-loading" : ""}`} type="submit" disabled={busy}>
           {t("auth.login")} <Icon.arrowRight size={18} />
         </button>
       </form>
@@ -82,7 +92,7 @@ export default function LoginPage() {
         </button>
       </div>
 
-      <button className="btn btn-soft btn-block" style={{ marginTop: 12 }} onClick={demo}>
+      <button className="btn btn-soft btn-block" style={{ marginTop: 12 }} onClick={demo} disabled={busy}>
         <Icon.sparkle size={18} /> {t("auth.demo")}
       </button>
 
