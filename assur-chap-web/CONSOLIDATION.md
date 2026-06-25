@@ -62,9 +62,9 @@ automatique quand Supabase n'est pas configuré.
    l'environnement). À lancer en local — voir « Tests » ci-dessous.
 2. **Déployer le backend Supabase** : appliquer les 4 migrations et déployer les
    Edge Functions + leurs secrets (non automatisable depuis ce dépôt).
-3. **Auth SSR par cookies** : l'auth actuelle est côté client (session
-   localStorage), suffisante pour des pages `"use client"`. Pour le rendu serveur
-   et une meilleure sécurité, migrer vers `@supabase/ssr` + middleware.
+3. ~~Auth SSR par cookies~~ ✅ **Fait** : `@supabase/ssr` + middleware
+   (`src/middleware.ts`), session en cookies partagée client/serveur, protection
+   `/app` & `/admin` + rôles. Voir `AUTH_SSR.md`.
 4. **Realtime** : abonnements Supabase pour notifications/sinistres en temps réel
    (actuellement chargés au montage de page).
 5. **Storage** : upload réel des médias (carte grise OCR, photos de sinistre) —

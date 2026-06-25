@@ -29,7 +29,9 @@ export default function LoginPage() {
       return;
     }
     toast("Connexion réussie 👋", "ok");
-    router.push(res.user?.role === "admin" ? "/admin" : "/app");
+    const redirect = new URLSearchParams(window.location.search).get("redirect");
+    const fallback = res.user?.role === "admin" ? "/admin" : "/app";
+    router.push(redirect && redirect.startsWith("/") ? redirect : fallback);
   }
 
   async function demo() {
