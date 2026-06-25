@@ -87,8 +87,11 @@ automatique quand Supabase n'est pas configuré.
     Business API + Resend) respecte les préférences ; rappels d'expiration
     multicanaux (`expiry-reminders`, seuils 30/15/7/1) ; triggers sinistres
     (migration `0006`) ; notif paiement réussi ; préférences par canal (profil).
-12. **Intégrations restantes** : Google Maps (sinistres), détection de fraude,
-    signature électronique, app React Native.
+12. **App React Native (Expo)** : ✅ **Fondation livrée** dans `../assur-chap-mobile/`
+    (auth, dashboard, devis, contrats, sinistres, assistant, profil ; backend
+    Supabase partagé + mode démo).
+13. **Intégrations restantes** : Google Maps (sinistres), détection de fraude,
+    signature électronique ; finalisation mobile (paiement WebBrowser, OCR photo).
 
 ---
 

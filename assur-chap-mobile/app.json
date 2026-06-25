@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Assur Chap",
+    "slug": "assur-chap",
+    "scheme": "assurchap",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1F7A8C"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.assurchap.app"
+    },
+    "android": {
+      "package": "com.assurchap.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1F7A8C"
+      }
+    },
+    "plugins": ["expo-router", "expo-image-picker"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
