@@ -5,7 +5,7 @@
 // ==========================================================================
 import { getStore } from "@/lib/store";
 import { daysUntil } from "@/lib/format";
-import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle, StorageBucket } from "./types";
+import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle, StorageBucket, VehicleOcr } from "./types";
 import type { Offer, User, VerifyResult } from "@/lib/types";
 
 export const localBackend: Backend = {
@@ -87,6 +87,12 @@ export const localBackend: Backend = {
   // Storage simulé (mode démo) : renvoie un chemin factice
   async uploadFile(bucket: StorageBucket, file: File) {
     return `${bucket}/demo/${Date.now()}-${file.name}`;
+  },
+
+  // OCR simulé (mode démo) : échantillon plausible
+  async ocrVehicleDoc(_file: File): Promise<VehicleOcr> {
+    await new Promise((r) => setTimeout(r, 800));
+    return { brand: "Toyota", model: "Corolla", year: 2019, plate: "AB-4521-CI", vin: "JTDBR32E720123456", power: 8, fuel: "essence", simulated: true };
   },
 
   // Pas de realtime en mode local

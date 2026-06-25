@@ -20,7 +20,7 @@ import {
   type UserRow,
   type VehicleRow,
 } from "@/lib/supabase/rows";
-import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle, StorageBucket } from "./types";
+import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle, StorageBucket, VehicleOcr } from "./types";
 import type { AdminStats, Contract, Offer, User, VerifyResult } from "@/lib/types";
 
 let companiesCache: CompanyRow[] = [];
@@ -41,6 +41,19 @@ async function loadCompanies(): Promise<CompanyRow[]> {
 async function companyIdForSlug(slug: string): Promise<string | null> {
   const companies = await loadCompanies();
   return companies.find((c) => c.slug === slug)?.id ?? null;
+}
+
+function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.includes(",") ? result.split(",")[1] : result;
+      resolve({ base64, mimeType: file.type || "image/jpeg" });
+    };
+    reader.onerror = () => reject(new Error("Lecture du fichier impossible"));
+    reader.readAsDataURL(file);
+  });
 }
 
 async function accessToken(): Promise<string | null> {
@@ -269,6 +282,17 @@ export const supabaseBackend: Backend = {
     const { error } = await sb().storage.from(bucket).upload(path, file, { upsert: false });
     if (error) throw new Error(error.message);
     return path;
+  },
+
+  // --- OCR / IA ---
+  async ocrVehicleDoc(file: File): Promise<VehicleOcr> {
+    const { base64, mimeType } = await fileToBase64(file);
+    const res = await callFn<{ error?: string; simulated?: boolean; fields?: VehicleOcr }>("ocr-document", {
+      imageBase64: base64,
+      mimeType,
+    });
+    if (res.error) throw new Error(res.error);
+    return { ...(res.fields ?? {}), simulated: res.simulated };
   },
 
   // --- Realtime ---

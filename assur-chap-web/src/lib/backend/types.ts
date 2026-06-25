@@ -40,6 +40,18 @@ export interface NewClaim {
 
 export type StorageBucket = "documents" | "claims";
 
+/** Champs extraits d'une carte grise par l'OCR (tous optionnels). */
+export interface VehicleOcr {
+  brand?: string;
+  model?: string;
+  year?: number;
+  plate?: string;
+  vin?: string;
+  power?: number;
+  fuel?: string;
+  simulated?: boolean;
+}
+
 export interface AuthResult {
   user?: User;
   error?: string;
@@ -85,6 +97,10 @@ export interface Backend {
   // --- Storage ---
   /** Téléverse un fichier (bucket privé, scope utilisateur) et renvoie son chemin. */
   uploadFile(bucket: StorageBucket, file: File): Promise<string>;
+
+  // --- OCR / IA ---
+  /** Extrait les champs d'une carte grise depuis une image (OpenAI Vision). */
+  ocrVehicleDoc(file: File): Promise<VehicleOcr>;
 
   // --- Realtime ---
   /** S'abonne aux changements de tables (re-fetch côté page). Renvoie une fonction de désabonnement. */

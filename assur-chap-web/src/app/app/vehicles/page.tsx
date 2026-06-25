@@ -12,6 +12,13 @@ import { useToast } from "@/components/Toast";
 import { getBackend } from "@/lib/backend";
 import type { Usage, Vehicle } from "@/lib/types";
 
+const FUEL_LABEL: Record<string, string> = {
+  essence: "Essence",
+  diesel: "Diesel",
+  hybride: "Hybride",
+  electrique: "Électrique",
+};
+
 const EMPTY = {
   brand: "",
   model: "",
@@ -32,8 +39,32 @@ export default function VehiclesPage() {
   const [form, setForm] = useState(EMPTY);
   const [docFile, setDocFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  async function analyze(file: File) {
+    setDocFile(file);
+    setAnalyzing(true);
+    try {
+      const r = await getBackend().ocrVehicleDoc(file);
+      setForm((f) => ({
+        ...f,
+        brand: r.brand ?? f.brand,
+        model: r.model ?? f.model,
+        year: r.year ?? f.year,
+        plate: r.plate ?? f.plate,
+        vin: r.vin ?? f.vin,
+        power: r.power ?? f.power,
+        fuel: r.fuel ? FUEL_LABEL[r.fuel] ?? f.fuel : f.fuel,
+      }));
+      toast(r.simulated ? "Champs pré-remplis (OCR simulé — configurez OpenAI)" : "Carte grise analysée ✅", "ok");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Analyse impossible", "err");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
 
   async function refresh() {
     setError("");
@@ -104,9 +135,9 @@ export default function VehiclesPage() {
             <Icon.sparkle size={20} />
           </span>
           <div>
-            <strong>OCR carte grise (Phase 3)</strong>
+            <strong>OCR carte grise par IA</strong>
             <div className="soft" style={{ fontSize: ".88rem" }}>
-              Bientôt : prenez en photo votre carte grise, l&apos;IA pré-remplira automatiquement ces champs.
+              Cliquez sur « Ajouter », joignez une photo de votre carte grise : l&apos;IA pré-remplit automatiquement les champs.
             </div>
           </div>
         </div>
@@ -182,19 +213,38 @@ export default function VehiclesPage() {
                   </select>
                 </div>
                 <div className="field full">
-                  <label className="label">Carte grise (photo / PDF)</label>
-                  <label className="upload-zone" style={{ display: "block", padding: 18 }}>
+                  <label className="label">
+                    Carte grise — <span className="brand-orange">analyse IA</span> (pré-remplissage auto)
+                  </label>
+                  <label className="upload-zone" style={{ display: "block", padding: 18, pointerEvents: analyzing ? "none" : "auto" }}>
                     <input
                       type="file"
-                      accept="image/*,application/pdf"
+                      accept="image/*"
                       className="hidden"
-                      onChange={(e) => setDocFile(e.target.files?.[0] || null)}
+                      disabled={analyzing}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) analyze(f);
+                      }}
                     />
                     <div className="row gap-sm" style={{ justifyContent: "center" }}>
-                      <Icon.file size={18} />
-                      <span className="soft" style={{ fontSize: ".88rem" }}>
-                        {docFile ? docFile.name : "Joindre la carte grise (optionnel)"}
-                      </span>
+                      {analyzing ? (
+                        <>
+                          <span className="spin">
+                            <Icon.refresh size={18} />
+                          </span>
+                          <span className="soft" style={{ fontSize: ".88rem" }}>
+                            Analyse de la carte grise…
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Icon.sparkle size={18} />
+                          <span className="soft" style={{ fontSize: ".88rem" }}>
+                            {docFile ? docFile.name : "Prendre/joindre la carte grise — l'IA remplit le formulaire"}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </label>
                 </div>

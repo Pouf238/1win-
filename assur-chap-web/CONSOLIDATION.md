@@ -77,8 +77,11 @@ automatique quand Supabase n'est pas configuré.
    Retrait complet à planifier une fois la prod validée.
 8. **États chargement/erreur** : ✅ ajoutés aux pages de données (dashboard,
    véhicules, contrats, sinistres, paiements, admin).
-9. **Intégrations restantes** : OCR/IA (OpenAI), WhatsApp, Resend, Google Maps,
-   détection de fraude, signature électronique, app React Native.
+9. **OCR carte grise** : ✅ **Fait** — Edge Function `ocr-document` (OpenAI Vision)
+   + `Backend.ocrVehicleDoc()` ; analyse auto à l'ajout véhicule (pré-remplissage).
+   Mode simulé sans `OPENAI_API_KEY`.
+10. **Intégrations restantes** : Assistant IA (chat), WhatsApp, Resend, Google Maps,
+    détection de fraude, signature électronique, app React Native.
 
 ---
 
