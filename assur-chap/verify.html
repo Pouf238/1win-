@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vérifier un contrat — Assur Chap</title>
+  <meta name="theme-color" content="#1F7A8C" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <header class="nav"><div class="container nav-inner">
+    <a href="index.html" class="logo"><span class="mark" id="lm"></span><span>Assur<b>Chap</b></span></a>
+    <a href="app.html" class="btn btn-ghost btn-sm">Espace client</a>
+  </div></header>
+
+  <main class="container section" style="max-width:640px">
+    <div class="center" style="margin-bottom:24px">
+      <span class="badge badge-brand"><span class="dot"></span>Vérification publique de contrat</span>
+      <h1 style="font-size:2rem;margin-top:14px">Vérifiez la validité d'un contrat</h1>
+      <p class="muted" style="margin-top:8px">Entrez le numéro de contrat et le code de vérification, ou scannez le QR code du document.</p>
+    </div>
+
+    <div class="card card-pad-lg">
+      <form id="vForm" class="stack" style="--gap:14px">
+        <label class="field"><span class="label">Numéro de contrat</span><input class="input" name="num" placeholder="AC-2026-123456" required /></label>
+        <label class="field"><span class="label">Code de vérification</span><input class="input mono" name="token" placeholder="XXXXXXXX" required /></label>
+        <button class="btn btn-primary btn-block btn-lg">Vérifier le contrat</button>
+      </form>
+    </div>
+    <div id="result" style="margin-top:18px"></div>
+  </main>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/pricing.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/verify.js"></script>
+</body>
+</html>

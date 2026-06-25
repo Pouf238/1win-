@@ -1,0 +1,16 @@
+{
+  "name": "Assur Chap — Assurance auto en ligne",
+  "short_name": "Assur Chap",
+  "description": "Assurez votre véhicule en moins de 3 minutes. Souscrivez, payez par Mobile Money et recevez votre contrat instantanément.",
+  "start_url": "app.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1F7A8C",
+  "theme_color": "#1F7A8C",
+  "lang": "fr",
+  "categories": ["finance", "business"],
+  "icons": [
+    { "src": "assets/icon-512.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
