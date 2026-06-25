@@ -20,7 +20,7 @@ import {
   type UserRow,
   type VehicleRow,
 } from "@/lib/supabase/rows";
-import type { AdminData, AuthResult, Backend, ChatMessage, ChatReply, NewClaim, NewVehicle, StorageBucket, VehicleOcr } from "./types";
+import type { AdminData, AuthResult, Backend, ChatMessage, ChatReply, NewClaim, NewVehicle, NotificationPrefs, StorageBucket, VehicleOcr } from "./types";
 import type { AdminStats, Contract, Offer, User, VerifyResult } from "@/lib/types";
 
 let companiesCache: CompanyRow[] = [];
@@ -271,6 +271,25 @@ export const supabaseBackend: Backend = {
     const { data: au } = await sb().auth.getUser();
     if (!au.user) return;
     await sb().from("notifications").update({ read: true }).eq("user_id", au.user.id).eq("read", false);
+  },
+
+  // --- Préférences de notification ---
+  async getNotificationPrefs(): Promise<NotificationPrefs> {
+    const { data: au } = await sb().auth.getUser();
+    if (!au.user) return { whatsapp: true, email: true, sms: false };
+    const { data } = await sb().from("users").select("notify_whatsapp, notify_email, notify_sms").eq("id", au.user.id).single();
+    const r = (data as { notify_whatsapp?: boolean; notify_email?: boolean; notify_sms?: boolean } | null) ?? {};
+    return { whatsapp: r.notify_whatsapp !== false, email: r.notify_email !== false, sms: r.notify_sms === true };
+  },
+
+  async setNotificationPrefs(prefs: NotificationPrefs): Promise<void> {
+    const { data: au } = await sb().auth.getUser();
+    if (!au.user) return;
+    const { error } = await sb()
+      .from("users")
+      .update({ notify_whatsapp: prefs.whatsapp, notify_email: prefs.email, notify_sms: prefs.sms })
+      .eq("id", au.user.id);
+    if (error) throw new Error(error.message);
   },
 
   // --- Storage ---

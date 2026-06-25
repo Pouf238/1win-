@@ -50,6 +50,12 @@ export interface ChatReply {
   simulated?: boolean;
 }
 
+export interface NotificationPrefs {
+  whatsapp: boolean;
+  email: boolean;
+  sms: boolean;
+}
+
 /** Champs extraits d'une carte grise par l'OCR (tous optionnels). */
 export interface VehicleOcr {
   brand?: string;
@@ -103,6 +109,10 @@ export interface Backend {
 
   getNotifications(): Promise<Notification[]>;
   markAllRead(): Promise<void>;
+
+  // --- Préférences de notification (canaux) ---
+  getNotificationPrefs(): Promise<NotificationPrefs>;
+  setNotificationPrefs(prefs: NotificationPrefs): Promise<void>;
 
   // --- Storage ---
   /** Téléverse un fichier (bucket privé, scope utilisateur) et renvoie son chemin. */

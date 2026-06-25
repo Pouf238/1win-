@@ -8,6 +8,7 @@ import { Icon } from "@/components/Icons";
 import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { getBackend } from "@/lib/backend";
+import type { NotificationPrefs } from "@/lib/backend/types";
 import { initials } from "@/lib/format";
 
 export default function ProfilePage() {
@@ -18,10 +19,28 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
 
   useEffect(() => {
     if (user) setForm({ name: user.name, email: user.email, phone: user.phone || "" });
   }, [user]);
+
+  useEffect(() => {
+    getBackend().getNotificationPrefs().then(setPrefs);
+  }, []);
+
+  async function togglePref(key: keyof NotificationPrefs) {
+    if (!prefs) return;
+    const next = { ...prefs, [key]: !prefs[key] };
+    setPrefs(next);
+    try {
+      await getBackend().setNotificationPrefs(next);
+      toast("Préférences enregistrées", "ok");
+    } catch (err) {
+      setPrefs(prefs); // rollback
+      toast(err instanceof Error ? err.message : "Erreur d'enregistrement", "err");
+    }
+  }
 
   if (!user) return null;
   const link = (typeof window !== "undefined" ? window.location.origin : "") + "/register?ref=" + user.referralCode;
@@ -153,16 +172,31 @@ export default function ProfilePage() {
       </div>
 
       <div className="card stack">
-        <strong>Préférences</strong>
-        <div className="list-row">
-          <Icon.bell size={18} />
-          <span style={{ flex: 1 }}>Notifications WhatsApp & email</span>
-          <span className="badge badge-success">Activées</span>
-        </div>
+        <strong>Préférences de notification</strong>
+        <p className="soft" style={{ fontSize: ".86rem", marginTop: -4 }}>
+          Choisissez comment recevoir vos alertes (paiement, contrat, échéance, sinistre).
+        </p>
+        {([
+          ["whatsapp", "WhatsApp", "phone"],
+          ["email", "Email", "file"],
+          ["sms", "SMS", "bell"],
+        ] as [keyof NotificationPrefs, string, "phone" | "file" | "bell"][]).map(([key, label, icon]) => {
+          const I = Icon[icon];
+          return (
+            <label key={key} className="list-row" style={{ cursor: prefs ? "pointer" : "default" }}>
+              <I size={18} />
+              <span style={{ flex: 1 }}>{label}</span>
+              <span className="switch">
+                <input type="checkbox" checked={prefs ? prefs[key] : false} disabled={!prefs} onChange={() => togglePref(key)} />
+                <span className="track" />
+              </span>
+            </label>
+          );
+        })}
         <div className="list-row">
           <Icon.shield size={18} />
           <span style={{ flex: 1 }}>Double authentification (OTP)</span>
-          <span className="badge">Phase 3</span>
+          <span className="badge">À venir</span>
         </div>
       </div>
 

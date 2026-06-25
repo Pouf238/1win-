@@ -83,8 +83,12 @@ automatique quand Supabase n'est pas configuré.
 10. **Assistant IA (chat)** : ✅ **Fait** — Edge Function `ai-assistant` (OpenAI) +
     `Backend.chat()` + page `/app/assistant` (FR/EN, suggestions). Mode simulé
     (règles) sans `OPENAI_API_KEY`.
-11. **Intégrations restantes** : WhatsApp, Resend (emails), Google Maps, détection
-    de fraude, signature électronique, app React Native.
+11. **Notifications WhatsApp + email** : ✅ **Fait** — `send-notification` (WhatsApp
+    Business API + Resend) respecte les préférences ; rappels d'expiration
+    multicanaux (`expiry-reminders`, seuils 30/15/7/1) ; triggers sinistres
+    (migration `0006`) ; notif paiement réussi ; préférences par canal (profil).
+12. **Intégrations restantes** : Google Maps (sinistres), détection de fraude,
+    signature électronique, app React Native.
 
 ---
 

@@ -83,7 +83,11 @@ Deno.serve(async (req) => {
       method: "POST", headers: fnHeaders, body: JSON.stringify({ contractId: contract!.id }),
     }).catch(() => {});
 
-    // 4) notifications multicanal
+    // 4) notifications multicanal (paiement réussi + contrat généré)
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification`, {
+      method: "POST", headers: fnHeaders,
+      body: JSON.stringify({ userId: payment.user_id, type: "payment_success", contractId: contract!.id, ctx: { amount: payment.amount } }),
+    }).catch(() => {});
     fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification`, {
       method: "POST", headers: fnHeaders,
       body: JSON.stringify({ userId: payment.user_id, type: "contract_issued", contractId: contract!.id }),

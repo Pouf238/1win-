@@ -5,7 +5,7 @@
 // ==========================================================================
 import { getStore } from "@/lib/store";
 import { daysUntil } from "@/lib/format";
-import type { AdminData, AuthResult, Backend, ChatMessage, ChatReply, NewClaim, NewVehicle, StorageBucket, VehicleOcr } from "./types";
+import type { AdminData, AuthResult, Backend, ChatMessage, ChatReply, NewClaim, NewVehicle, NotificationPrefs, StorageBucket, VehicleOcr } from "./types";
 import type { Offer, User, VerifyResult } from "@/lib/types";
 
 export const localBackend: Backend = {
@@ -82,6 +82,24 @@ export const localBackend: Backend = {
 
   async markAllRead() {
     getStore().markAllRead();
+  },
+
+  async getNotificationPrefs(): Promise<NotificationPrefs> {
+    try {
+      const raw = window.localStorage.getItem("ac_notify_prefs");
+      if (raw) return JSON.parse(raw) as NotificationPrefs;
+    } catch {
+      /* ignore */
+    }
+    return { whatsapp: true, email: true, sms: false };
+  },
+
+  async setNotificationPrefs(prefs: NotificationPrefs): Promise<void> {
+    try {
+      window.localStorage.setItem("ac_notify_prefs", JSON.stringify(prefs));
+    } catch {
+      /* ignore */
+    }
   },
 
   // Storage simulé (mode démo) : renvoie un chemin factice

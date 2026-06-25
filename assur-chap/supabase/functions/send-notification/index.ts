@@ -51,7 +51,7 @@ async function sendEmail(to: string, subject: string, html: string) {
 Deno.serve(async (req) => {
   const pre = handleOptions(req); if (pre) return pre;
   try {
-    const { userId, type, contractId, ctx } = await req.json();
+    const { userId, type, contractId, ctx, category } = await req.json();
     const sb = adminClient();
     const { data: user } = await sb.from("users").select("*").eq("id", userId).single();
     if (!user) return json({ error: "Utilisateur introuvable" }, 404);
@@ -62,20 +62,25 @@ Deno.serve(async (req) => {
       if (c) context = { ...context, number: c.contract_number, amount: c.premium, end_date: c.end_date };
     }
     const tpl = template(type, context);
+    const cat = category ?? type;
 
     // Enregistrer la notification (push in-app)
     await sb.from("notifications").insert({
-      user_id: userId, title: tpl.title, body: tpl.body, icon: tpl.icon, channel: "push", category: type,
-      data: { contractId: contractId ?? null },
+      user_id: userId, title: tpl.title, body: tpl.body, icon: tpl.icon, channel: "push", category: cat,
+      data: { contractId: contractId ?? null, ...(ctx ?? {}) },
     });
+
+    // Préférences par canal (colonnes ajoutées en migration 0006 ; défaut = activé)
+    const waOn = user.notify_whatsapp !== false;
+    const emailOn = user.notify_email !== false;
 
     const emailHtml = `<div style="font-family:Inter,Arial,sans-serif"><h2 style="color:#1F7A8C">${tpl.title}</h2><p>${tpl.body}</p><p style="color:#888;font-size:12px">Assur Chap — L'assurance auto digitale</p></div>`;
     const [wa, mail] = await Promise.all([
-      sendWhatsApp(user.phone ?? "", `${tpl.title}\n${tpl.body}`),
-      sendEmail(user.email ?? "", tpl.title, emailHtml),
+      waOn ? sendWhatsApp(user.phone ?? "", `${tpl.title}\n${tpl.body}`) : Promise.resolve({ skipped: "pref_off" }),
+      emailOn ? sendEmail(user.email ?? "", tpl.title, emailHtml) : Promise.resolve({ skipped: "pref_off" }),
     ]);
 
-    return json({ ok: true, whatsapp: wa, email: mail });
+    return json({ ok: true, category: cat, whatsapp: wa, email: mail });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }
