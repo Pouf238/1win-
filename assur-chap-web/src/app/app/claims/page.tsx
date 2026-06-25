@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icons";
 import { Modal } from "@/components/ui";
+import { Loading, ErrorState } from "@/components/Loading";
 import { useToast } from "@/components/Toast";
 import { getBackend } from "@/lib/backend";
 import { formatDate } from "@/lib/format";
@@ -22,17 +23,31 @@ export default function ClaimsPage() {
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [gps, setGps] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function refresh() {
-    const b = getBackend();
-    const [cl, all] = await Promise.all([b.getClaims(), b.getContracts()]);
-    setClaims(cl);
-    const cs = all.filter((c) => c.status === "active");
-    setContracts(cs);
-    if (cs[0]) setContractId(cs[0].id);
+    setError("");
+    try {
+      const b = getBackend();
+      const [cl, all] = await Promise.all([b.getClaims(), b.getContracts()]);
+      setClaims(cl);
+      const cs = all.filter((c) => c.status === "active");
+      setContracts(cs);
+      if (cs[0]) setContractId((prev) => prev || cs[0].id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Chargement impossible");
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     refresh();
+    // Suivi temps réel des sinistres (et de leurs mises à jour)
+    const off = getBackend().onChanges(["claims"], refresh);
+    return off;
   }, []);
 
   async function submit(e: React.FormEvent) {
@@ -42,23 +57,32 @@ export default function ClaimsPage() {
       return;
     }
     const c = contracts.find((x) => x.id === contractId);
+    setBusy(true);
     try {
-      await getBackend().addClaim({
+      const b = getBackend();
+      const mediaUrls: string[] = [];
+      for (const f of files) {
+        mediaUrls.push(await b.uploadFile("claims", f));
+      }
+      await b.addClaim({
         contractId,
         vehicleId: c?.vehicleId || "",
         type,
         description,
         location: location || "Position non précisée",
-        photos: 0,
+        mediaUrls,
       });
       toast("Sinistre déclaré ✅", "ok");
       setOpen(false);
       setDescription("");
       setLocation("");
       setGps(false);
+      setFiles([]);
       await refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur lors de la déclaration", "err");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -80,7 +104,12 @@ export default function ClaimsPage() {
         </div>
       )}
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px,1fr))" }}>
+      {loading ? (
+        <Loading label="Chargement de vos sinistres…" />
+      ) : error ? (
+        <ErrorState message={error} onRetry={refresh} />
+      ) : (
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px,1fr))" }}>
         {claims.map((cl) => (
           <article className="card stack" key={cl.id}>
             <div className="row-between">
@@ -115,7 +144,8 @@ export default function ClaimsPage() {
             <p>Aucun sinistre déclaré. Tant mieux !</p>
           </div>
         )}
-      </div>
+        </div>
+      )}
 
       {open && (
         <Modal title="Déclarer un sinistre" onClose={() => setOpen(false)}>
@@ -147,15 +177,22 @@ export default function ClaimsPage() {
                 <label className="label">Lieu</label>
                 <input className="input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Boulevard VGE, Abidjan" />
               </div>
-              <div className="upload-zone" onClick={() => toast("Upload photos/vidéos (Phase 3)", "info")}>
+              <label className="upload-zone" style={{ display: "block" }}>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                />
                 <span className="icon-tile accent">
                   <Icon.file size={22} />
                 </span>
                 <strong>Ajouter photos & vidéos</strong>
                 <div className="soft" style={{ fontSize: ".84rem" }}>
-                  Cliquez pour joindre des fichiers (simulé)
+                  {files.length > 0 ? `${files.length} fichier(s) sélectionné(s)` : "Cliquez pour joindre des fichiers"}
                 </div>
-              </div>
+              </label>
               <label className="row gap-sm" style={{ cursor: "pointer" }}>
                 <span className="switch">
                   <input type="checkbox" checked={gps} onChange={(e) => setGps(e.target.checked)} />
@@ -165,11 +202,11 @@ export default function ClaimsPage() {
               </label>
             </div>
             <div className="modal-foot">
-              <button type="button" className="btn btn-ghost btn-block" onClick={() => setOpen(false)}>
+              <button type="button" className="btn btn-ghost btn-block" onClick={() => setOpen(false)} disabled={busy}>
                 Annuler
               </button>
-              <button type="submit" className="btn btn-primary btn-block">
-                Envoyer le dossier
+              <button type="submit" className={`btn btn-primary btn-block ${busy ? "is-loading" : ""}`} disabled={busy}>
+                {busy ? "Envoi…" : "Envoyer le dossier"}
               </button>
             </div>
           </form>

@@ -8,6 +8,7 @@ import { Icon } from "@/components/Icons";
 import { Modal } from "@/components/ui";
 import { ContractCard } from "@/components/cards";
 import { ContractDoc } from "@/components/ContractDoc";
+import { Loading, ErrorState } from "@/components/Loading";
 import { useToast } from "@/components/Toast";
 import { getBackend } from "@/lib/backend";
 import { INSURERS } from "@/lib/pricing";
@@ -23,12 +24,21 @@ export default function ContractsPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [view, setView] = useState<Contract | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "expired">("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function refresh() {
-    const b = getBackend();
-    const [c, v] = await Promise.all([b.getContracts(), b.getVehicles()]);
-    setContracts(c);
-    setVehicles(v);
+    setError("");
+    try {
+      const b = getBackend();
+      const [c, v] = await Promise.all([b.getContracts(), b.getVehicles()]);
+      setContracts(c);
+      setVehicles(v);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Chargement impossible");
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     refresh();
@@ -72,26 +82,32 @@ export default function ContractsPage() {
         ))}
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(330px,1fr))" }}>
-        {filtered.map((c) => (
-          <ContractCard
-            key={c.id}
-            contract={c}
-            vehicle={vehicles.find((v) => v.id === c.vehicleId)}
-            accent={accentFor(c.insurerId)}
-            onView={() => setView(c)}
-            onRenew={() => renew(c.id)}
-          />
-        ))}
-        {filtered.length === 0 && (
-          <div className="card empty">
-            <span className="icon-tile">
-              <Icon.file size={24} />
-            </span>
-            <p>Aucun contrat dans cette catégorie.</p>
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <Loading label="Chargement de vos contrats…" />
+      ) : error ? (
+        <ErrorState message={error} onRetry={refresh} />
+      ) : (
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(330px,1fr))" }}>
+          {filtered.map((c) => (
+            <ContractCard
+              key={c.id}
+              contract={c}
+              vehicle={vehicles.find((v) => v.id === c.vehicleId)}
+              accent={accentFor(c.insurerId)}
+              onView={() => setView(c)}
+              onRenew={() => renew(c.id)}
+            />
+          ))}
+          {filtered.length === 0 && (
+            <div className="card empty">
+              <span className="icon-tile">
+                <Icon.file size={24} />
+              </span>
+              <p>Aucun contrat dans cette catégorie.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {view && (
         <Modal title={"Contrat " + view.number} onClose={() => setView(null)}>

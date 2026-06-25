@@ -3,17 +3,25 @@
 // Assur Chap — Profil & parrainage
 // ==========================================================================
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icons";
 import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/components/Toast";
+import { getBackend } from "@/lib/backend";
 import { initials } from "@/lib/format";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, refresh } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+
+  useEffect(() => {
+    if (user) setForm({ name: user.name, email: user.email, phone: user.phone || "" });
+  }, [user]);
 
   if (!user) return null;
   const link = (typeof window !== "undefined" ? window.location.origin : "") + "/register?ref=" + user.referralCode;
@@ -24,6 +32,22 @@ export default function ProfilePage() {
       toast("Copié dans le presse-papier", "ok");
       setTimeout(() => setCopied(false), 1500);
     });
+  }
+
+  async function saveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const updated = await getBackend().updateProfile(form);
+      if (!updated) throw new Error("Mise à jour impossible");
+      await refresh();
+      toast("Profil mis à jour ✅", "ok");
+      setEditing(false);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Erreur lors de la mise à jour", "err");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -41,6 +65,47 @@ export default function ProfilePage() {
           </div>
         </div>
         <span className="badge badge-brand">{user.role}</span>
+      </div>
+
+      <div className="card stack">
+        <div className="row-between">
+          <strong>Informations personnelles</strong>
+          {!editing && (
+            <button className="btn btn-ghost btn-sm" onClick={() => setEditing(true)}>
+              Modifier
+            </button>
+          )}
+        </div>
+        {editing ? (
+          <form onSubmit={saveProfile} className="stack">
+            <div className="form-grid">
+              <div className="field">
+                <label className="label">Nom complet</label>
+                <input className="input" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div className="field">
+                <label className="label">Téléphone</label>
+                <input className="input" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+              </div>
+              <div className="field full">
+                <label className="label">Email</label>
+                <input className="input" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+              </div>
+            </div>
+            <div className="row gap-sm">
+              <button type="button" className="btn btn-ghost" onClick={() => setEditing(false)} disabled={busy}>
+                Annuler
+              </button>
+              <button type="submit" className={`btn btn-primary ${busy ? "is-loading" : ""}`} disabled={busy}>
+                {busy ? "Enregistrement…" : "Enregistrer"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="soft" style={{ fontSize: ".92rem" }}>
+            {user.email} · {user.phone || "Téléphone non renseigné"}
+          </div>
+        )}
       </div>
 
       <div className="card stack">

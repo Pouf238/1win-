@@ -20,7 +20,7 @@ import {
   type UserRow,
   type VehicleRow,
 } from "@/lib/supabase/rows";
-import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle } from "./types";
+import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle, StorageBucket } from "./types";
 import type { AdminStats, Contract, Offer, User, VerifyResult } from "@/lib/types";
 
 let companiesCache: CompanyRow[] = [];
@@ -182,6 +182,7 @@ export const supabaseBackend: Backend = {
       fuel: (d.fuel || "essence").toLowerCase().replace("é", "e").replace("É", "e"),
       value: d.value,
       usage: d.usage,
+      registration_doc_url: d.registrationDocUrl ?? null,
     };
     const { data, error } = await sb().from("vehicles").insert(row).select().single();
     if (error) throw new Error(error.message);
@@ -240,7 +241,7 @@ export const supabaseBackend: Backend = {
       type: d.type,
       description: d.description,
       location: d.location,
-      media_urls: Array.from({ length: d.photos || 0 }).map((_, i) => "media_" + i),
+      media_urls: d.mediaUrls,
     };
     const { data, error } = await sb().from("claims").insert(row).select().single();
     if (error) throw new Error(error.message);
@@ -257,6 +258,31 @@ export const supabaseBackend: Backend = {
     const { data: au } = await sb().auth.getUser();
     if (!au.user) return;
     await sb().from("notifications").update({ read: true }).eq("user_id", au.user.id).eq("read", false);
+  },
+
+  // --- Storage ---
+  async uploadFile(bucket: StorageBucket, file: File): Promise<string> {
+    const { data: au } = await sb().auth.getUser();
+    if (!au.user) throw new Error("Non authentifié");
+    const safe = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+    const path = `${au.user.id}/${Date.now()}-${safe}`;
+    const { error } = await sb().storage.from(bucket).upload(path, file, { upsert: false });
+    if (error) throw new Error(error.message);
+    return path;
+  },
+
+  // --- Realtime ---
+  onChanges(tables: string[], cb: () => void): () => void {
+    const client = getSupabase();
+    if (!client) return () => {};
+    const channel = client.channel("rt-" + tables.join("-") + "-" + Math.random().toString(36).slice(2, 6));
+    tables.forEach((table) => {
+      channel.on("postgres_changes", { event: "*", schema: "public", table }, () => cb());
+    });
+    channel.subscribe();
+    return () => {
+      client.removeChannel(channel);
+    };
   },
 
   // --- Admin ---

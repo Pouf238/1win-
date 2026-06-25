@@ -13,6 +13,14 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(URL && ANON);
 }
 
+/**
+ * Autorise le mode démo / repli local. Désactivez-le en production en
+ * définissant NEXT_PUBLIC_ALLOW_DEMO="false" pour masquer le bouton démo.
+ */
+export function isDemoAllowed(): boolean {
+  return process.env.NEXT_PUBLIC_ALLOW_DEMO !== "false";
+}
+
 export const SUPABASE_URL = URL;
 export const SUPABASE_ANON_KEY = ANON;
 

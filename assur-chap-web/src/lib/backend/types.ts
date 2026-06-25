@@ -26,6 +26,7 @@ export interface NewVehicle {
   fuel: string;
   value: number;
   usage: Usage;
+  registrationDocUrl?: string;
 }
 
 export interface NewClaim {
@@ -34,8 +35,10 @@ export interface NewClaim {
   type: string;
   description: string;
   location: string;
-  photos: number;
+  mediaUrls: string[];
 }
+
+export type StorageBucket = "documents" | "claims";
 
 export interface AuthResult {
   user?: User;
@@ -78,6 +81,14 @@ export interface Backend {
 
   getNotifications(): Promise<Notification[]>;
   markAllRead(): Promise<void>;
+
+  // --- Storage ---
+  /** Téléverse un fichier (bucket privé, scope utilisateur) et renvoie son chemin. */
+  uploadFile(bucket: StorageBucket, file: File): Promise<string>;
+
+  // --- Realtime ---
+  /** S'abonne aux changements de tables (re-fetch côté page). Renvoie une fonction de désabonnement. */
+  onChanges(tables: string[], cb: () => void): () => void;
 
   // --- Admin ---
   adminStats(): Promise<AdminStats>;

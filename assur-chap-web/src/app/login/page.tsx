@@ -7,6 +7,7 @@ import { Icon } from "@/components/Icons";
 import { useAuth } from "@/providers/AuthProvider";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { useToast } from "@/components/Toast";
+import { isDemoAllowed } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -94,9 +95,11 @@ export default function LoginPage() {
         </button>
       </div>
 
-      <button className="btn btn-soft btn-block" style={{ marginTop: 12 }} onClick={demo} disabled={busy}>
-        <Icon.sparkle size={18} /> {t("auth.demo")}
-      </button>
+      {isDemoAllowed() && (
+        <button className="btn btn-soft btn-block" style={{ marginTop: 12 }} onClick={demo} disabled={busy}>
+          <Icon.sparkle size={18} /> {t("auth.demo")}
+        </button>
+      )}
 
       <p className="soft center" style={{ marginTop: 20 }}>
         {t("auth.noAccount")} <Link href="/register">{t("auth.register")}</Link>

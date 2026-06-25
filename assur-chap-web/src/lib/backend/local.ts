@@ -5,7 +5,7 @@
 // ==========================================================================
 import { getStore } from "@/lib/store";
 import { daysUntil } from "@/lib/format";
-import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle } from "./types";
+import type { AdminData, AuthResult, Backend, NewClaim, NewVehicle, StorageBucket } from "./types";
 import type { Offer, User, VerifyResult } from "@/lib/types";
 
 export const localBackend: Backend = {
@@ -72,7 +72,8 @@ export const localBackend: Backend = {
   },
 
   async addClaim(d: NewClaim) {
-    return getStore().addClaim(d);
+    const { mediaUrls, ...rest } = d;
+    return getStore().addClaim({ ...rest, photos: mediaUrls.length });
   },
 
   async getNotifications() {
@@ -81,6 +82,16 @@ export const localBackend: Backend = {
 
   async markAllRead() {
     getStore().markAllRead();
+  },
+
+  // Storage simulé (mode démo) : renvoie un chemin factice
+  async uploadFile(bucket: StorageBucket, file: File) {
+    return `${bucket}/demo/${Date.now()}-${file.name}`;
+  },
+
+  // Pas de realtime en mode local
+  onChanges() {
+    return () => {};
   },
 
   async adminStats() {

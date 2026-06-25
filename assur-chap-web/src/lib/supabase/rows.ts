@@ -37,6 +37,7 @@ export interface VehicleRow {
   fuel: string;
   value: number | string;
   usage: Vehicle["usage"];
+  registration_doc_url: string | null;
   created_at: string;
 }
 
@@ -133,6 +134,7 @@ export function nVehicle(r: VehicleRow): Vehicle {
     fuel: r.fuel,
     value: Number(r.value),
     usage: r.usage,
+    registrationDocUrl: r.registration_doc_url ?? undefined,
     createdAt: r.created_at,
   };
 }

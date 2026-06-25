@@ -220,6 +220,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: .9rem; }
 
 .empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
 .empty .icon-tile { margin: 0 auto 14px; }
+.spin { display: inline-flex; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .divider { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: .82rem; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 

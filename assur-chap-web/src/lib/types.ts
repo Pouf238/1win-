@@ -30,6 +30,7 @@ export interface Vehicle {
   fuel: string;
   value: number; // valeur du véhicule (FCFA)
   usage: Usage;
+  registrationDocUrl?: string; // carte grise (Storage)
   createdAt: string;
 }
 

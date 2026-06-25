@@ -60,20 +60,24 @@ automatique quand Supabase n'est pas configuré.
 1. **Installer & builder** : `npm install` puis `npm run build` n'ont **pas pu
    être exécutés ici** (registre npm bloqué par la politique réseau de
    l'environnement). À lancer en local — voir « Tests » ci-dessous.
-2. **Déployer le backend Supabase** : appliquer les 4 migrations et déployer les
-   Edge Functions + leurs secrets (non automatisable depuis ce dépôt).
+2. **Déployer le backend Supabase** : appliquer les migrations `0001→0005` et
+   déployer les Edge Functions + leurs secrets (non automatisable depuis ce dépôt).
 3. ~~Auth SSR par cookies~~ ✅ **Fait** : `@supabase/ssr` + middleware
-   (`src/middleware.ts`), session en cookies partagée client/serveur, protection
-   `/app` & `/admin` + rôles. Voir `AUTH_SSR.md`.
-4. **Realtime** : abonnements Supabase pour notifications/sinistres en temps réel
-   (actuellement chargés au montage de page).
-5. **Storage** : upload réel des médias (carte grise OCR, photos de sinistre) —
-   aujourd'hui simulé (`media_urls` placeholder).
-6. **Profil** : formulaire d'édition (`updateProfile` est implémenté côté backend
-   mais l'écran profil est en lecture seule).
-7. **Suppression du repli local** : à retirer une fois Supabase validé en prod
-   (garder éventuellement derrière un flag de dev).
-8. **Intégrations restantes** : OCR/IA (OpenAI), WhatsApp, Resend, Google Maps,
+   (`src/middleware.ts`). Voir `AUTH_SSR.md`.
+4. ~~Realtime~~ ✅ **Fait** : `Backend.onChanges()` (Supabase Realtime) branché
+   sur le dashboard et les sinistres ; tables ajoutées à la publication via
+   migration `0005`.
+5. ~~Storage~~ ✅ **Fait** : `Backend.uploadFile()` ; upload carte grise (véhicule)
+   et médias de sinistre vers les buckets privés `documents`/`claims` (policies +
+   buckets : migration `0005`).
+6. ~~Profil~~ ✅ **Fait** : formulaire d'édition (nom/email/téléphone) →
+   `updateProfile`.
+7. **Suppression du repli local** : flag `NEXT_PUBLIC_ALLOW_DEMO="false"` masque le
+   bouton démo ; le repli reste actif tant que Supabase n'est pas configuré.
+   Retrait complet à planifier une fois la prod validée.
+8. **États chargement/erreur** : ✅ ajoutés aux pages de données (dashboard,
+   véhicules, contrats, sinistres, paiements, admin).
+9. **Intégrations restantes** : OCR/IA (OpenAI), WhatsApp, Resend, Google Maps,
    détection de fraude, signature électronique, app React Native.
 
 ---

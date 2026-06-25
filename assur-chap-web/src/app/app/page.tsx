@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon, type IconName } from "@/components/Icons";
 import { ContractCard, VehicleCard } from "@/components/cards";
+import { Loading, ErrorState } from "@/components/Loading";
 import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { getBackend } from "@/lib/backend";
@@ -30,19 +31,32 @@ export default function Dashboard() {
     notifs: Notification[];
   }>({ contracts: [], vehicles: [], payments: [], notifs: [] });
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   async function refresh() {
-    const b = getBackend();
-    const [contracts, vehicles, payments, notifs] = await Promise.all([
-      b.getContracts(),
-      b.getVehicles(),
-      b.getPayments(),
-      b.getNotifications(),
-    ]);
-    setData({ contracts, vehicles, payments, notifs });
+    setError("");
+    try {
+      const b = getBackend();
+      const [contracts, vehicles, payments, notifs] = await Promise.all([
+        b.getContracts(),
+        b.getVehicles(),
+        b.getPayments(),
+        b.getNotifications(),
+      ]);
+      setData({ contracts, vehicles, payments, notifs });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Chargement impossible");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     refresh();
+    // Mises à jour en direct (notifications, contrats, paiements)
+    const off = getBackend().onChanges(["notifications", "contracts", "payments"], refresh);
+    return off;
   }, []);
 
   const active = data.contracts.filter((c) => c.status === "active");
@@ -79,6 +93,12 @@ export default function Dashboard() {
         </Link>
       </div>
 
+      {loading ? (
+        <Loading label="Chargement de votre tableau de bord…" />
+      ) : error ? (
+        <ErrorState message={error} onRetry={refresh} />
+      ) : (
+      <>
       <div className="kpi-grid">
         {kpis.map((k, i) => {
           const I = Icon[k.icon];
@@ -173,6 +193,8 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

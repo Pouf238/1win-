@@ -27,23 +27,36 @@ export default function AdminPage() {
     }
   }, [ready, user, router]);
 
+  const [error, setError] = useState("");
+
   useEffect(() => {
     if (user?.role !== "admin") return;
     const b = getBackend();
-    Promise.all([b.adminStats(), b.adminData()]).then(([s, d]) => {
-      setStats(s);
-      setContracts(d.contracts);
-      setUsers(d.users);
-      setClaims(d.claims);
-    });
+    Promise.all([b.adminStats(), b.adminData()])
+      .then(([s, d]) => {
+        setStats(s);
+        setContracts(d.contracts);
+        setUsers(d.users);
+        setClaims(d.claims);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Chargement impossible"));
   }, [user]);
 
   if (!ready || user?.role !== "admin" || !stats) {
     return (
-      <div style={{ display: "grid", placeItems: "center", minHeight: "100vh" }}>
-        <div className="row soft">
-          <Icon.scale size={22} /> Chargement de l&apos;administration…
-        </div>
+      <div style={{ display: "grid", placeItems: "center", minHeight: "100vh", padding: 24 }}>
+        {error ? (
+          <div className="row soft" style={{ color: "var(--danger)" }}>
+            <Icon.warning size={22} /> {error}
+          </div>
+        ) : (
+          <div className="row soft">
+            <span className="spin">
+              <Icon.refresh size={22} />
+            </span>{" "}
+            Chargement de l&apos;administration…
+          </div>
+        )}
       </div>
     );
   }

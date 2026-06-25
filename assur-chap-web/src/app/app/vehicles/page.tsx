@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icons";
 import { Modal } from "@/components/ui";
 import { VehicleCard } from "@/components/cards";
+import { Loading, ErrorState } from "@/components/Loading";
 import { useToast } from "@/components/Toast";
 import { getBackend } from "@/lib/backend";
 import type { Usage, Vehicle } from "@/lib/types";
@@ -29,9 +30,20 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function refresh() {
-    setVehicles(await getBackend().getVehicles());
+    setError("");
+    try {
+      setVehicles(await getBackend().getVehicles());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Chargement impossible");
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     refresh();
@@ -47,14 +59,20 @@ export default function VehiclesPage() {
       toast("Marque, modèle et immatriculation requis.", "err");
       return;
     }
+    setBusy(true);
     try {
-      await getBackend().addVehicle(form);
+      const b = getBackend();
+      const registrationDocUrl = docFile ? await b.uploadFile("documents", docFile) : undefined;
+      await b.addVehicle({ ...form, registrationDocUrl });
       toast("Véhicule ajouté 🚗", "ok");
       setOpen(false);
       setForm(EMPTY);
+      setDocFile(null);
       await refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Erreur lors de l'ajout", "err");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -94,19 +112,25 @@ export default function VehiclesPage() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
-        {vehicles.map((v) => (
-          <VehicleCard key={v.id} vehicle={v} onQuote={() => router.push("/app/quote?vehicle=" + v.id)} onRemove={() => remove(v.id)} />
-        ))}
-        {vehicles.length === 0 && (
-          <div className="card empty">
-            <span className="icon-tile">
-              <Icon.car size={24} />
-            </span>
-            <p>Aucun véhicule enregistré.</p>
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <Loading label="Chargement de vos véhicules…" />
+      ) : error ? (
+        <ErrorState message={error} onRetry={refresh} />
+      ) : (
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}>
+          {vehicles.map((v) => (
+            <VehicleCard key={v.id} vehicle={v} onQuote={() => router.push("/app/quote?vehicle=" + v.id)} onRemove={() => remove(v.id)} />
+          ))}
+          {vehicles.length === 0 && (
+            <div className="card empty">
+              <span className="icon-tile">
+                <Icon.car size={24} />
+              </span>
+              <p>Aucun véhicule enregistré.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {open && (
         <Modal title="Ajouter un véhicule" onClose={() => setOpen(false)}>
@@ -157,14 +181,31 @@ export default function VehiclesPage() {
                     <option value="professionnel">Professionnel</option>
                   </select>
                 </div>
+                <div className="field full">
+                  <label className="label">Carte grise (photo / PDF)</label>
+                  <label className="upload-zone" style={{ display: "block", padding: 18 }}>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                      onChange={(e) => setDocFile(e.target.files?.[0] || null)}
+                    />
+                    <div className="row gap-sm" style={{ justifyContent: "center" }}>
+                      <Icon.file size={18} />
+                      <span className="soft" style={{ fontSize: ".88rem" }}>
+                        {docFile ? docFile.name : "Joindre la carte grise (optionnel)"}
+                      </span>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
             <div className="modal-foot">
-              <button type="button" className="btn btn-ghost btn-block" onClick={() => setOpen(false)}>
+              <button type="button" className="btn btn-ghost btn-block" onClick={() => setOpen(false)} disabled={busy}>
                 Annuler
               </button>
-              <button type="submit" className="btn btn-primary btn-block">
-                Enregistrer
+              <button type="submit" className={`btn btn-primary btn-block ${busy ? "is-loading" : ""}`} disabled={busy}>
+                {busy ? "Enregistrement…" : "Enregistrer"}
               </button>
             </div>
           </form>
