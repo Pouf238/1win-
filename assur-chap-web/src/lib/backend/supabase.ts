@@ -20,7 +20,7 @@ import {
   type UserRow,
   type VehicleRow,
 } from "@/lib/supabase/rows";
-import type { AdminData, AuthResult, Backend, ChatMessage, ChatReply, NewClaim, NewVehicle, NotificationPrefs, StorageBucket, VehicleOcr } from "./types";
+import type { AdminData, AgentStats, AuthResult, Backend, ChatMessage, ChatReply, MfaEnroll, NewClaim, NewVehicle, NotificationPrefs, OAuthProvider, StorageBucket, VehicleOcr } from "./types";
 import type { AdminStats, Contract, Offer, User, VerifyResult } from "@/lib/types";
 
 let companiesCache: CompanyRow[] = [];
@@ -163,6 +163,38 @@ export const supabaseBackend: Backend = {
     await sb().auth.signOut();
   },
 
+  // --- OAuth & 2FA ---
+  async signInWithOAuth(provider: OAuthProvider): Promise<{ error?: string }> {
+    const redirectTo = (typeof window !== "undefined" ? window.location.origin : "") + "/app";
+    const { error } = await sb().auth.signInWithOAuth({ provider, options: { redirectTo } });
+    return { error: error?.message };
+  },
+
+  async mfaStatus(): Promise<boolean> {
+    const { data } = await sb().auth.mfa.listFactors();
+    const totp = (data?.totp ?? []) as { status: string }[];
+    return totp.some((f) => f.status === "verified");
+  },
+
+  async mfaEnroll(): Promise<MfaEnroll> {
+    const { data, error } = await sb().auth.mfa.enroll({ factorType: "totp" });
+    if (error) throw new Error(error.message);
+    return { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret };
+  },
+
+  async mfaVerify(factorId: string, code: string): Promise<{ error?: string }> {
+    const { data: challenge, error: cErr } = await sb().auth.mfa.challenge({ factorId });
+    if (cErr) return { error: cErr.message };
+    const { error } = await sb().auth.mfa.verify({ factorId, challengeId: challenge.id, code });
+    return { error: error?.message };
+  },
+
+  async mfaDisable(): Promise<void> {
+    const { data } = await sb().auth.mfa.listFactors();
+    const factors = (data?.totp ?? []) as { id: string }[];
+    for (const f of factors) await sb().auth.mfa.unenroll({ factorId: f.id });
+  },
+
   async updateProfile(d) {
     const { data: au } = await sb().auth.getUser();
     if (!au.user) return null;
@@ -231,6 +263,22 @@ export const supabaseBackend: Backend = {
     const c = contracts.find((x) => x.id === id);
     if (!c) return null;
     return purchase({ insurerId: c.insurerId, vehicleId: c.vehicleId, coverageId: c.coverageId, months: c.months, payMethod: "cinetpay" });
+  },
+
+  async getContractPdf(contractId): Promise<string | null> {
+    const read = async () => {
+      const { data } = await sb().from("contracts").select("pdf_url").eq("id", contractId).single();
+      return (data as { pdf_url?: string } | null)?.pdf_url ?? null;
+    };
+    let path = await read();
+    if (!path) {
+      await callFn("generate-contract-pdf", { contractId }); // génère le PDF (best-effort)
+      path = await read();
+    }
+    if (!path) return null;
+    if (/^https?:\/\//.test(path)) return path;
+    const { data: signed } = await sb().storage.from("contracts").createSignedUrl(path, 3600);
+    return signed?.signedUrl ?? null;
   },
 
   // --- Paiements ---
@@ -364,6 +412,21 @@ export const supabaseBackend: Backend = {
       users: ((u.data as UserRow[]) || []).map((r) => nUser(r)).filter((x): x is User => x !== null),
       claims: ((cl.data as ClaimRow[]) || []).map(nClaim),
       vehicles: ((v.data as VehicleRow[]) || []).map(nVehicle),
+    };
+  },
+
+  // --- Agent / Courtier ---
+  async agentStats(): Promise<AgentStats> {
+    const { data } = await sb().rpc("agent_stats");
+    const s = (data as Record<string, unknown>) || {};
+    const list = Array.isArray(s.clients_list) ? (s.clients_list as Record<string, string>[]) : [];
+    return {
+      referralCode: String(s.referral_code ?? ""),
+      clients: Number(s.clients ?? 0),
+      sales: Number(s.sales ?? 0),
+      revenue: Number(s.revenue ?? 0),
+      commission: Number(s.commission ?? 0),
+      clientsList: list.map((c) => ({ name: c.name ?? "", email: c.email ?? "", joinedAt: c.joined_at ?? "" })),
     };
   },
 

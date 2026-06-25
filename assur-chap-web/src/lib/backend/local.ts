@@ -5,7 +5,7 @@
 // ==========================================================================
 import { getStore } from "@/lib/store";
 import { daysUntil } from "@/lib/format";
-import type { AdminData, AuthResult, Backend, ChatMessage, ChatReply, NewClaim, NewVehicle, NotificationPrefs, StorageBucket, VehicleOcr } from "./types";
+import type { AdminData, AgentStats, AuthResult, Backend, ChatMessage, ChatReply, MfaEnroll, NewClaim, NewVehicle, NotificationPrefs, OAuthProvider, StorageBucket, VehicleOcr } from "./types";
 import type { Offer, User, VerifyResult } from "@/lib/types";
 
 export const localBackend: Backend = {
@@ -39,6 +39,23 @@ export const localBackend: Backend = {
     return getStore().updateProfile(d);
   },
 
+  // OAuth & 2FA indisponibles en mode démo (nécessitent Supabase)
+  async signInWithOAuth(_provider: OAuthProvider): Promise<{ error?: string }> {
+    return { error: "Connexion sociale disponible une fois Supabase configuré." };
+  },
+  async mfaStatus(): Promise<boolean> {
+    return false;
+  },
+  async mfaEnroll(): Promise<MfaEnroll> {
+    throw new Error("La double authentification nécessite Supabase.");
+  },
+  async mfaVerify(): Promise<{ error?: string }> {
+    return { error: "Indisponible en mode démo." };
+  },
+  async mfaDisable(): Promise<void> {
+    /* no-op */
+  },
+
   async getVehicles() {
     return getStore().vehicles();
   },
@@ -61,6 +78,11 @@ export const localBackend: Backend = {
 
   async renewContract(id) {
     return getStore().renewContract(id);
+  },
+
+  async getContractPdf(): Promise<string | null> {
+    // Mode démo : pas de génération réelle de PDF
+    return null;
   },
 
   async getPayments() {
@@ -151,6 +173,23 @@ export const localBackend: Backend = {
       users: s.db.users,
       claims: s.db.claims,
       vehicles: s.db.vehicles,
+    };
+  },
+
+  async agentStats(): Promise<AgentStats> {
+    const u = getStore().currentUser();
+    // Démo : portefeuille fictif pour illustrer l'espace agent.
+    return {
+      referralCode: u?.referralCode ?? "AGENT",
+      clients: 3,
+      sales: 4,
+      revenue: 936000,
+      commission: 93600,
+      clientsList: [
+        { name: "Kouamé Yao", email: "kouame@example.com", joinedAt: new Date(Date.now() - 12 * 86400000).toISOString() },
+        { name: "Fatou Diallo", email: "fatou@example.com", joinedAt: new Date(Date.now() - 30 * 86400000).toISOString() },
+        { name: "Jean N'Guessan", email: "jean@example.com", joinedAt: new Date(Date.now() - 60 * 86400000).toISOString() },
+      ],
     };
   },
 

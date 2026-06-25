@@ -6,7 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getBackend, backendMode } from "@/lib/backend";
 import { getSupabase } from "@/lib/supabase/client";
-import type { AuthResult } from "@/lib/backend/types";
+import type { AuthResult, OAuthProvider } from "@/lib/backend/types";
 import type { User } from "@/lib/types";
 
 interface AuthContext {
@@ -16,6 +16,7 @@ interface AuthContext {
   login: (identifier: string, password: string) => Promise<AuthResult>;
   register: (data: { name: string; email: string; phone?: string; password?: string; referredBy?: string | null }) => Promise<AuthResult>;
   loginDemo: () => Promise<AuthResult>;
+  signInWithOAuth: (provider: OAuthProvider) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -75,12 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res;
   }, []);
 
+  const signInWithOAuth = useCallback((provider: OAuthProvider) => getBackend().signInWithOAuth(provider), []);
+
   const logout = useCallback(async () => {
     await getBackend().logout();
     setUser(null);
   }, []);
 
-  return <Ctx.Provider value={{ user, ready, mode, login, register, loginDemo, logout, refresh }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, ready, mode, login, register, loginDemo, signInWithOAuth, logout, refresh }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth(): AuthContext {

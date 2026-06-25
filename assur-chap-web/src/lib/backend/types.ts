@@ -40,6 +40,14 @@ export interface NewClaim {
 
 export type StorageBucket = "documents" | "claims";
 
+export type OAuthProvider = "google" | "apple";
+
+export interface MfaEnroll {
+  factorId: string;
+  qr: string; // data URL (SVG) du QR à scanner
+  secret: string;
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -54,6 +62,21 @@ export interface NotificationPrefs {
   whatsapp: boolean;
   email: boolean;
   sms: boolean;
+}
+
+export interface AgentClient {
+  name: string;
+  email: string;
+  joinedAt: string;
+}
+
+export interface AgentStats {
+  referralCode: string;
+  clients: number;
+  sales: number;
+  revenue: number;
+  commission: number;
+  clientsList: AgentClient[];
 }
 
 /** Champs extraits d'une carte grise par l'OCR (tous optionnels). */
@@ -93,6 +116,13 @@ export interface Backend {
   logout(): Promise<void>;
   updateProfile(d: { name: string; email: string; phone: string }): Promise<User | null>;
 
+  // --- OAuth & 2FA ---
+  signInWithOAuth(provider: OAuthProvider): Promise<{ error?: string }>;
+  mfaStatus(): Promise<boolean>;
+  mfaEnroll(): Promise<MfaEnroll>;
+  mfaVerify(factorId: string, code: string): Promise<{ error?: string }>;
+  mfaDisable(): Promise<void>;
+
   // --- Données (périmètre utilisateur courant, sécurisé par RLS) ---
   getVehicles(): Promise<Vehicle[]>;
   addVehicle(d: NewVehicle): Promise<Vehicle>;
@@ -102,6 +132,8 @@ export interface Backend {
   /** Souscription : retourne le contrat, ou null si redirection vers une page de paiement externe. */
   createContract(offer: Offer, vehicleId: string, method: string): Promise<Contract | null>;
   renewContract(id: string): Promise<Contract | null>;
+  /** Renvoie une URL téléchargeable du PDF du contrat (génère si absent), ou null. */
+  getContractPdf(contractId: string): Promise<string | null>;
 
   getPayments(): Promise<Payment[]>;
   getClaims(): Promise<Claim[]>;
@@ -131,6 +163,9 @@ export interface Backend {
   // --- Admin ---
   adminStats(): Promise<AdminStats>;
   adminData(): Promise<AdminData>;
+
+  // --- Agent / Courtier ---
+  agentStats(): Promise<AgentStats>;
 
   // --- Public ---
   verifyContract(contractNumber: string, token: string): Promise<VerifyResult | null>;

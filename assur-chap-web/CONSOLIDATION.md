@@ -90,8 +90,13 @@ automatique quand Supabase n'est pas configuré.
 12. **App React Native (Expo)** : ✅ **Fondation livrée** dans `../assur-chap-mobile/`
     (auth, dashboard, devis, contrats, sinistres, assistant, profil ; backend
     Supabase partagé + mode démo).
-13. **Intégrations restantes** : Google Maps (sinistres), détection de fraude,
-    signature électronique ; finalisation mobile (paiement WebBrowser, OCR photo).
+13. **Finalisation site web** : ✅ espace **Agent/Courtier** (RPC `agent_stats`,
+    migration `0007`) ; **téléchargement PDF** (generate-contract-pdf + URL signée) ;
+    **signature électronique** (consentement horodaté au paiement) ; **connexion
+    Google/Apple** (OAuth Supabase) ; **2FA TOTP** (Supabase MFA, profil).
+    Typecheck interne du code web : **0 erreur**.
+14. **Intégrations restantes** : Google Maps (localisation sinistres), détection
+    de fraude IA ; finalisation mobile (paiement WebBrowser, OCR photo).
 
 ---
 

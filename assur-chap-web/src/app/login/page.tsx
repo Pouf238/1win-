@@ -11,7 +11,7 @@ import { isDemoAllowed } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const { t } = useI18n();
-  const { login, loginDemo } = useAuth();
+  const { login, loginDemo, signInWithOAuth } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
@@ -45,6 +45,16 @@ export default function LoginPage() {
     }
     toast("Bienvenue sur le compte démo", "ok");
     router.push("/app");
+  }
+
+  async function oauth(provider: "google" | "apple") {
+    setError("");
+    const res = await signInWithOAuth(provider);
+    if (res.error) {
+      setError(res.error);
+      toast(res.error, "err");
+    }
+    // En cas de succès, Supabase redirige vers le fournisseur.
   }
 
   return (
@@ -87,10 +97,10 @@ export default function LoginPage() {
       </div>
 
       <div className="social-btns">
-        <button className="btn btn-ghost" onClick={() => toast("Google : disponible en Phase 3", "info")}>
+        <button className="btn btn-ghost" onClick={() => oauth("google")} disabled={busy}>
           <Icon.google size={18} /> Google
         </button>
-        <button className="btn btn-ghost" onClick={() => toast("Apple : disponible en Phase 3", "info")}>
+        <button className="btn btn-ghost" onClick={() => oauth("apple")} disabled={busy}>
           Apple
         </button>
       </div>

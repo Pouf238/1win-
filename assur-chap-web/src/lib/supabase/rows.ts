@@ -157,6 +157,7 @@ export function nContract(r: ContractRow, companies: CompanyRow[]): Contract {
     endDate: r.end_date,
     status: r.status,
     verifyToken: r.verify_token,
+    pdfUrl: r.pdf_url ?? undefined,
     createdAt: r.created_at,
   };
 }

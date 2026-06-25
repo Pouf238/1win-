@@ -4,18 +4,35 @@
 // ==========================================================================
 import { useEffect, useState } from "react";
 import { Icon } from "./Icons";
+import { useToast } from "./Toast";
+import { getBackend } from "@/lib/backend";
 import { qrDataUrl } from "@/lib/qr";
 import { fcfa, formatDate } from "@/lib/format";
 import type { Contract, Vehicle } from "@/lib/types";
 
-export function ContractDoc({ contract, vehicle, onDownload }: { contract: Contract; vehicle?: Vehicle; onDownload?: () => void }) {
+export function ContractDoc({ contract, vehicle }: { contract: Contract; vehicle?: Vehicle }) {
   const [qr, setQr] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const { toast } = useToast();
   const verifyPath = `/verify?n=${encodeURIComponent(contract.number)}&t=${encodeURIComponent(contract.verifyToken)}`;
   const verifyUrl = (typeof window !== "undefined" ? window.location.origin : "") + verifyPath;
 
   useEffect(() => {
     qrDataUrl(verifyUrl).then(setQr);
   }, [verifyUrl]);
+
+  async function downloadPdf() {
+    setDownloading(true);
+    try {
+      const url = await getBackend().getContractPdf(contract.id);
+      if (url) window.open(url, "_blank", "noopener");
+      else toast("PDF disponible une fois Supabase + la fonction generate-contract-pdf déployés.", "info");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Téléchargement impossible", "err");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="doc">
@@ -89,11 +106,9 @@ export function ContractDoc({ contract, vehicle, onDownload }: { contract: Contr
               <a className="btn btn-soft btn-sm" href={verifyPath} target="_blank" rel="noreferrer">
                 <Icon.qr size={15} /> Page de vérification
               </a>
-              {onDownload && (
-                <button className="btn btn-ghost btn-sm" onClick={onDownload}>
-                  <Icon.file size={15} /> Télécharger
-                </button>
-              )}
+              <button className={`btn btn-ghost btn-sm ${downloading ? "is-loading" : ""}`} onClick={downloadPdf} disabled={downloading}>
+                <Icon.file size={15} /> {downloading ? "Génération…" : "Télécharger le PDF"}
+              </button>
             </div>
           </div>
         </div>

@@ -108,6 +108,7 @@ export interface Contract {
   endDate: string;
   status: ContractStatus;
   verifyToken: string;
+  pdfUrl?: string;
   createdAt: string;
 }
 

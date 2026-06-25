@@ -67,6 +67,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
+        {(user.role === "agent" || user.role === "admin") && (
+          <Link href="/app/agent" className={`side-link ${pathname.startsWith("/app/agent") ? "is-active" : ""}`}>
+            <span className="ic">
+              <Icon.users size={20} />
+            </span>
+            Espace agent
+          </Link>
+        )}
         {user.role === "admin" && (
           <Link href="/admin" className="side-link">
             <span className="ic">

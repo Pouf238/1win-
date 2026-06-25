@@ -38,6 +38,7 @@ function QuoteWizard() {
   const [sort, setSort] = useState<SortMode>("ai");
   const [chosen, setChosen] = useState<Offer | null>(null);
   const [method, setMethod] = useState("orange");
+  const [signed, setSigned] = useState(false);
   const [paying, setPaying] = useState(false);
   const [contract, setContract] = useState<Contract | null>(null);
 
@@ -285,16 +286,26 @@ function QuoteWizard() {
             ))}
           </div>
           <p className="input-hint">
-            <Icon.shield size={13} style={{ display: "inline", verticalAlign: "-2px" }} /> Paiement simulé (Phase 1). Les passerelles
-            réelles (CinetPay, PayDunya) seront branchées en Phase 3.
+            <Icon.shield size={13} style={{ display: "inline", verticalAlign: "-2px" }} /> Sans clés CinetPay, le paiement est simulé.
           </p>
+
+          <label className="row gap-sm" style={{ cursor: "pointer", alignItems: "flex-start" }}>
+            <span className="switch" style={{ marginTop: 2 }}>
+              <input type="checkbox" checked={signed} onChange={(e) => setSigned(e.target.checked)} />
+              <span className="track" />
+            </span>
+            <span style={{ flex: 1, fontSize: ".9rem" }}>
+              Je certifie l&apos;exactitude des informations et <strong>signe électroniquement</strong> ce contrat
+              ({chosen.coverageName} · {chosen.insurer}). Horodatage à la validation.
+            </span>
+          </label>
 
           <div className="row gap-sm">
             <button className="btn btn-ghost" onClick={() => setStep(2)} disabled={paying}>
               Retour
             </button>
-            <button className={`btn btn-accent ${paying ? "is-loading" : ""}`} onClick={pay} disabled={paying}>
-              {paying ? "Paiement en cours…" : `Payer ${fcfa(chosen.price)}`}
+            <button className={`btn btn-accent ${paying ? "is-loading" : ""}`} onClick={pay} disabled={paying || !signed}>
+              {paying ? "Paiement en cours…" : signed ? `Signer & payer ${fcfa(chosen.price)}` : "Cochez la signature"}
             </button>
           </div>
         </div>
@@ -317,7 +328,7 @@ function QuoteWizard() {
             </div>
           </div>
 
-          <ContractDoc contract={contract} vehicle={vehicle} onDownload={() => toast("Téléchargement PDF (Phase 3)", "info")} />
+          <ContractDoc contract={contract} vehicle={vehicle} />
 
           <div className="row gap-sm wrap">
             <button className="btn btn-primary" onClick={() => router.push("/app/contracts")}>
@@ -329,6 +340,7 @@ function QuoteWizard() {
                 setStep(0);
                 setChosen(null);
                 setContract(null);
+                setSigned(false);
               }}
             >
               Nouveau devis

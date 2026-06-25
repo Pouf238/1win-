@@ -112,7 +112,7 @@ export default function ContractsPage() {
       {view && (
         <Modal title={"Contrat " + view.number} onClose={() => setView(null)}>
           <div className="modal-body">
-            <ContractDoc contract={view} vehicle={vehicles.find((v) => v.id === view.vehicleId)} onDownload={() => toast("Téléchargement PDF (Phase 3)", "info")} />
+            <ContractDoc contract={view} vehicle={vehicles.find((v) => v.id === view.vehicleId)} />
           </div>
         </Modal>
       )}

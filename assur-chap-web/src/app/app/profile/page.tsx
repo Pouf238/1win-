@@ -5,10 +5,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icons";
+import { Modal } from "@/components/ui";
 import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { getBackend } from "@/lib/backend";
-import type { NotificationPrefs } from "@/lib/backend/types";
+import type { MfaEnroll, NotificationPrefs } from "@/lib/backend/types";
 import { initials } from "@/lib/format";
 
 export default function ProfilePage() {
@@ -25,9 +26,59 @@ export default function ProfilePage() {
     if (user) setForm({ name: user.name, email: user.email, phone: user.phone || "" });
   }, [user]);
 
+  const [mfaOn, setMfaOn] = useState(false);
+  const [mfaModal, setMfaModal] = useState(false);
+  const [enroll, setEnroll] = useState<MfaEnroll | null>(null);
+  const [code, setCode] = useState("");
+  const [mfaBusy, setMfaBusy] = useState(false);
+
   useEffect(() => {
     getBackend().getNotificationPrefs().then(setPrefs);
+    getBackend().mfaStatus().then(setMfaOn).catch(() => {});
   }, []);
+
+  async function startMfa() {
+    setMfaBusy(true);
+    try {
+      const e = await getBackend().mfaEnroll();
+      setEnroll(e);
+      setMfaModal(true);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "2FA indisponible", "err");
+    } finally {
+      setMfaBusy(false);
+    }
+  }
+
+  async function confirmMfa() {
+    if (!enroll || !code) return;
+    setMfaBusy(true);
+    try {
+      const res = await getBackend().mfaVerify(enroll.factorId, code.trim());
+      if (res.error) {
+        toast(res.error, "err");
+        return;
+      }
+      setMfaOn(true);
+      setMfaModal(false);
+      setCode("");
+      setEnroll(null);
+      toast("Double authentification activée 🔒", "ok");
+    } finally {
+      setMfaBusy(false);
+    }
+  }
+
+  async function disableMfa() {
+    setMfaBusy(true);
+    try {
+      await getBackend().mfaDisable();
+      setMfaOn(false);
+      toast("2FA désactivée", "info");
+    } finally {
+      setMfaBusy(false);
+    }
+  }
 
   async function togglePref(key: keyof NotificationPrefs) {
     if (!prefs) return;
@@ -195,8 +246,16 @@ export default function ProfilePage() {
         })}
         <div className="list-row">
           <Icon.shield size={18} />
-          <span style={{ flex: 1 }}>Double authentification (OTP)</span>
-          <span className="badge">À venir</span>
+          <span style={{ flex: 1 }}>Double authentification (TOTP)</span>
+          {mfaOn ? (
+            <button className="btn btn-danger btn-sm" onClick={disableMfa} disabled={mfaBusy}>
+              Désactiver
+            </button>
+          ) : (
+            <button className="btn btn-soft btn-sm" onClick={startMfa} disabled={mfaBusy}>
+              Activer
+            </button>
+          )}
         </div>
       </div>
 
@@ -210,6 +269,37 @@ export default function ProfilePage() {
       >
         <Icon.logout size={18} /> Se déconnecter
       </button>
+
+      {mfaModal && enroll && (
+        <Modal title="Activer la double authentification" onClose={() => setMfaModal(false)}>
+          <div className="modal-body stack">
+            <p className="soft" style={{ fontSize: ".9rem" }}>
+              Scannez ce QR code avec votre application d&apos;authentification (Google Authenticator, Authy…), puis saisissez
+              le code à 6 chiffres.
+            </p>
+            <div className="center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={enroll.qr} alt="QR code 2FA" width={180} height={180} style={{ margin: "0 auto", borderRadius: 10 }} />
+            </div>
+            <div className="field">
+              <label className="label">Clé secrète (si vous ne pouvez pas scanner)</label>
+              <input className="input mono" readOnly value={enroll.secret} />
+            </div>
+            <div className="field">
+              <label className="label">Code de vérification</label>
+              <input className="input mono" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" inputMode="numeric" maxLength={6} />
+            </div>
+          </div>
+          <div className="modal-foot">
+            <button className="btn btn-ghost btn-block" onClick={() => setMfaModal(false)} disabled={mfaBusy}>
+              Annuler
+            </button>
+            <button className={`btn btn-primary btn-block ${mfaBusy ? "is-loading" : ""}`} onClick={confirmMfa} disabled={mfaBusy || code.length < 6}>
+              Vérifier & activer
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
