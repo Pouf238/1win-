@@ -24,10 +24,12 @@ Deno.serve(async (req) => {
     if (!payment) return json({ error: "Paiement introuvable" }, 404);
     if (payment.status === "success") return json({ ok: true, already: true });
 
-    // Vérification du statut réel auprès de CinetPay (anti-fraude)
-    let paid = body.simulated === true;
+    // Vérification du statut réel auprès de CinetPay (anti-fraude).
+    // SÉCURITÉ : ne jamais faire confiance à `simulated` en production. Le statut
+    // réel CinetPay fait autorité ; la simulation exige un opt-in explicite (dev).
     const apiKey = Deno.env.get("CINETPAY_API_KEY");
     const siteId = Deno.env.get("CINETPAY_SITE_ID");
+    let paid = false;
     if (apiKey && siteId) {
       const res = await fetch(CINETPAY_CHECK, {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -36,6 +38,12 @@ Deno.serve(async (req) => {
       const out = await res.json();
       paid = out?.data?.status === "ACCEPTED";
       await sb.from("payments").update({ raw_payload: { ...payment.raw_payload, check: out } }).eq("id", payment.id);
+    } else if (body.simulated === true) {
+      if (Deno.env.get("ALLOW_SIMULATED_PAYMENTS") === "true") {
+        paid = true; // mode dev/démo explicitement autorisé
+      } else {
+        return json({ error: "Paiement simulé désactivé. Configurez CINETPAY_API_KEY/SITE_ID (prod) ou ALLOW_SIMULATED_PAYMENTS=true (dev)." }, 403);
+      }
     }
 
     if (!paid) {

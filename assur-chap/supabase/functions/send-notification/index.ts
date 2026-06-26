@@ -8,6 +8,10 @@ import { adminClient } from "../_shared/supabase.ts";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR").format(Math.round(n)) + " FCFA";
 
+// Échappement HTML (anti-injection dans les emails)
+const esc = (s: string) =>
+  String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
 type Tpl = { title: string; body: string; icon: string };
 function template(type: string, ctx: Record<string, unknown>): Tpl {
   switch (type) {
@@ -74,7 +78,7 @@ Deno.serve(async (req) => {
     const waOn = user.notify_whatsapp !== false;
     const emailOn = user.notify_email !== false;
 
-    const emailHtml = `<div style="font-family:Inter,Arial,sans-serif"><h2 style="color:#1F7A8C">${tpl.title}</h2><p>${tpl.body}</p><p style="color:#888;font-size:12px">Assur Chap — L'assurance auto digitale</p></div>`;
+    const emailHtml = `<div style="font-family:Inter,Arial,sans-serif"><h2 style="color:#1F7A8C">${esc(tpl.title)}</h2><p>${esc(tpl.body)}</p><p style="color:#888;font-size:12px">Assur Chap — L'assurance auto digitale</p></div>`;
     const [wa, mail] = await Promise.all([
       waOn ? sendWhatsApp(user.phone ?? "", `${tpl.title}\n${tpl.body}`) : Promise.resolve({ skipped: "pref_off" }),
       emailOn ? sendEmail(user.email ?? "", tpl.title, emailHtml) : Promise.resolve({ skipped: "pref_off" }),

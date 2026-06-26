@@ -9,6 +9,12 @@ import { useI18n } from "@/i18n/LanguageProvider";
 import { useToast } from "@/components/Toast";
 import { isDemoAllowed } from "@/lib/supabase/client";
 
+/** N'autorise qu'un chemin interne (évite l'open-redirect : //host, /\\host, http://…). */
+function safeRedirect(r: string | null): string | null {
+  if (!r || !r.startsWith("/") || r.startsWith("//") || r.startsWith("/\\")) return null;
+  return r;
+}
+
 export default function LoginPage() {
   const { t } = useI18n();
   const { login, loginDemo, signInWithOAuth } = useAuth();
@@ -30,9 +36,8 @@ export default function LoginPage() {
       return;
     }
     toast("Connexion réussie 👋", "ok");
-    const redirect = new URLSearchParams(window.location.search).get("redirect");
     const fallback = res.user?.role === "admin" ? "/admin" : "/app";
-    router.push(redirect && redirect.startsWith("/") ? redirect : fallback);
+    router.push(safeRedirect(new URLSearchParams(window.location.search).get("redirect")) ?? fallback);
   }
 
   async function demo() {
