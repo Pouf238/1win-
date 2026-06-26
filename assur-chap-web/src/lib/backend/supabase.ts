@@ -302,11 +302,16 @@ export const supabaseBackend: Backend = {
       type: d.type,
       description: d.description,
       location: d.location,
+      latitude: d.latitude ?? null,
+      longitude: d.longitude ?? null,
       media_urls: d.mediaUrls,
     };
     const { data, error } = await sb().from("claims").insert(row).select().single();
     if (error) throw new Error(error.message);
-    return nClaim(data as ClaimRow);
+    const claim = nClaim(data as ClaimRow);
+    // Analyse anti-fraude (best-effort, asynchrone)
+    callFn("fraud-check", { claimId: claim.id }).catch(() => {});
+    return claim;
   },
 
   // --- Notifications ---

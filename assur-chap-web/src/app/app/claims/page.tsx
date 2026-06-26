@@ -24,7 +24,32 @@ export default function ClaimsPage() {
   const [location, setLocation] = useState("");
   const [gps, setGps] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
+
+  function captureLocation(on: boolean) {
+    setGps(on);
+    if (!on) {
+      setCoords(null);
+      return;
+    }
+    if (!navigator.geolocation) {
+      toast("Géolocalisation non disponible sur cet appareil.", "err");
+      setGps(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        toast("Position GPS capturée 📍", "ok");
+      },
+      () => {
+        toast("Accès à la position refusé.", "err");
+        setGps(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -71,12 +96,15 @@ export default function ClaimsPage() {
         description,
         location: location || "Position non précisée",
         mediaUrls,
+        latitude: coords?.lat,
+        longitude: coords?.lng,
       });
       toast("Sinistre déclaré ✅", "ok");
       setOpen(false);
       setDescription("");
       setLocation("");
       setGps(false);
+      setCoords(null);
       setFiles([]);
       await refresh();
     } catch (err) {
@@ -123,6 +151,17 @@ export default function ClaimsPage() {
             </p>
             <div className="row gap-sm soft" style={{ fontSize: ".84rem" }}>
               <Icon.mapPin size={15} /> {cl.location}
+              {cl.latitude != null && cl.longitude != null && (
+                <a
+                  href={`https://www.google.com/maps?q=${cl.latitude},${cl.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="badge badge-brand"
+                  style={{ marginLeft: "auto" }}
+                >
+                  Voir sur la carte
+                </a>
+              )}
             </div>
             <div className="timeline" style={{ marginTop: 6 }}>
               {cl.updates.map((u, i) => (
@@ -195,10 +234,17 @@ export default function ClaimsPage() {
               </label>
               <label className="row gap-sm" style={{ cursor: "pointer" }}>
                 <span className="switch">
-                  <input type="checkbox" checked={gps} onChange={(e) => setGps(e.target.checked)} />
+                  <input type="checkbox" checked={gps} onChange={(e) => captureLocation(e.target.checked)} />
                   <span className="track" />
                 </span>
-                <span>Joindre ma localisation GPS</span>
+                <span style={{ flex: 1 }}>
+                  Joindre ma localisation GPS
+                  {coords && (
+                    <span className="soft" style={{ display: "block", fontSize: ".8rem" }}>
+                      📍 {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+                    </span>
+                  )}
+                </span>
               </label>
             </div>
             <div className="modal-foot">

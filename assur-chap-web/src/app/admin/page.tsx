@@ -177,7 +177,14 @@ export default function AdminPage() {
                       {cl.location}
                     </div>
                   </div>
-                  <span className="badge badge-warning">{cl.status}</span>
+                  <div className="row gap-sm">
+                    {cl.aiFraudScore != null && cl.aiFraudScore >= 0.7 && (
+                      <span className="badge badge-danger" title={`Score IA ${Math.round(cl.aiFraudScore * 100)}/100`}>
+                        <Icon.warning size={12} /> Fraude ?
+                      </span>
+                    )}
+                    <span className="badge badge-warning">{cl.status}</span>
+                  </div>
                 </div>
               ))}
               {claims.length === 0 && <p className="soft center">Aucun sinistre.</p>}

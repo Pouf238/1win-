@@ -139,6 +139,9 @@ export interface Claim {
   createdAt: string;
   photos: number;
   updates: ClaimUpdate[];
+  latitude?: number;
+  longitude?: number;
+  aiFraudScore?: number;
 }
 
 export interface Notification {

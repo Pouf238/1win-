@@ -78,7 +78,10 @@ export interface ClaimRow {
   type: string;
   description: string | null;
   location: string | null;
+  latitude: number | null;
+  longitude: number | null;
   media_urls: unknown[] | null;
+  ai_fraud_score: number | null;
   status: string;
   updates: { date: string; label: string }[] | null;
   created_at: string;
@@ -186,6 +189,9 @@ export function nClaim(r: ClaimRow): Claim {
     status: claimStatusLabel(r.status),
     photos: Array.isArray(r.media_urls) ? r.media_urls.length : 0,
     updates: r.updates ?? [],
+    latitude: r.latitude ?? undefined,
+    longitude: r.longitude ?? undefined,
+    aiFraudScore: r.ai_fraud_score ?? undefined,
     createdAt: r.created_at,
   };
 }

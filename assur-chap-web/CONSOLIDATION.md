@@ -95,8 +95,12 @@ automatique quand Supabase n'est pas configuré.
     **signature électronique** (consentement horodaté au paiement) ; **connexion
     Google/Apple** (OAuth Supabase) ; **2FA TOTP** (Supabase MFA, profil).
     Typecheck interne du code web : **0 erreur**.
-14. **Intégrations restantes** : Google Maps (localisation sinistres), détection
-    de fraude IA ; finalisation mobile (paiement WebBrowser, OCR photo).
+14. **Anti-fraude & géolocalisation** : ✅ Edge Function `fraud-check`
+    (heuristiques + IA, met à jour `ai_fraud_score`, déclenchée à la déclaration) ;
+    badge « Fraude ? » côté admin ; capture **GPS** du sinistre + lien Google Maps.
+15. **Site web : couverture PRD ~quasi complète.** Restant mineur : Maps interactif
+    (embed/clé), versement réel des commissions.
+16. **Mobile** : finalisation (paiement WebBrowser, OCR photo, écrans secondaires).
 
 ---
 

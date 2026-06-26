@@ -36,6 +36,8 @@ export interface NewClaim {
   description: string;
   location: string;
   mediaUrls: string[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export type StorageBucket = "documents" | "claims";
