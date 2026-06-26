@@ -31,12 +31,23 @@ RLS et des fonctions serveur. *Pas un pentest dynamique (l'app n'est pas déploy
 | 3 | Moyenne | **Intégrité paiements** : RLS `payments_insert_self` laissait un client insérer une ligne payment arbitraire | Policy supprimée (migration `0008`) — paiements créés uniquement en service-role |
 | 4 | Faible | **Injection HTML email** (défense en profondeur) dans `send-notification` | Échappement HTML du titre/corps |
 
+## 🟢 Durcissement supplémentaire appliqué
+
+- **En-têtes de sécurité** (`next.config.mjs`) : CSP, `X-Frame-Options: DENY`,
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`
+  (geolocation/camera limités à `self`), HSTS. `poweredByHeader` désactivé.
+- **Edge Functions — `verify_jwt`** (`supabase/config.toml`) : seul
+  `cinetpay-webhook` est public (verify_jwt=false) ; toutes les autres fonctions
+  exigent un JWT.
+- **Build robuste** : `eslint.ignoreDuringBuilds` (le lint ne bloque pas le
+  déploiement), typecheck TypeScript conservé. Pages d'erreur gracieuses
+  (`error.tsx`, `global-error.tsx`, `not-found.tsx`, `loading.tsx`).
+
 ## 🟠 Recommandations restantes (à traiter avant production)
 
-1. **Webhook CinetPay — authenticité** : `cinetpay-webhook` n'est pas signé. Au-delà
-   du correctif #2, **vérifier la signature/IP CinetPay** et/ou exiger un token
-   secret partagé. Mettre `verify_jwt = false` uniquement pour ce webhook via
-   `supabase/config.toml` (et ne pas exposer les autres fonctions inutilement).
+1. **Webhook CinetPay — signature** : `verify_jwt=false` est désormais ciblé sur
+   ce webhook (config.toml), mais il reste à **vérifier la signature/IP CinetPay**
+   (ou un token secret partagé) en complément du correctif #2.
 2. **Rate-limiting** absent sur : connexion, OTP, `verify_contract` (brute-force
    numéro+token), assistant/OCR (coût OpenAI). À ajouter au niveau
    reverse-proxy / WAF / Edge (ex. Upstash ratelimit).
@@ -55,8 +66,8 @@ RLS et des fonctions serveur. *Pas un pentest dynamique (l'app n'est pas déploy
 7. **Vérification publique** : `verify_contract` expose nom de l'assuré + véhicule
    à quiconque a `numéro + token`. Acceptable (token 8 hex aléatoire) mais à
    coupler au rate-limiting (#2).
-8. **En-têtes de sécurité** : ajouter CSP, `X-Frame-Options`, `Referrer-Policy`,
-   HSTS via `next.config` / middleware.
+8. ~~En-têtes de sécurité~~ ✅ **Fait** (`next.config.mjs`). CSP à durcir avec un
+   nonce si on retire `'unsafe-inline'`.
 9. **Dépendances** : lancer `npm audit` et figer les versions après installation.
 
 ## Portée non couverte

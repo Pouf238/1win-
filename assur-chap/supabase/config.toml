@@ -1,0 +1,31 @@
+# ==========================================================================
+# Assur Chap — Configuration Supabase (Edge Functions)
+# ==========================================================================
+project_id = "assur-chap"
+
+# --- Edge Functions : contrôle d'accès (verify_jwt) ---
+# Par défaut, les fonctions exigent un JWT valide (clé anon ou utilisateur).
+# Le webhook de paiement est appelé par CinetPay (sans JWT) → public, mais
+# protégé applicativement (vérification du statut réel + ALLOW_SIMULATED_PAYMENTS).
+[functions.cinetpay-webhook]
+verify_jwt = false
+
+# Fonctions appelées par des utilisateurs authentifiés (JWT requis)
+[functions.cinetpay-initiate]
+verify_jwt = true
+[functions.ocr-document]
+verify_jwt = true
+[functions.ai-assistant]
+verify_jwt = true
+[functions.fraud-check]
+verify_jwt = true
+
+# Fonctions internes (appelées en service-role par d'autres fonctions / cron)
+[functions.send-notification]
+verify_jwt = true
+[functions.generate-contract-pdf]
+verify_jwt = true
+[functions.insurer-sync]
+verify_jwt = true
+[functions.expiry-reminders]
+verify_jwt = true
