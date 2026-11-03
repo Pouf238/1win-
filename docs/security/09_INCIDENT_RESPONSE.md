@@ -65,13 +65,15 @@ Le schéma v2 ne fait qu'**ajouter** colonnes et tables (l'ancien code les ignor
 ## 5. Rotation des secrets
 | Secret | Où | Procédure | Conséquence |
 |---|---|---|---|
-| Mot de passe MySQL | hPanel → Bases de données → utilisateur | Changer le mot de passe, puis mettre à jour `db.pass` dans `_app/config.local.php` (gestionnaire de fichiers) | Aucune si fait dans la foulée |
-| `install_token` | `_app/config.local.php` | Remplacer par une valeur aléatoire de 32+ caractères | L'installation est de toute façon fermée |
+| Mot de passe MySQL | `php _app/cli/rotate.php check` puis `apply` (voir `docs/ROTATION_SECRETS.md`) | Préparer `_app/config.local.php.new` (seuls `db.pass` et `install_token` changent) ; l'outil change **les deux comptes** (`127.0.0.1` et `localhost`), vérifie et revient en arrière seul en cas d'échec. **Fait le 3 nov. 2026 (15:57 UTC), sans coupure** | Aucune (méthode à configuration transitoire) |
+| `install_token` | `_app/config.local.php` (rotation avec l'outil ci-dessus) | Valeur aléatoire de 64 caractères hexadécimaux. **Renouvelé le 3 nov. 2026** | Aucune ; sert de code d'activation d'un futur enrôlement MFA |
 | Mot de passe d'un membre | *Équipe* ou *Mon mot de passe* | Nouveau mot de passe (12+ caractères) | Sessions du membre fermées |
 | `app_key` | `_app/config.local.php` | **Ne pas changer sans plan** : elle chiffre les secrets MFA et signe le journal. Si changée : toutes les MFA doivent être **réenrôlées** (§4.2) et la vérification d'intégrité signalera une rupture à la date du changement (exporter le journal avant, noter l'incident) | Réenrôlement de l'équipe |
 | Clés API futures (passerelle) | variables du fichier de configuration | Rotation côté prestataire puis mise à jour | — |
 
 Sauvegarder `app_key` et `config.local.php` **hors du serveur** (gestionnaire de mots de passe).
+
+> Non renouvelés le 3 nov. 2026 (volontairement) : `app_key` (voir ci-dessus) et le mot de passe de la boîte e-mail `no-reply@` (à changer **avec** `smtp.pass`, après avertissement du propriétaire). Reste à supprimer, sur décision du propriétaire, `_app/storage/rotation/config.avant.php` (contient les anciens secrets, révoqués).
 
 ## 6. Sauvegarde et restauration
 - **Automatique** : cron quotidien 03:23 UTC → `<dossier du compte>/domains/symoprint.com/backups/` (hors racine web) : `db-AAAA-MM-JJ_HHMMSS.sql.gz` (tous les jours), `uploads-….zip` (dimanche), rétention 14 jours / 4 archives. Des sauvegardes **avant migration** (base + fichiers clients) ont été réalisées le 3 nov. 2026 à 02:55 puis à 04:55 (juste avant le déploiement), et une sauvegarde **après migration** à 04:57 (24 tables, `audit_log` incluse) ; heure locale du serveur.

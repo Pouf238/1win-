@@ -29,7 +29,7 @@ Les mêmes empreintes sont conservées **sur le serveur** (`SHA256SUMS`, lecture
 Le fichier **`pre-lotA.enc`** est chiffré (AES-256, dérivation de clé PBKDF2 à 600 000 itérations). Il contient des données personnelles (comptes, devis) : il ne doit jamais être stocké en clair hors du serveur.
 1. hPanel → *Gestionnaire de fichiers* → `domains/symoprint.com/backups/independantes/pre-lotA/` → télécharger **`pre-lotA.enc`** (et `SHA256SUMS`).
 2. Vérifier son empreinte (tableau ci-dessus), puis le copier à **au moins deux endroits indépendants** (par exemple un stockage en ligne personnel et un disque externe).
-3. **Garder la phrase secrète à part**, dans un gestionnaire de mots de passe — jamais à côté du fichier. *Elle vous a été communiquée dans la conversation : considérez-la comme confidentielle ; si vous préférez, rechiffrez le fichier avec votre propre phrase après l'avoir téléchargé.*
+3. **Garder la phrase secrète à part**, dans un gestionnaire de mots de passe — jamais à côté du fichier. ***La phrase secrète qui vous avait été communiquée dans la conversation est COMPROMISE** (décision du propriétaire, 3 nov. 2026) : ne pas s'y fier. Après téléchargement, rechiffrez le fichier avec une **nouvelle phrase** de votre choix, générée par vous et conservée dans un gestionnaire de mots de passe (déchiffrer avec l'ancienne puis rechiffrer, sur un ordinateur de confiance ; ou, mieux, chiffrement avec une clé publique : `openssl pkeyutl`/`age`/GPG, sans phrase à mémoriser). Une fois la copie rechiffrée vérifiée et conservée à deux endroits, vous pourrez demander la suppression de `pre-lotA.enc` du serveur. Le fichier ne contient que des données déjà présentes sur le serveur ; la phrase compromise ne protège donc plus que contre un vol du seul fichier.*
 4. Test de restauration (à faire une fois, sur un ordinateur de confiance) :
    `openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in pre-lotA.enc -out pre-lotA.tar` puis `tar xf pre-lotA.tar` (OpenSSL est disponible sous Linux/macOS ; sous Windows via Git Bash ou WSL).
 Le serveur ne conserve **pas** la phrase secrète.
@@ -44,7 +44,9 @@ Le serveur ne conserve **pas** la phrase secrète.
 |---|---|---|
 | `cfg-avant-smtp-20261103.bak` | configuration avant l'activation de l'envoi d'e-mails | `d3cfa30189494af6a3c54abc51c8225225842170e2140af193f8161bde4d9910` |
 | `independantes/cfg-avant-retrait-mfa-20261103.bak` | configuration avant le retrait de `mfa_setup_code` | `341a72b7922ad1bfcc1fe6e6485d05e63c4e6ace9346053e59c77977e6892382` |
-Le fichier actuel `_app/config.local.php` (permissions 600, inaccessible depuis le Web) a pour empreinte `bb50cc09b0346c80706d89ee4168d8aecde019569561110262d6e90561ff3920`. **Retour arrière de la configuration** : recopier le fichier `.bak` voulu à la place de `_app/config.local.php` (ces copies contiennent des secrets : ne jamais les télécharger sur un appareil non sûr).
+| `independantes/cfg-avant-rotation-20261103.bak` | configuration avant le renouvellement du mot de passe de la base et du jeton d'installation (secrets **révoqués** depuis le 3 nov. 2026 15:57 UTC) | `bb50cc09b0346c80706d89ee4168d8aecde019569561110262d6e90561ff3920` |
+
+Le fichier actuel `_app/config.local.php` (permissions 600, inaccessible depuis le Web) contient les **nouveaux** secrets (voir `docs/ROTATION_SECRETS.md`) ; son empreinte n'est pas publiée ici. Copie de sécurité interne : `_app/storage/rotation/config.avant.php`. **Retour arrière de la configuration** : recopier le fichier `.bak` voulu à la place de `_app/config.local.php` (ces copies contiennent des secrets : ne jamais les télécharger sur un appareil non sûr).
 
 ## 5. Bonnes pratiques à garder
 - Avant toute opération sensible : sauvegarde fraîche **nommée à part** (hors rotation) + contrôle d'intégrité + copie des empreintes.

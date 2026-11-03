@@ -14,9 +14,10 @@
 - [ ] **Connexion de l'administrateur existant** : mot de passe actuel → **enrôlement MFA** avec le **code d'activation** (`mfa_setup_code`) puis la clé à saisir dans Google Authenticator/Authy/Microsoft Authenticator → **noter les 8 codes de secours** → choisir un nouveau mot de passe (12+ caractères).
 - [ ] *Sécurité et journal* : intégrité « Valide », MFA « Activée » ; créer les autres comptes de l'équipe (rôle minimal nécessaire).
 - [x] Après l'enrôlement de l'administrateur, **retirer `mfa_setup_code`** de la configuration. *Fait le 3 nov. 2026 à 15:06 UTC, après vérification sur le journal d'audit de production : enrôlement à 05:17, changement de mot de passe, déconnexion, nouvelle connexion **avec code TOTP** à 05:32, 8 codes de secours intacts. Copie de la configuration d'avant : `backups/independantes/cfg-avant-retrait-mfa-20261103.bak`.*
-- [ ] **Jeton d'installation** : sans `mfa_setup_code`, le code d'activation d'un futur enrôlement MFA est le `install_token` de la configuration — le renouveler (valeur longue connue du seul propriétaire, dans `_app/config.local.php`).
+- [x] **Jeton d'installation** : sans `mfa_setup_code`, le code d'activation d'un futur enrôlement MFA est le `install_token` de la configuration. *Renouvelé le 3 nov. 2026 (64 caractères aléatoires, jamais affiché ; connu du seul propriétaire via `_app/config.local.php`).*
 - [x] Contrôles passifs : en-têtes (CSP avec `object-src 'none'`, `X-Frame-Options: DENY`), absence de `X-Powered-By` (sinon R-08), cookie `__Host-sp_sess`, fichiers sensibles toujours en 403.
-- [ ] **Rotation des secrets** (R-09, `09` §5) : mot de passe MySQL, jeton d'installation.
+- [x] **Rotation des secrets** (R-09, `09` §5) : mot de passe MySQL (2 comptes) et jeton d'installation. *Faite le 3 nov. 2026 à 15:57 UTC, sans coupure, vérifiée (voir `docs/ROTATION_SECRETS.md`).*
+- [ ] Reste à décider par le propriétaire : suppression de `_app/storage/rotation/config.avant.php` et des anciennes copies de configuration après quelques jours sans incident ; changement du mot de passe de la boîte e-mail (avec `smtp.pass`) ; examen de la base inutilisée `u304911821_pgfOL`.
 - [ ] Vérifier la délivrabilité des e-mails de confirmation/réinitialisation (R-01) **avant** de communiquer sur les comptes clients.
 
 ## B. Configuration externe à votre charge
