@@ -1,6 +1,6 @@
 # 07 — Tests de sécurité
 
-> **Statut de déploiement (3 nov. 2026)** : correctifs **testés en local, non déployés** sur https://symoprint.com (autorisation en attente).
+> **Statut de déploiement (3 nov. 2026)** : les correctifs décrits ici sont **déployés sur https://symoprint.com** (dépôt incrémental vers 04:57, heure du serveur : aucun fichier supprimé, sauvegarde base + fichiers clients réalisée à 04:55 juste avant ; migration de la base vérifiée : 24 tables dont `audit_log`). Vérifications passives après déploiement : en-têtes, redirections, fichiers sensibles et nouvelles routes conformes ; aucune erreur applicative. **Restent à faire par le propriétaire** : activation de la double authentification de l'administrateur, rotation des secrets, configuration e-mail/DNS (voir `08` et `10`).
 
 ## 1. Méthode
 - **Environnement** : instance PHP locale jetable (SQLite, e-mails dans un journal), **jamais la production** — `tests/security/helper.php` et `suite.js` refusent toute cible contenant `symoprint.com`.

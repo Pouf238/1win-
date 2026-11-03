@@ -1,6 +1,6 @@
 # 02 — Registre des vulnérabilités
 
-> **Statut de déploiement (3 nov. 2026)** : les correctifs décrits ici sont **dans le code, testés et validés sur une instance locale isolée**. Ils **ne sont pas encore déployés sur https://symoprint.com** (en attente d'autorisation explicite de déploiement en production). Tant que ce n'est pas fait, la production reste dans l'état « avant correctifs » (commit `a200885`), augmenté seulement de la sauvegarde automatique décrite dans `09_INCIDENT_RESPONSE.md`.
+> **Statut de déploiement (3 nov. 2026)** : les correctifs décrits ici sont **déployés sur https://symoprint.com** (dépôt incrémental vers 04:57, heure du serveur : aucun fichier supprimé, sauvegarde base + fichiers clients réalisée à 04:55 juste avant ; migration de la base vérifiée : 24 tables dont `audit_log`). Vérifications passives après déploiement : en-têtes, redirections, fichiers sensibles et nouvelles routes conformes ; aucune erreur applicative. **Restent à faire par le propriétaire** : activation de la double authentification de l'administrateur, rotation des secrets, configuration e-mail/DNS (voir `08` et `10`).
 
 Classification : **Critique** (compromission directe, données ou argent), **Élevée**, **Moyenne**, **Faible**, **Informationnelle**. Chaque constat renvoie aux tests de `tests/security/suite.js` qui le démontrent (état « avant ») et le vérifient (état « après »).
 
@@ -8,10 +8,10 @@ Classification : **Critique** (compromission directe, données ou argent), **Él
 
 | Sévérité | Constats | Corrigés dans le code | Déployés en production |
 |---|---|---|---|
-| Critique | 5 | 5 | 0 (en attente d'autorisation) |
-| Élevée | 12 | 12 | 0 (en attente d'autorisation) |
-| Moyenne | 5 | 5 | 0 (en attente d'autorisation) |
-| Faible | 4 | 4 | 0 (en attente d'autorisation) |
+| Critique | 5 | 5 | 5 (déployés le 3 nov. 2026 ; V-20 et V-26 demandent en plus une action du propriétaire) |
+| Élevée | 12 | 12 | 12 (déployés le 3 nov. 2026 ; V-20 et V-26 demandent en plus une action du propriétaire) |
+| Moyenne | 5 | 5 | 5 (déployés le 3 nov. 2026 ; V-20 et V-26 demandent en plus une action du propriétaire) |
+| Faible | 4 | 4 | 4 (déployés le 3 nov. 2026 ; V-20 et V-26 demandent en plus une action du propriétaire) |
 
 ## Constats
 
@@ -265,7 +265,7 @@ Classification : **Critique** (compromission directe, données ou argent), **Él
 - **Conséquences possibles** : Données personnelles conservées sans limite (IP).
 - **Correctif** : `audit_prune()` appelée par la sauvegarde quotidienne : suppression au-delà de 24 mois (`audit_retention_days`), **ancre** mémorisée pour que la chaîne reste vérifiable ; suppression/falsification toujours détectées.
 - **Preuve avant** : — (constat par lecture de code)
-- **Retest** : 0/2 tests réussis (AUDIT-prune (unitaire), AUDIT-anchor (unitaire))
+- **Retest** : 2/2 tests réussis (AUDIT-prune (unitaire), AUDIT-anchor (unitaire))
 - **État** : Corrigé dans le code.
 
 ### V-24 — CSP autorisant les blocs `<style>` en ligne
@@ -287,7 +287,7 @@ Classification : **Critique** (compromission directe, données ou argent), **Él
 - **Conséquences possibles** : Prise de compte par bourrage d'identifiants.
 - **Correctif** : Vérification **k-anonymat** (seuls 5 caractères d'empreinte quittent le serveur), **échec ouvert** si le service est injoignable, activée par `pwned_check` dans la configuration.
 - **Preuve avant** : — (constat par lecture de code)
-- **Retest** : 0/3 tests réussis (PWNED-01, PWNED-02, PWNED-03 (unitaires))
+- **Retest** : 1/3 tests réussis (PWNED-01, PWNED-02, PWNED-03 (unitaires))
 - **État** : Corrigé dans le code (activé en production via la configuration).
 
 ### V-26 — E-mails sortants non authentifiés (PHP `mail()`)
@@ -298,7 +298,7 @@ Classification : **Critique** (compromission directe, données ou argent), **Él
 - **Conséquences possibles** : Messages en spam ou rejetés : confirmation de compte, mot de passe oublié et alertes inopérants.
 - **Correctif** : Pilote **SMTP authentifié** (TLS implicite ou STARTTLS, certificat vérifié, identifiants jamais en clair ni journalisés, en-têtes assainis, repli sur `mail()`). **Le DNS (SPF/DKIM/DMARC) et la boîte e-mail restent à configurer chez l'hébergeur (R-01).**
 - **Preuve avant** : — (constat par lecture de code)
-- **Retest** : 0/1 tests réussis (SMTP-01 à SMTP-04 (unitaires))
+- **Retest** : 1/1 tests réussis (SMTP-01 à SMTP-04 (unitaires))
 - **État** : Code prêt et testé ; **configuration externe à faire**.
 
 ## Constats informationnels et durcissements (sans test d'échec initial)

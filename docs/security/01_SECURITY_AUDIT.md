@@ -1,6 +1,6 @@
 # 01 — Audit de sécurité de Symo Print
 
-> **Statut de déploiement (3 nov. 2026)** : les correctifs décrits ici sont **dans le code, testés et validés sur une instance locale isolée**. Ils **ne sont pas encore déployés sur https://symoprint.com** (en attente d'autorisation explicite de déploiement en production). Tant que ce n'est pas fait, la production reste dans l'état « avant correctifs » (commit `a200885`), augmenté seulement de la sauvegarde automatique décrite dans `09_INCIDENT_RESPONSE.md`.
+> **Statut de déploiement (3 nov. 2026)** : les correctifs décrits ici sont **déployés sur https://symoprint.com** (dépôt incrémental vers 04:57, heure du serveur : aucun fichier supprimé, sauvegarde base + fichiers clients réalisée à 04:55 juste avant ; migration de la base vérifiée : 24 tables dont `audit_log`). Vérifications passives après déploiement : en-têtes, redirections, fichiers sensibles et nouvelles routes conformes ; aucune erreur applicative. **Restent à faire par le propriétaire** : activation de la double authentification de l'administrateur, rotation des secrets, configuration e-mail/DNS (voir `08` et `10`).
 
 ## 1. Objet, périmètre et méthode
 
@@ -57,7 +57,7 @@ Les échecs initiaux correspondent à **26 constats consolidés** (V-01 à V-26)
 ### Ce qui était déjà correct (vérifié, non modifié)
 Requêtes SQL paramétrées partout (aucune injection SQL trouvée, y compris `SLEEP`, `UNION`, tautologies) ; encodage HTML des champs clients (XSS stocké/réfléchi sur les champs testés) ; jeton CSRF sur tous les POST ; recalcul des prix côté serveur (prix/total forgés ignorés, quantités négatives ou démesurées bornées) ; contrôle de propriété sur commandes, devis, adresses, fichiers ; protection contre la double soumission de commande ; renouvellement de l'identifiant de session à la connexion ; fichiers sensibles refusés (`_app`, `.git`, `.env`, `composer.json`…).
 
-## 5. Vérifications passives de la production (état avant déploiement des correctifs)
+## 5. Vérifications passives de la production (état **avant** déploiement des correctifs)
 
 | Contrôle | Résultat |
 |---|---|
@@ -71,6 +71,18 @@ Requêtes SQL paramétrées partout (aucune injection SQL trouvée, y compris `S
 | IP client | `REMOTE_ADDR` = IP réelle du visiteur (le serveur la fournit) : aucune configuration de proxy de confiance nécessaire |
 | PHP | 8.3 ; Argon2id disponible ; `openssl`, `dom`, `zip`, `fileinfo` présents ; `exec/system/proc_open…` désactivées |
 | DNS e-mail | SPF = `include:_spf.reach.hostinger.com ~all` ; DKIM Reach ; **DMARC `p=none`** ; **aucun enregistrement MX** → voir risques `08_REMAINING_RISKS.md` (R-01) |
+
+### Après déploiement (3 nov. 2026, passif)
+| Contrôle | Résultat |
+|---|---|
+| En-têtes | CSP avec `object-src 'none'`, `frame-ancestors 'none'`, `style-src 'self'` ; `X-Frame-Options: DENY` ; `nosniff` ; `Referrer-Policy` ; `Permissions-Policy` étendue ; COOP/CORP `same-origin` ; HSTS ; `Cache-Control: no-store` |
+| Divulgation | `X-Powered-By` **absent** |
+| Cookies | `__Host-sp_sess` (`Secure; HttpOnly; SameSite=Lax`), `sp_cart` idem |
+| Pages publiques | accueil, catalogue, fiches produit, devis, contact, FAQ, CGV, connexion/inscription : 200 |
+| Nouvelles routes | `/admin/securite`, `/admin/mfa`, `/admin/confirmer`, `/compte/mes-donnees` : redirigées vers la connexion (actives, protégées) |
+| Fichiers sensibles | `_app/*`, `.git`, `.env`, `tools/`, `docs/`, sessions, uploads, logs : **403** |
+| Connexion invalide (essai unique) | message générique, aucune erreur dans le journal PHP |
+| Note | un second en-tête `Content-Security-Policy: upgrade-insecure-requests` est ajouté par l'infrastructure (cumul avec le nôtre, sans conflit) |
 
 ## 6. Limites de cet audit (à lire)
 

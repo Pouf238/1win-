@@ -1,6 +1,6 @@
 # 04 — Architecture de sécurité
 
-> **Statut de déploiement (3 nov. 2026)** : ce qui est décrit ici est **implémenté et testé en local** ; **non déployé sur https://symoprint.com** (autorisation de mise en production en attente).
+> **Statut de déploiement (3 nov. 2026)** : les correctifs décrits ici sont **déployés sur https://symoprint.com** (dépôt incrémental vers 04:57, heure du serveur : aucun fichier supprimé, sauvegarde base + fichiers clients réalisée à 04:55 juste avant ; migration de la base vérifiée : 24 tables dont `audit_log`). Vérifications passives après déploiement : en-têtes, redirections, fichiers sensibles et nouvelles routes conformes ; aucune erreur applicative. **Restent à faire par le propriétaire** : activation de la double authentification de l'administrateur, rotation des secrets, configuration e-mail/DNS (voir `08` et `10`).
 
 ## 1. Principes
 Défense en profondeur (réseau/CDN → serveur → application → données), moindre privilège, **jamais de confiance au navigateur** (prix, rôles, propriété, statuts toujours recalculés/contrôlés côté serveur), échec sûr (refus par défaut), journalisation de tout événement sensible, secrets hors dépôt et hors frontend.

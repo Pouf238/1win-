@@ -1,6 +1,6 @@
 # 09 — Réponse aux incidents, restauration et rotation des secrets
 
-> **Statut de déploiement (3 nov. 2026)** : correctifs **testés en local, non déployés** sur https://symoprint.com (autorisation en attente).
+> **Statut de déploiement (3 nov. 2026)** : les correctifs décrits ici sont **déployés sur https://symoprint.com** (dépôt incrémental vers 04:57, heure du serveur : aucun fichier supprimé, sauvegarde base + fichiers clients réalisée à 04:55 juste avant ; migration de la base vérifiée : 24 tables dont `audit_log`). Vérifications passives après déploiement : en-têtes, redirections, fichiers sensibles et nouvelles routes conformes ; aucune erreur applicative. **Restent à faire par le propriétaire** : activation de la double authentification de l'administrateur, rotation des secrets, configuration e-mail/DNS (voir `08` et `10`).
 
 ## 1. Équipe et contacts (à compléter par le propriétaire)
 | Rôle | Nom | Contact |
@@ -74,7 +74,7 @@ Le schéma v2 ne fait qu'**ajouter** colonnes et tables (l'ancien code les ignor
 Sauvegarder `app_key` et `config.local.php` **hors du serveur** (gestionnaire de mots de passe).
 
 ## 6. Sauvegarde et restauration
-- **Automatique** : cron quotidien 03:23 UTC → `<dossier du compte>/domains/symoprint.com/backups/` (hors racine web) : `db-AAAA-MM-JJ_HHMMSS.sql.gz` (tous les jours), `uploads-….zip` (dimanche), rétention 14 jours / 4 archives. Une sauvegarde **pré-migration** (base + fichiers clients) a été réalisée le 3 nov. 2026 à 02:55 (heure locale du serveur).
+- **Automatique** : cron quotidien 03:23 UTC → `<dossier du compte>/domains/symoprint.com/backups/` (hors racine web) : `db-AAAA-MM-JJ_HHMMSS.sql.gz` (tous les jours), `uploads-….zip` (dimanche), rétention 14 jours / 4 archives. Des sauvegardes **avant migration** (base + fichiers clients) ont été réalisées le 3 nov. 2026 à 02:55 puis à 04:55 (juste avant le déploiement), et une sauvegarde **après migration** à 04:57 (24 tables, `audit_log` incluse) ; heure locale du serveur.
 - **Accès** : gestionnaire de fichiers hPanel (dossier au-dessus de `public_html`) ; télécharger régulièrement une copie **hors Hostinger**.
 - **Restaurer la base** : hPanel → phpMyAdmin → la base de données du site → *Importer* le fichier `.sql.gz` (le script contient `DROP TABLE IF EXISTS` puis `CREATE TABLE` + `INSERT`) ; ou en ligne de commande : `gunzip -c db-….sql.gz | mysql -u UTILISATEUR -p BASE`.
 - **Restaurer les fichiers clients** : extraire `uploads-….zip` dans `_app/storage/uploads/`.
