@@ -1,6 +1,6 @@
 # Interrupteurs de fonctionnalités — conception finale, tests et exploitation (3 novembre 2026)
 
-> **Statut : développé et testé en local ; NON déployé en production.** Aucun changement de schéma de base de données n'est nécessaire (la migration v4, déjà appliquée, suffit). Le déploiement attend votre autorisation distincte.
+> **Statut : DÉPLOYÉ en production le 3 novembre 2026 à 23:08 UTC (autorisé par vous), préréglage « Vitrine + devis », les 12 modules désactivés.** Aucun changement de schéma de base de données (la migration v4 suffisait). Détail, vérifications et retour arrière : `docs/DOSSIER_DEPLOIEMENT_LOTS_A_F.md`.
 
 ## 1. Ce que c'est
 Vingt et un interrupteurs — **9 familles métier** et **12 modules** (les nouveautés des lots B à F) — pour ouvrir la plateforme progressivement et couper une fonction sans toucher au code, sans perdre de données et sans déploiement.

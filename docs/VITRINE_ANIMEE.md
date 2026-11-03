@@ -1,6 +1,6 @@
 # Vitrine animée de l'accueil (3 novembre 2026)
 
-> **État : développée et testée en local. NON déployée en production** (la production fonctionne avec l'ancienne version + le seul Lot A ; cette section s'appuie sur le code des lots B à F, qui reste soumis à une autorisation de déploiement distincte).
+> **État : DÉPLOYÉE en production le 3 novembre 2026 à 23:08 UTC** (avec les lots B à F, voir `docs/DOSSIER_DEPLOIEMENT_LOTS_A_F.md`). Testée en ligne dans un navigateur réel : 24 contrôles, aucune erreur de console ni de CSP.
 
 ## Ce que c'est
 Une section de la page d'accueil, « Vos objets à votre image » : à gauche la liste de 3 à 5 objets (photos produits réelles de la boutique), à droite une scène. Les effets reprennent ceux du composant *Coffee Pour Menu* (Aakash Mehra), appliqués à **vos photos** au lieu d'un dessin de café :

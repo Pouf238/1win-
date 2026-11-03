@@ -48,6 +48,17 @@ Le serveur ne conserve **pas** la phrase secrète.
 
 Le fichier actuel `_app/config.local.php` (permissions 600, inaccessible depuis le Web) contient les **nouveaux** secrets (voir `docs/ROTATION_SECRETS.md`) ; son empreinte n'est pas publiée ici. Copie de sécurité interne : `_app/storage/rotation/config.avant.php`. **Retour arrière de la configuration** : recopier le fichier `.bak` voulu à la place de `_app/config.local.php` (ces copies contiennent des secrets : ne jamais les télécharger sur un appareil non sûr).
 
+## 4 ter. Copie indépendante avant le déploiement des lots B à F (3 nov. 2026, 23:02 UTC)
+Dossier `backups/independantes/pre-lotsBF/` (0600, hors rotation, `SHA256SUMS` en lecture seule). Empreintes SHA-256 (début) ; les valeurs complètes sont dans `SHA256SUMS` sur le serveur.
+| Fichier | Contenu | SHA-256 (début) |
+|---|---|---|
+| `db-2026-11-03_230202.sql.gz` | base de données (30 tables, 404 lignes) | `fd999d7af001e939` |
+| `uploads-2026-11-03_230202.zip` | fichiers clients (2 fichiers) | `060793a23cc6fd01` |
+| `code-avant-lots-BF.tgz` | **code du site avant le déploiement** (hors stockage) — sert au retour arrière niveau 1 | `8208cfc94cecbb51` |
+| `code-sha256-avant.txt` | empreintes de chaque fichier de code d'avant | `badb9691a52e7d38` |
+| `htaccess-avant` | `.htaccess` d'avant | `8b6865ffa084c1b2` |
+Pas de copie chiffrée hors compte pour cette étape : elle suppose la nouvelle phrase secrète que vous choisirez (voir §3).
+
 ## 5. Bonnes pratiques à garder
 - Avant toute opération sensible : sauvegarde fraîche **nommée à part** (hors rotation) + contrôle d'intégrité + copie des empreintes.
 - Ne jamais supprimer une sauvegarde sans l'accord du propriétaire.

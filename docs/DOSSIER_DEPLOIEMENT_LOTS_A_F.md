@@ -1,9 +1,32 @@
 # Dossier de décision — déploiement des lots A à F (3 novembre 2026)
 
-> **Statut : Lot A seul déployé (migration v4) ; lots B à F NON déployés.** Le déploiement des lots B à F attend votre autorisation distincte.
-> Rien n'est supprimé, aucune commande n'est touchée, le fonctionnement des paiements n'est pas modifié (voir §5).
+> **Statut : lots A à F + vitrine animée DÉPLOYÉS en production le 3 novembre 2026 à 23:08 UTC, avec le préréglage « Vitrine + devis » (votre choix).** Rien n'a été supprimé, aucune donnée n'a changé (empreintes identiques). Voir ci-dessous « Déploiement des lots B à F ».
 
-## État au 3 novembre 2026, 13:56 UTC — Lot A DÉPLOYÉ en production (migration v4 seule)
+## Déploiement des lots B à F + vitrine animée — 3 novembre 2026, 23:08 UTC (autorisé par vous)
+**Méthode** (script `ops.sh`, répété d'abord sur une réplique locale : sauvegarde, contrôle, application, retour arrière) :
+1. **Avant tout changement** : état réel du serveur comparé à ce qui était attendu (35 fichiers identiques à l'ancienne version, 6 déjà à jour, 17 nouveaux). Sauvegarde fraîche de 23:02 UTC : base `db-2026-11-03_230202.sql.gz` (30 tables, 404 lignes), fichiers clients `uploads-2026-11-03_230202.zip` (2 fichiers, intégrité vérifiée), **copie du code actuel** `code-avant-lots-BF.tgz` et empreintes de tous ses fichiers, `.htaccess` — dossier `backups/independantes/pre-lotsBF/` (hors rotation, 0600, `SHA256SUMS` en lecture seule). Empreintes de référence des données enregistrées.
+2. **Envoi dans un dossier de préparation** protégé (`_app/storage/deploy-stage/`, 403 depuis le Web) : 53 fichiers. **Contrôle sur le serveur** : empreinte SHA-256 identique à l'envoi pour les 53, syntaxe valide avec le PHP 8.3 du serveur (0 erreur).
+3. **Remplacement atomique** (renommage fichier par fichier, durée ≈ 1 s), dans l'ordre sûr : outils, fichiers nouveaux (inertes), amorçage, bibliothèques (noyau en dernier), routes, vues, ressources. Aucun fichier supprimé, aucune migration (le schéma était déjà en v4), aucune modification de la configuration.
+4. **Vérifications** : voir ci-dessous.
+
+**Résultats**
+| Contrôle | Résultat |
+|---|---|
+| Surveillance externe pendant tout le déploiement | **420 requêtes sur 420 en HTTP 200** (via l'application) et 105 sur 105 pour le catalogue avec session : aucune interruption |
+| Données (empreintes avant/après) | **identiques** : 52 produits, 1 devis, 2 comptes, 38 paramètres, promo, paiements ; 2 fichiers clients vérifiés octet par octet ; aucune nouvelle table |
+| Journal d'erreurs PHP | 0 erreur fatale ; aucune nouvelle ligne depuis le déploiement |
+| Pages publiques | accueil (avec la vitrine), catalogue, fiches, devis, contact, FAQ, livraison, à propos, services, guide : 200 ; connexion client et équipe : 200 |
+| Fonctions fermées par le préréglage | `/panier`, `/compte/inscription`, `/suivi` : 503 « Indisponible pour le moment » avec message clair et accès au devis / WhatsApp / contact ; même **sans jeton** en POST : refusées sans effet |
+| Fiche produit | boutons d'ajout au panier masqués et désactivés, bandeau « Produit vendu sur devis », bouton de devis actif |
+| Accès | `/admin*`, `/compte*` sans session : redirection vers la connexion ; faux identifiants : retour normal à la connexion ; fichiers sensibles (`config`, `migrate`, `.git`, `tests`, `docs`, `tools`, `backup`) : 403 |
+| En-têtes de sécurité | CSP, HSTS, `nosniff`, `X-Frame-Options`, `Referrer-Policy` présents sur toutes les pages ; pas d'`X-Powered-By` |
+| Vitrine (navigateur réel, sur le site en ligne) | 24 contrôles : survol, chute et arrivée en ressort, clavier, tactile, mouvement réduit, sans JavaScript, mobile ; aucune erreur de console ni de CSP |
+
+**Ce qui change pour les visiteurs (préréglage « Vitrine + devis »)** : le devis, la personnalisation, l'envoi de fichiers et les notifications sont actifs ; **commandes, paiements, inscriptions, commandes sans compte et suivi sont fermés** (messages explicites). Les clients existants se connectent toujours et gardent l'accès à leurs commandes, devis et documents ; l'équipe garde tout le nécessaire pour traiter les dossiers en cours. Les 12 modules des lots B à F sont **désactivés** : à activer un par un depuis *Administration → Fonctionnalités* (super-administrateur, mot de passe récent demandé).
+
+**Retour arrière (non utilisé)** — niveau 1, code seulement (< 1 min, la base n'est pas touchée) : `sh ~/domains/symoprint.com/public_html/_app/storage/deploy-stage/ops.sh rollback` (réécrit les anciens fichiers depuis `code-avant-lots-BF.tgz` ; les fichiers nouveaux restent, inertes pour l'ancien code ; testé sur réplique : 129 anciens fichiers rétablis à l'identique). Niveaux 2 et 3 (base) : voir §8, inchangés.
+
+## Étape précédente — 3 novembre 2026, 13:56 UTC — Lot A DÉPLOYÉ en production (migration v4 seule)
 **Autorisé par vous** (sauvegarde + migration du Lot A uniquement). **Les lots B à F ne sont PAS déployés** : le code applicatif en ligne est inchangé (commit 5559a24). Seuls ont été déposés : `_app/sql/migrate.php` et `tools/migrate.php` (Lot A) et trois outils de diagnostic en lecture seule (`_app/cli/mailtest.php`, `inventory.php`, `verify.php`).
 - **Sauvegardes** (13:36 UTC) : base `db-2026-11-03_133601.sql.gz` (24 tables, 308 lignes) et fichiers clients `uploads-2026-11-03_133601.zip` (**2 fichiers**, dont celui de 05:27) ; intégrité vérifiée (gzip et CRC de l'archive) ; **copie indépendante** `backups/independantes/pre-lotA/` (hors rotation, lecture seule, empreintes SHA-256 identiques aux originaux) ; configuration `cfg-avant-smtp-20261103.bak` incluse. Aucune sauvegarde existante supprimée.
 - **Répétition sur le même moteur que la production** : MariaDB **11.8.9**, mode SQL non strict (différent de mon moteur de test habituel) — migration, pages, données : identiques ; retour arrière `down 3` testé.

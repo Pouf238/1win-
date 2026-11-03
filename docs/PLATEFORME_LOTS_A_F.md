@@ -1,6 +1,6 @@
 # Plateforme — réalisation des lots A à F (3 novembre 2026)
 
-> **État : développé et testé en local. NON déployé en production** (la migration modifie la base : elle attend votre autorisation, voir §6).
+> **État : lots A à F DÉPLOYÉS en production** (Lot A le 3 nov. 2026 à 13:53 UTC, lots B à F le 3 nov. 2026 à 23:08 UTC, tous autorisés par vous ; modules des lots B à F désactivés par défaut). Voir `docs/DOSSIER_DEPLOIEMENT_LOTS_A_F.md`.
 
 ## 1. Lot A — Fondations de données (réversibles)
 - **Migrations réversibles** : chaque version a un `up` et un `down` testés (`tests/platform/migrations.php`) ; commande `php tools/migrate.php status | up | down <version> --i-have-a-backup`.
