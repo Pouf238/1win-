@@ -38,7 +38,7 @@
 - Sinon, un autre super administrateur coche « Réinitialiser MFA » (réauthentification requise).
 - S'il n'existe qu'un seul super administrateur : dans **phpMyAdmin** (hPanel → Bases de données), exécuter pour son adresse :
   `UPDATE users SET mfa_enabled=0, mfa_secret=NULL, mfa_backup=NULL, mfa_used=NULL, must_change_pw=1, session_epoch=session_epoch+1 WHERE email='ADRESSE';`
-  puis se reconnecter : l'enrôlement est de nouveau imposé (il exigera le `mfa_setup_code` de la configuration, ou un code personnel que génère un autre super administrateur). Ne jamais désactiver la MFA pour un autre motif.
+  puis se reconnecter : l'enrôlement est de nouveau imposé (il exigera le `mfa_setup_code` de la configuration — **absent depuis le 3 nov. 2026** : à défaut, le `install_token` de la configuration ; ou un code personnel que génère un autre super administrateur). Ne jamais désactiver la MFA pour un autre motif.
 
 ### 4.3 Fuite ou soupçon de fuite de secrets → **rotation** (voir §5)
 

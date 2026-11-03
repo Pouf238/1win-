@@ -69,7 +69,7 @@ Uniquement des **ajouts** (6 tables, 9 colonnes, 6 index) + 13 lignes de statuts
 | Parcours navigateur e2e | 85 / 85 |
 | Mise à jour depuis l'ancienne base ; ancien code sur base v4 | réussis |
 | **Répétition de restauration** : sauvegarde faite par le script DE PRODUCTION (`cli/backup.php`, code 5559a24) sur une base MariaDB identique à la production, puis `gunzip -c … \| mysql` dans une base vide | 24 tables, 140 lignes restaurées ; comparaison avec la source : **identique, accents compris**, à une seule exception voulue (la ligne d'audit « backup » écrite après la sauvegarde) |
-| **Non testé** | la suite de sécurité complète sur MariaDB (seule la suite plateforme l'est) ; les e-mails réels en conditions de forte charge ; la version exacte du MySQL/MariaDB de Hostinger n'est pas connue |
+| **Complément du 3 nov. 2026** | suites **sécurité (119/119), plateforme (17/17) et interrupteurs (59/59) rejouées sur MariaDB 11.8.9** (même version et même mode SQL que la production) : toutes réussies. **Reste non testé** : le MySQL de production n'a pas été utilisé directement (seulement son moteur à l'identique) ; les e-mails réels en forte charge |
 
 ## 5. Paiements
 **Non modifiés.** La table `payments` est créée vide et n'est lue par aucune page ; les modes de paiement, la confirmation manuelle par l'équipe (référence obligatoire) et les montants calculés côté serveur sont inchangés. Le paiement en ligne (Lot G) n'est pas inclus : il exige votre choix de prestataire et des clés de test.
@@ -124,7 +124,12 @@ Réponse honnête à votre question : **le schéma (Lot A) se déploie seul et s
 - **Activation séparée par famille de fonctions (option, non faite à ce jour)** : ajouter un interrupteur de configuration par famille de routes nouvelles (statuts/modèles/notifications = D ; devis étendus = C ; fichiers = E ; suivi invité = B), pour les activer une par une après le dépôt. Cela demande une petite modification du code et de ses tests (≈ une demi-journée de travail et de vérification) ; les fichiers partagés (`shop.php`, `admin.php`…) resteraient actifs dès l'étape 3. **À ne faire que si vous le demandez.**
 - Recommandation : étapes 0 → 1 (validation par vous) → 2 → 3, sans activation séparée.
 
-## 9. Décisions que j'attends de vous
+## 9. Documents associés (3 nov. 2026)
+- `docs/INTERRUPTEURS_FONCTIONNALITES.md` — interrupteurs de fonctionnalités : conception finale, dépendances, tests, risques, retour arrière, configuration manuelle.
+- `docs/SAUVEGARDES.md` — sauvegardes, empreintes SHA-256, copie chiffrée hors compte, restauration.
+- `docs/EMAIL_CONFIGURATION.md` — messagerie.
+
+## 10. Décisions que j'attends de vous
 1. Autorisation de déployer les lots A à F selon ce plan (oui / non / avec modifications).
 2. Renseigner « E-mail public » et « E-mail de notification » (je peux le faire avec votre accord, ou vous dans *Paramètres*).
 3. Relecture des modèles de messages clients avant ouverture au public.
