@@ -201,7 +201,7 @@ function maintenance(): void {
     try {
         $n = time(); DB::q('DELETE FROM ratelimits WHERE expires<?', [$n]); DB::q('DELETE FROM password_resets WHERE expires_at<?', [date('Y-m-d H:i:s', $n - 7 * 86400)]);
         DB::q("DELETE FROM carts WHERE user_id=0 AND updated_at<?", [date('Y-m-d H:i:s', $n - 90 * 86400)]);
-        foreach (DB::all('SELECT * FROM files WHERE order_id=0 AND quote_id=0 AND created_at<? LIMIT 200', [date('Y-m-d H:i:s', $n - 7 * 86400)]) as $f) { @unlink(Files::path($f)); DB::del('files', (int) $f['id']); }
+        foreach (DB::all('SELECT * FROM files WHERE order_id=0 AND quote_id=0 AND created_at<? LIMIT 200', [date('Y-m-d H:i:s', $n - 30 * 86400)]) as $f) { @unlink(Files::path($f)); DB::del('files', (int) $f['id']); }
     } catch (Throwable $e) { error_log('[symoprint] maintenance : ' . $e->getMessage()); }
 }
 /** Signature de webhook de prestataire de paiement (HMAC-SHA256, horodatage, anti-rejeu). Prêt pour l'intégration d'une passerelle. */

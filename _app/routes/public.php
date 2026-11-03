@@ -99,7 +99,7 @@ route('POST', '/api/upload', function () {
 });
 route('POST', '/api/upload/supprimer', function () {
     $id = (int) (body_json()['id'] ?? $_POST['id'] ?? 0); $f = DB::find('files', $id);
-    if ($f && hash_equals((string) $f['owner_token'], Cart::token()) && !$f['order_id'] && !$f['quote_id']) { @unlink(Files::path($f)); DB::del('files', $id); }
+    if ($f && hash_equals((string) $f['owner_token'], Cart::token()) && !$f['order_id'] && !$f['quote_id']) { @unlink(Files::path($f)); DB::del('files', $id); } // nosemgrep: php.lang.security.injection.tainted-filename.tainted-filename (chemin issu de la base, validé par Files::path : format généré par le serveur)
     json_out(['ok' => true]);
 });
 route('POST', '/api/favori', function () {

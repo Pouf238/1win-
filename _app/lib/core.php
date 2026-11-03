@@ -65,7 +65,11 @@ function throttle(string $key, int $max, int $window, bool $peek = false): bool 
     $k = substr(sha1($key), 0, 40); $t = time();
     $r = DB::row('SELECT n, expires FROM ratelimits WHERE k=?', [$k]);
     if ($peek) return $r && $r['expires'] >= $t && $r['n'] >= $max;   // consultation sans compter
-    if (!$r || $r['expires'] < $t) { if ($r) DB::q('DELETE FROM ratelimits WHERE k=?', [$k]); DB::q('INSERT INTO ratelimits (k,n,expires) VALUES (?,?,?)', [$k, 1, $t + $window]); return false; }
+    if (!$r || $r['expires'] < $t) {
+        if ($r) DB::q('DELETE FROM ratelimits WHERE k=?', [$k]);
+        try { DB::q('INSERT INTO ratelimits (k,n,expires) VALUES (?,?,?)', [$k, 1, $t + $window]); } catch (PDOException $e) { DB::q('UPDATE ratelimits SET n=n+1 WHERE k=?', [$k]); }   // requête concurrente : la ligne vient d'être créée
+        return false;
+    }
     DB::q('UPDATE ratelimits SET n=n+1 WHERE k=?', [$k]); return $r['n'] + 1 > $max;
 }
 

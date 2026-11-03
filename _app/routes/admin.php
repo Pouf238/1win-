@@ -233,7 +233,7 @@ route('POST', '/admin/utilisateurs/{id}', function ($a) {
 route('GET', '/admin/securite', function () {
     require_perm('security'); $lvl = in_array(get('level'), ['info', 'warn', 'alert'], true) ? get('level') : ''; $q = get('q');
     $w = ['1=1']; $p = []; if ($lvl) { $w[] = 'level=?'; $p[] = $lvl; } if ($q !== '') { $w[] = '(action LIKE ? OR target LIKE ? OR ip LIKE ?)'; $l = '%' . $q . '%'; array_push($p, $l, $l, $l); }
-    adm('security', ['rows' => DB::all('SELECT * FROM audit_log WHERE ' . implode(' AND ', $w) . ' ORDER BY id DESC LIMIT 300', $p), 'integrity' => audit_verify(), 'staff' => DB::all("SELECT id,email,name,role,active,mfa_enabled,last_login,must_change_pw FROM users WHERE role<>'customer' ORDER BY id"),
+    $bk = @file_get_contents(dirname(ROOT) . '/backups/.dernier-succes'); adm('security', ['backup' => $bk ? trim($bk) : '', 'rows' => DB::all('SELECT * FROM audit_log WHERE ' . implode(' AND ', $w) . ' ORDER BY id DESC LIMIT 300', $p), 'integrity' => audit_verify(), 'staff' => DB::all("SELECT id,email,name,role,active,mfa_enabled,last_login,must_change_pw FROM users WHERE role<>'customer' ORDER BY id"),
         'fails' => (int) DB::val("SELECT COUNT(*) FROM audit_log WHERE action IN ('login_fail','mfa_fail') AND ts>?", [date('Y-m-d H:i:s', time() - 86400)]), 'alerts' => (int) DB::val("SELECT COUNT(*) FROM audit_log WHERE level='alert' AND ts>?", [date('Y-m-d H:i:s', time() - 7 * 86400)])], 'Sécurité et journal', 'security');
 });
 route('GET', '/admin/securite/export', function () {

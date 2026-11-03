@@ -31,8 +31,8 @@ route('GET', '/admin/produits', function () {
 route('POST', '/admin/produits/bulk', function () {
     require_perm('catalog'); $ids = array_map('intval', (array) ($_POST['ids'] ?? [])); $act = post('action'); if (!$ids) { flash('error', 'Sélectionnez au moins un produit.'); redirect('/admin/produits'); }
     $in = DB::in($ids);
-    if ($act === 'confirm') DB::q("UPDATE products SET pricing_status='confirmed' WHERE id IN ($in)", $ids); elseif ($act === 'demo') DB::q("UPDATE products SET pricing_status='demo' WHERE id IN ($in)", $ids);
-    elseif ($act === 'on' || $act === 'off') DB::q("UPDATE products SET active=" . ($act === 'on' ? 1 : 0) . " WHERE id IN ($in)", $ids);
+    if ($act === 'confirm') DB::q("UPDATE products SET pricing_status='confirmed' WHERE id IN ($in)", $ids); elseif ($act === 'demo') DB::q("UPDATE products SET pricing_status='demo' WHERE id IN ($in)", $ids); // nosemgrep: php.lang.security.injection.tainted-sql-string.tainted-sql-string ($in = uniquement des « ? » générés par DB::in(), ids castés en entiers)
+    elseif ($act === 'on' || $act === 'off') DB::q("UPDATE products SET active=" . ($act === 'on' ? 1 : 0) . " WHERE id IN ($in)", $ids); // nosemgrep: php.lang.security.injection.tainted-sql-string.tainted-sql-string (idem : placeholders)
     elseif ($act === 'adjust') {
         $f = (float) str_replace(',', '.', post('factor', '1')); if ($f <= 0 || $f > 5) { flash('error', 'Coefficient invalide (entre 0,01 et 5).'); redirect('/admin/produits'); }
         require_reauth(); audit('price_bulk_adjust', count($ids) . ' produits', ['factor' => $f], 'warn');

@@ -69,7 +69,8 @@ class Files {
         }
         if ($tot > 500 * 1048576) throw $bad('contenu décompressé trop volumineux.'); if ($comp > 0 && $tot / $comp > 100 && $tot > 1048576) throw $bad('taux de compression anormal.');
     }
-    static function path(array $row): string { return APP . '/storage/uploads/' . $row['stored_name']; }
+    /** Chemin disque d'un fichier : le nom stocké est toujours généré par le serveur ; tout autre format est refusé (défense en profondeur contre une valeur altérée en base). */
+    static function path(array $row): string { if (!preg_match('#^\d{4}/\d{2}/[a-f0-9]{32}\.dat$#', (string) $row['stored_name'])) throw new RuntimeException('Chemin de fichier invalide.'); return APP . '/storage/uploads/' . $row['stored_name']; }
     /** Envoie le fichier en téléchargement (jamais affiché inline). */
     static function send(array $row): void {
         $p = self::path($row); if (!is_file($p)) abort(404, 'Fichier introuvable.');
