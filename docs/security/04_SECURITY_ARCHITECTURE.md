@@ -17,7 +17,7 @@ Visiteur ─ HTTPS/TLS1.3 ─▶ CDN hcdn (cache, anti-bot basique) ─▶ LiteS
 
 ## 3. Authentification et sessions
 - **Client** : e-mail confirmé + mot de passe (Argon2id) ; session 2 h d'inactivité ; verrous anti-force brute.
-- **Équipe** : mot de passe → *session en attente* (`pending_uid`, aucun droit) → code TOTP ou code de secours → session complète (identifiant régénéré). Sans MFA configurée : enrôlement obligatoire. Mot de passe à changer si `must_change_pw`.
+- **Équipe** : mot de passe → *session en attente* (`pending_uid`, aucun droit) → code TOTP ou code de secours → session complète (identifiant régénéré). Sans MFA configurée : enrôlement obligatoire, **protégé par un code d'activation** (personnel ou `mfa_setup_code`). Mot de passe à changer si `must_change_pw`.
 - **Révocation** : `users.session_epoch` comparé à chaque requête ; incrémenté par changement/reset de mot de passe, « déconnexion partout », modification/désactivation par un administrateur.
 - **Cookies** : `sp_sess` (`__Host-sp_sess` en HTTPS) `HttpOnly; Secure; SameSite=Lax; Path=/`, sans domaine ; `sp_cart` (panier invité) idem.
 
@@ -54,7 +54,7 @@ Réception → taille/quota → extension (liste blanche) → MIME réel → sig
 Pas de passerelle intégrée : Mobile Money/virement **déclarés par le client** puis **confirmés par l'équipe** (permission `payments`, référence obligatoire, journal). Montants = recalcul serveur ; aucune donnée de carte. `card` reste désactivé. Le jour d'une intégration : utiliser `webhook_verify()`, idempotence par référence de transaction, confirmation **uniquement** sur notification signée du prestataire.
 
 ## 8. Configuration (clés de `_app/config.local.php`)
-`app_url`, `db`, `install_token`, `auto_install` (false en prod), `mail_driver`, `debug` (false), **`app_key`** (base64 32 octets : chiffrement MFA + signature du journal — **à sauvegarder, ne jamais modifier**), optionnels : `trusted_proxies`/`proxy_header`, `idle_customer|idle_staff|abs_customer|abs_staff`, `mfa_window`.
+`app_url`, `db`, `install_token`, `auto_install` (false en prod), `mail_driver` (`mail` | `smtp` | `log` en test), `smtp` (hôte, port, `secure` = `ssl`/`tls`, `user`, `pass`, `from`), `debug` (false), **`mfa_setup_code`** (code d'activation MFA des comptes sans code personnel), `pwned_check` (true), `audit_retention_days` (730), **`app_key`** (base64 32 octets : chiffrement MFA + signature du journal — **à sauvegarder, ne jamais modifier**), optionnels : `trusted_proxies`/`proxy_header`, `idle_customer|idle_staff|abs_customer|abs_staff`, `mfa_window`.
 
 ## 9. Sauvegarde et continuité
-Cron quotidien → `backups/` hors web : base (SQL gz) tous les jours, fichiers clients (zip) le dimanche, rétention 14 j. Restauration : `09_INCIDENT_RESPONSE.md`.
+Cron quotidien → `backups/` hors web : base (SQL gz) tous les jours, fichiers clients (zip) le dimanche, rétention 14 j ; le même passage purge le journal d'audit au-delà de 24 mois en conservant une ancre de chaîne. Restauration : `09_INCIDENT_RESPONSE.md`.

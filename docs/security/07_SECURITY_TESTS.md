@@ -11,7 +11,7 @@
 ## 2. Résultat global
 | | Avant (`a200885`) | Après |
 |---|---|---|
-| Réussis | **56 / 113** | **113 / 113** |
+| Réussis | **56 / 119** | **119 / 119** |
 | Régressions | — | 0 |
 
 ## 3. Autres outils
@@ -19,6 +19,7 @@
 |---|---|---|
 | Semgrep 1.183 (`p/php`, `p/owasp-top-ten`, `p/security-audit`) | exécuté | 5 alertes initiales → 0 (3 faux positifs vérifiés et annotés, 1 durcissement appliqué, 1 outil de développement annoté) |
 | Gitleaks (historique complet) | exécuté | 0 secret |
+| Tests unitaires `tests/security/unit.js` (faux serveur SMTP et service de mots de passe fuités ; vecteurs RFC 6238 ; journal chaîné ; webhooks) | exécuté | **21/21** |
 | Test fonctionnel e2e (Playwright) | exécuté | 85/85, aucune erreur JavaScript/console, aucune erreur PHP |
 | Chemin de mise à jour (`tests/security/upgrade.sh`) : base créée par l'ancien code (`a200885`) → nouveau code | exécuté | migration automatique sans perte (comptes identiques, `schema_version=2`), 9 vérifications : ancien administrateur → MFA et mot de passe imposés, ancien client connecté sans re-confirmation, ancien « manager » devenu administrateur |
 | Inventaire des routes | exécuté | 122 routes + 7 entités CRUD |
@@ -39,7 +40,7 @@
 | Endpoints d'API (CSRF, CORS, débit, erreurs, injection) | `CSRF-01…04`, `CORS-01`, `RATE-*`, `ERR-01`, `SQLI-01/02` |
 | Sessions (fixation, déconnexion, révocation, expiration) | `SESS-01…06`, `PWD-01` |
 
-## 5. Détail des 113 scénarios
+## 5. Détail des 119 scénarios d'intégration
 ✔ = réussi, ✘ = échec. « Avant » : code initial ; « Après » : code corrigé.
 
 | ID | Sévérité | Scénario | Avant | Après |
@@ -125,7 +126,7 @@
 | UPL-09 | critique | upload refusé : archive ZIP contenant un exécutable/script | ✘ | ✔ |
 | UPL-10 | critique | upload refusé : bombe ZIP (ratio de compression extrême) | ✘ | ✔ |
 | UPL-11 | critique | upload refusé : fichier .htaccess / extension inconnue | ✔ | ✔ |
-| UPL-12 | moyenne | trop volumineux refusé, sans fichier orphelin | ✔ | ✔ |
+| UPL-12 | moyenne | au-delà de la limite applicative (50 Mo) refusé, sans fichier orphelin ; sous la limite accepté | ✔ | ✔ |
 | UPL-13 | élevée | nom de fichier piégé (../../) : nom stocké aléatoire, nom affiché assaini | ✔ | ✔ |
 | UPL-14 | critique | stockage hors web : accès direct aux fichiers téléversés impossible | ✔ | ✔ |
 | UPL-15 | élevée | téléchargement : forcé en pièce jointe, type neutre, nosniff | ✔ | ✔ |
@@ -157,6 +158,12 @@
 | INSTALL-01 | critique | page d'installation fermée dès qu'un super administrateur existe | ✔ | ✔ |
 | ENUM-02 | moyenne | renvoi de confirmation : même réponse pour e-mail connu, inconnu ou déjà confirmé | ✔ | ✔ |
 | HDR-06 | moyenne | en-têtes de sécurité présents aussi sur les réponses JSON, erreurs et téléchargements | ✘ | ✔ |
+| ENROLL-01 | critique | enrôlement MFA : connaître seulement le mot de passe ne suffit pas (code d'activation de la configuration exigé) | ✘ | ✔ |
+| ENROLL-02 | élevée | nouveau membre : code d'activation personnel remis une seule fois par le super administrateur, exigé à l'enrôlement, inutilisable ensuite | ✘ | ✔ |
+| DATA-01 | élevée | export des données personnelles : mot de passe exigé, uniquement MES données | ✘ | ✔ |
+| DATA-02 | élevée | suppression de compte : mot de passe + confirmation, effacement des données personnelles, commandes conservées sans lien, sessions fermées | ✘ | ✔ |
+| CSP-02 | moyenne | CSP : plus de style inline en bloc (style-src 'self'), attributs style tolérés uniquement via style-src-attr | ✘ | ✔ |
+| ALERT-01 | moyenne | actions critiques (suppression, remboursement, équipe, réglages) : alerte e-mail envoyée au propriétaire | ✘ | ✔ |
 
 ## 6. Ce que ces tests ne prouvent pas
 Ils couvrent les attaques que nous avons anticipées. Ils ne remplacent ni un test d'intrusion humain, ni un audit de l'hébergeur, ni un test de charge. Ils s'exécutent sur SQLite : le comportement MySQL (types, transactions du journal d'audit, migrations) est **à confirmer au premier déploiement** (voir `10` §A).

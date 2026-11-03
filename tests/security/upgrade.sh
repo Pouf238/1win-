@@ -12,5 +12,5 @@ BEFORE=$(php -r '$p=new PDO("sqlite:'"$REPO"'/_app/storage/dev.sqlite"); echo $p
 export APP_ROOT="$REPO"; cd "$REPO" || exit 1
 php -S 127.0.0.1:$PORT "$REPO/tools/dev-router.php" >"$OUT/upg-new.log" 2>&1 & P2=$!; trap "kill $P2 2>/dev/null; git -C '$REPO' worktree remove --force '$TMP/old' 2>/dev/null" EXIT; sleep 1.2; curl -s -o /dev/null "http://127.0.0.1:$PORT/"
 AFTER=$(php -r '$p=new PDO("sqlite:'"$REPO"'/_app/storage/dev.sqlite"); echo $p->query("SELECT COUNT(*) FROM users")->fetchColumn();'); VER=$(php -r '$p=new PDO("sqlite:'"$REPO"'/_app/storage/dev.sqlite"); echo $p->query("SELECT svalue FROM settings WHERE skey=\"schema_version\"")->fetchColumn();')
-echo "comptes avant=$BEFORE après=$AFTER ; schema_version=$VER"; [ "$BEFORE" = "$AFTER" ] && [ "$VER" = "2" ] || { echo "ÉCHEC migration"; exit 1; }
+echo "comptes avant=$BEFORE après=$AFTER ; schema_version=$VER"; [ "$BEFORE" = "$AFTER" ] && [ "$VER" = "3" ] || { echo "ÉCHEC migration"; exit 1; }
 BASE="http://127.0.0.1:$PORT" node "$HERE/upgrade-flow.js" | tee "$OUT/upg-flow.txt"; ! grep -q "✗" "$OUT/upg-flow.txt"

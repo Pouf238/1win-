@@ -2,7 +2,7 @@
 
 > **Statut de déploiement (3 nov. 2026)** : ce qui est décrit ici est **implémenté et testé en local** ; **non déployé sur https://symoprint.com** (autorisation de mise en production en attente).
 
-Chaque correctif est vérifié par les tests de `tests/security/suite.js` (113 scénarios, 113 réussis) et par le test fonctionnel de bout en bout (85/85). Les identifiants `V-xx` renvoient à `02_VULNERABILITIES.md`.
+Chaque correctif est vérifié par les tests de `tests/security/suite.js` (119 scénarios d'intégration + 21 tests unitaires, tous réussis) et par le test fonctionnel de bout en bout (85/85). Les identifiants `V-xx` renvoient à `02_VULNERABILITIES.md`.
 
 ## A. Nouveau socle de sécurité — `_app/lib/security.php`
 | Domaine | Mécanisme |
@@ -48,9 +48,21 @@ Redirections internes uniquement ; panier modifié par POST ; JSON embarqué enc
 - `config.local.php` : `auto_install=false` en production, `app_key` générée hors dépôt.
 
 ## G. Pipeline DevSecOps (`.github/`)
-`security.yml` : syntaxe PHP, Gitleaks (historique complet), Semgrep (`--error`), **113 tests de sécurité** + test du chemin de mise à jour ; Trivy (vuln/secret/misconfig) en job **non bloquant** pour l'instant ; job final « porte de déploiement » qui échoue si l'un des contrôles bloquants échoue. `dependabot.yml` : mises à jour des actions. *À activer* : protection de branche exigeant le job `gate` (réglage GitHub, voir `10`).
+`security.yml` : syntaxe PHP, Gitleaks (historique complet), Semgrep (`--error`), **119 tests de sécurité** + **21 tests unitaires** + test du chemin de mise à jour ; Trivy (vuln/secret/misconfig) en job **non bloquant** pour l'instant ; job final « porte de déploiement » qui échoue si l'un des contrôles bloquants échoue. `dependabot.yml` : mises à jour des actions. *À activer* : protection de branche exigeant le job `gate` (réglage GitHub, voir `10`).
 
-## H. Corrigé en cours de test (bugs trouvés par les tests eux-mêmes)
+## H. Risques résiduels transformés en correctifs (2ᵉ passe)
+| Sujet | Correctif | Vérifié par |
+|---|---|---|
+| E-mails (R-01) | Pilote **SMTP authentifié** (`mail_driver: 'smtp'`, bloc `smtp` : hôte, port, `ssl`/`tls`, utilisateur, mot de passe, expéditeur) ; certificat vérifié ; refus d'envoyer des identifiants en clair vers un serveur distant ; mot de passe jamais journalisé ; repli sur `mail()` | `SMTP-01…04` (faux serveur SMTP) |
+| Enrôlement MFA (R-03) | **Code d'activation** : personnel (créé avec le compte ou à la réinitialisation MFA, affiché une fois, stocké haché) ou `mfa_setup_code` du serveur | `ENROLL-01/02`, `ENROLL-unit` |
+| Fraude/compte compromis (R-10) | **Alertes e-mail** sur suppression, remboursement, réglages, équipe, prix en masse | `ALERT-01` |
+| Données personnelles (R-11) | `/compte/mes-donnees` : **export JSON** et **suppression** du compte ; rétention du journal 24 mois avec **ancre** de chaîne | `DATA-01/02`, `AUDIT-prune/anchor` |
+| CSP (R-06) | `style-src 'self'` + `style-src-attr 'unsafe-inline'` | `CSP-02` + e2e sans violation |
+| X-Powered-By (R-08) | `Header unset` dans `.htaccess` (en plus de `header_remove`) | à revérifier en production |
+| Mots de passe fuités (R-13) | `pw_pwned()` k-anonymat, échec ouvert, option `pwned_check` | `PWNED-01…03` |
+| Vérifications indépendantes | TOTP validé contre les **vecteurs officiels de la RFC 6238** ; webhooks, `safe_path`, `jsafe`, CSV | `unit.js` |
+
+## I. Corrigé en cours de test (bugs trouvés par les tests eux-mêmes)
 - Référence de paiement obligatoire contournable (`NULL` ≠ `''`) → corrigé, test `PAY-06`.
 - Pas de TOTP rejoué mais pas d'erreur de course sur `ratelimits` (insertion concurrente) → `throttle()` tolère l'échec d'insertion.
 - Premier passage de la CI : le test `UPL-12` (fichier trop gros) ne passait que grâce à la limite de 2 Mo du PHP local et non à la règle de l'application (50 Mo) ; il échouait avec la configuration PHP de la CI. Test réécrit (fichier de 51 Mo refusé, 9 Mo accepté) et mêmes limites PHP imposées partout. L'action Trivy référencée n'existait pas : remplacée par l'image officielle, job non bloquant jusqu'à vérification.

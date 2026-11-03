@@ -58,7 +58,7 @@ jobs:
         run: docker run --rm -v "$PWD:/src:ro" aquasec/trivy:0.58.1 fs --scanners vuln,secret,misconfig --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 /src
 
   security-tests:
-    name: "Tests de sécurité (113 scénarios d'attaque sur instance isolée)"
+    name: "Tests de sécurité (119 scénarios d'attaque sur instance isolée)"
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -71,6 +71,8 @@ jobs:
       - run: bash tests/security/run.sh "$GITHUB_WORKSPACE" 8090 ci
         env:
           SECURITY_OUT: ${{ runner.temp }}
+      - name: "Tests unitaires (SMTP, journal chaîné, TOTP RFC 6238, mots de passe fuités)"
+        run: node tests/security/unit.js
       - name: "Chemin de mise à jour (ancienne base vers nouveau code)"
         run: bash tests/security/upgrade.sh a200885 8096
         env:

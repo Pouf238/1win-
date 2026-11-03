@@ -35,7 +35,7 @@ route('POST', '/admin/produits/bulk', function () {
     elseif ($act === 'on' || $act === 'off') DB::q("UPDATE products SET active=" . ($act === 'on' ? 1 : 0) . " WHERE id IN ($in)", $ids); // nosemgrep: php.lang.security.injection.tainted-sql-string.tainted-sql-string (idem : placeholders)
     elseif ($act === 'adjust') {
         $f = (float) str_replace(',', '.', post('factor', '1')); if ($f <= 0 || $f > 5) { flash('error', 'Coefficient invalide (entre 0,01 et 5).'); redirect('/admin/produits'); }
-        require_reauth(); audit('price_bulk_adjust', count($ids) . ' produits', ['factor' => $f], 'warn');
+        require_reauth(); audit('price_bulk_adjust', count($ids) . ' produits', ['factor' => $f], 'warn'); alert_mail('Ajustement massif des prix', count($ids) . ' produit(s), coefficient ' . $f);
         foreach ($ids as $id) { $pr = DB::find('products', $id); if (!$pr) continue; $c = jd($pr['pricing']);
             if (isset($c['tiers'])) $c['tiers'] = array_map(fn($t) => [$t[0], round_price($t[1] * $f)], $c['tiers']); if (isset($c['price_m2'])) $c['price_m2'] = round_price($c['price_m2'] * $f); if (isset($c['min_total'])) $c['min_total'] = round_price($c['min_total'] * $f);
             $g = jd($pr['groups_json']); foreach ($g as &$gr) foreach ($gr['choices'] as &$ch) if (in_array($ch['price']['mode'] ?? '', ['fixed', 'per_unit', 'per_m2'], true)) $ch['price']['value'] = round_price(($ch['price']['value'] ?? 0) * $f); unset($gr, $ch);

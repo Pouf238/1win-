@@ -4,7 +4,7 @@
 // ================================================================ en-têtes de sécurité (source unique de la CSP)
 function is_https(): bool { return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'; }
 function csp_policy(): string {
-    return "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'" . (is_https() ? '; upgrade-insecure-requests' : '');
+    return "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; style-src-attr 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'" . (is_https() ? '; upgrade-insecure-requests' : '');
 }
 function send_security_headers(): void {
     if (headers_sent()) return; header_remove('X-Powered-By');
@@ -54,9 +54,18 @@ function pw_policy(string $pw, string $email = '', bool $staff = false): ?string
     foreach (['password', 'motdepasse', 'azerty', 'qwerty', '123456', '000000', 'abidjan', 'symoprint', 'admin', 'letmein', 'welcome', 'iloveyou'] as $bad) if (str_contains($l, $bad)) return 'Ce mot de passe est trop prévisible : évitez les mots courants et les suites de chiffres.';
     $local = strtolower((string) strstr($email, '@', true)); if (strlen($local) >= 3 && str_contains($l, $local)) return 'Le mot de passe ne doit pas contenir votre adresse e-mail.';
     if (preg_match('/^(.)\1+$/u', $pw)) return 'Mot de passe trop répétitif.';
+    if (cfg('pwned_check', false) && pw_pwned($pw) === true) return 'Ce mot de passe figure dans des fuites de données publiques : choisissez-en un autre.';
     $classes = (preg_match('/\p{Ll}/u', $pw) ? 1 : 0) + (preg_match('/\p{Lu}/u', $pw) ? 1 : 0) + (preg_match('/\d/', $pw) ? 1 : 0) + (preg_match('/[^\p{L}\d]/u', $pw) ? 1 : 0);
     if ($classes < 3 && mb_strlen($pw) < 16) return 'Mélangez majuscules, minuscules, chiffres et symboles, ou utilisez une phrase de passe de 16 caractères ou plus.';
     return null;
+}
+/** Mot de passe déjà fuité ? Méthode « k-anonymat » : seuls les 5 premiers caractères de l'empreinte SHA-1 quittent le serveur. Retourne null si le service est injoignable (échec ouvert : l'inscription n'est jamais bloquée par une panne externe). */
+function pw_pwned(string $pw): ?bool {
+    $h = strtoupper(sha1($pw)); $pre = substr($h, 0, 5); $suf = substr($h, 5); $url = rtrim((string) cfg('pwned_url', 'https://api.pwnedpasswords.com/range/'), '/') . '/' . $pre; $body = null;
+    if (function_exists('curl_init')) { $c = curl_init($url); curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 2, CURLOPT_CONNECTTIMEOUT => 2, CURLOPT_HTTPHEADER => ['Add-Padding: true', 'User-Agent: SymoPrint-PasswordCheck'], CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP, CURLOPT_FOLLOWLOCATION => false]); $r = curl_exec($c); $code = curl_getinfo($c, CURLINFO_RESPONSE_CODE); curl_close($c); if ($r !== false && $code === 200) $body = (string) $r; }
+    if ($body === null) { error_log('[symoprint] vérification des mots de passe compromis indisponible'); return null; }
+    foreach (preg_split('/\r?\n/', $body) as $line) { [$s, $n] = array_pad(explode(':', trim($line), 2), 2, '0'); if (strcasecmp($s, $suf) === 0) return (int) $n > 0; }
+    return false;
 }
 function valid_email(string $e): bool { return strlen($e) <= 190 && filter_var($e, FILTER_VALIDATE_EMAIL) && !preg_match('/[\s,;<>"\'\\\\]/', $e); }
 
@@ -93,9 +102,28 @@ function audit(string $action, string $target = '', array $details = [], string 
     } catch (Throwable $e) { try { if (isset(DB::$pdo) && DB::$pdo->inTransaction()) DB::$pdo->rollBack(); } catch (Throwable $e2) { } error_log('[symoprint] audit indisponible : ' . $e->getMessage()); }
 }
 function audit_verify(): array {
-    $prev = ''; $n = 0; foreach (DB::all('SELECT * FROM audit_log ORDER BY id') as $r) { $n++; if ($r['prev_hash'] !== $prev || !hash_equals($r['hash'], audit_row_hash($prev, $r))) return ['ok' => false, 'checked' => $n, 'broken_at' => (int) $r['id']]; $prev = $r['hash']; }
+    $prev = ''; $n = 0; $anchor = (string) Settings::get('audit_anchor', ''); foreach (DB::all('SELECT * FROM audit_log ORDER BY id') as $r) { if ($n === 0 && $anchor !== '' && $r['prev_hash'] === $anchor) $prev = $anchor; $n++; if ($r['prev_hash'] !== $prev || !hash_equals($r['hash'], audit_row_hash($prev, $r))) return ['ok' => false, 'checked' => $n, 'broken_at' => (int) $r['id']]; $prev = $r['hash']; }
     return ['ok' => true, 'checked' => $n, 'broken_at' => null];
 }
+/** Rétention du journal : supprime les entrées plus anciennes que N jours (24 mois par défaut) et mémorise l'empreinte de la dernière entrée supprimée comme « ancre » pour que la vérification d'intégrité reste valable. Garde toujours au moins une entrée. */
+function audit_prune(?int $days = null): int {
+    $days = $days ?? (int) cfg('audit_retention_days', 730); $cut = date('Y-m-d H:i:s', time() - max(0, $days) * 86400);
+    $last = DB::row('SELECT id, hash FROM audit_log WHERE ts<? AND id<(SELECT MAX(id) FROM audit_log) ORDER BY id DESC LIMIT 1', [$cut]); if (!$last) return 0;
+    DB::$pdo->beginTransaction(); try { $n = DB::q('DELETE FROM audit_log WHERE id<=?', [$last['id']])->rowCount(); Settings::set('audit_anchor', $last['hash']); DB::$pdo->commit(); } catch (Throwable $e) { DB::$pdo->rollBack(); throw $e; }
+    audit('audit_pruned', (string) $n, ['older_than_days' => $days], 'info', 0); return $n;
+}
+/** Alerte e-mail à la boutique (limitée à 10 par heure et par sujet pour éviter l'inondation). N'écrit pas dans le journal : l'action sensible est déjà journalisée par son propre appel à audit(). */
+function alert_mail(string $subject, string $detail): void {
+    if (throttle('alertmail:' . sha1($subject), 10, 3600)) return;
+    if (class_exists('Mail')) Mail::admin('[Sécurité] ' . $subject, '<p>' . e($detail) . '</p><p style="color:#5b6c72;font-size:13px">Compte : ' . e(mask_email((string) (user()['email'] ?? '?'))) . ' · IP : ' . e(client_ip()) . ' · ' . e(now()) . '</p>');
+}
+/** Code d'activation exigé pour enrôler la double authentification : code personnel (remis par un super administrateur) ou, à défaut, `mfa_setup_code` / `install_token` de la configuration. Vide = aucune exigence (développement/tests). */
+function enroll_code_required(array $u): bool { return !empty($u['enroll_hash']) || (string) (cfg('mfa_setup_code') ?: cfg('install_token')) !== ''; }
+function enroll_code_ok(array $u, string $code): bool {
+    $code = trim($code); if (!empty($u['enroll_hash'])) return $code !== '' && hash_equals((string) $u['enroll_hash'], hash('sha256', strtoupper(str_replace('-', '', $code))));
+    $exp = (string) (cfg('mfa_setup_code') ?: cfg('install_token')); return $exp === '' || ($code !== '' && hash_equals($exp, $code));
+}
+function enroll_code_new(): array { $plain = strtoupper(bin2hex(random_bytes(6))); return [substr($plain, 0, 4) . '-' . substr($plain, 4, 4) . '-' . substr($plain, 8, 4), hash('sha256', $plain)]; }
 function security_alert(string $subject, string $detail): void {
     audit('alert', $subject, ['detail' => $detail], 'alert'); error_log('[symoprint][ALERTE] ' . $subject);
     if (function_exists('shop') && class_exists('Mail')) Mail::admin('[Sécurité] ' . $subject, '<p>' . e($detail) . '</p><p style="color:#5b6c72;font-size:13px">IP : ' . e(client_ip()) . ' · ' . e(now()) . '</p>');

@@ -11,7 +11,7 @@ Audit applicatif et d'hébergement de la plateforme **Symo Print** (impression e
 **Méthode** (dans cet ordre) :
 1. Lecture intégrale du code (≈ 2 000 lignes PHP applicatives, vues, JavaScript) et cartographie de la surface d'attaque.
 2. Inventaire statique des routes (`tools/route-inventory.php` : méthode, fichier, gardes détectées) — voir `06_PENTEST_SCOPE.md`.
-3. **Suite de tests offensifs maison (113 scénarios)** `tests/security/`, exécutée d'abord sur le code **avant** correction (preuve de l'état initial), puis après chaque série de correctifs.
+3. **Suite de tests offensifs maison (119 scénarios d'intégration + 21 tests unitaires)** `tests/security/`, exécutée d'abord sur le code **avant** correction (preuve de l'état initial), puis après chaque série de correctifs.
 4. Analyse statique : Semgrep 1.183 (`p/php`, `p/owasp-top-ten`, `p/security-audit`) et Gitleaks (historique Git complet).
 5. Vérifications **passives** de la production (en-têtes, fichiers exposés, TLS, redirections, DNS, accès distant à la base) — aucune attaque, aucune écriture.
 6. Test fonctionnel de bout en bout (Playwright, 85 vérifications) pour garantir qu'aucune fonctionnalité n'a été cassée.
@@ -41,17 +41,18 @@ Cartographie détaillée des endpoints : `06_PENTEST_SCOPE.md`. Détail du modè
 
 | Mesure | Avant correctifs | Après correctifs |
 |---|---|---|
-| Tests de sécurité réussis | **56 / 113** | **113 / 113** |
-| Échecs critiques | 18 | 0 |
-| Échecs élevés | 23 | 0 |
-| Échecs moyens | 15 | 0 |
+| Tests de sécurité réussis | **56 / 119** | **119 / 119** |
+| Échecs critiques | 19 | 0 |
+| Échecs élevés | 26 | 0 |
+| Échecs moyens | 17 | 0 |
 | Échecs faibles | 1 | 0 |
 | Semgrep (règles PHP/OWASP) | 5 alertes (3 faux positifs vérifiés + 1 durcissement + 1 outil de dev) | 0 (faux positifs annotés avec justification ; durcissement appliqué) |
 | Gitleaks (historique complet) | 0 secret | 0 secret |
-| CI GitHub (1ᵉʳ passage) | — | Gitleaks, Semgrep, syntaxe : réussis ; tests de sécurité : 112/113 (test `UPL-12` dépendant de la config PHP, corrigé) ; Trivy : échec de l'action (rendu non bloquant) — **deuxième passage à vérifier** |
+| Tests unitaires (TOTP selon la RFC 6238, SMTP, journal, webhooks…) | — | 21 / 21 |
 | Tests fonctionnels e2e | 85 / 85 | 85 / 85 |
+| CI GitHub (1ᵉʳ passage) | — | Gitleaks, Semgrep, syntaxe : réussis ; tests de sécurité : 112/113 (test `UPL-12` dépendant de la config PHP, corrigé) ; Trivy : action introuvable (rendu non bloquant) — **passages suivants à vérifier** |
 
-Les 57 échecs initiaux correspondent à **19 constats consolidés** (V-01 à V-19) et 6 points informationnels, listés dans `02_VULNERABILITIES.md`. **Aucun test n'a régressé** entre l'état initial et l'état final.
+Les échecs initiaux correspondent à **26 constats consolidés** (V-01 à V-26) et 6 points informationnels, listés dans `02_VULNERABILITIES.md`. **Aucun test n'a régressé** entre l'état initial et l'état final.
 
 ### Ce qui était déjà correct (vérifié, non modifié)
 Requêtes SQL paramétrées partout (aucune injection SQL trouvée, y compris `SLEEP`, `UNION`, tautologies) ; encodage HTML des champs clients (XSS stocké/réfléchi sur les champs testés) ; jeton CSRF sur tous les POST ; recalcul des prix côté serveur (prix/total forgés ignorés, quantités négatives ou démesurées bornées) ; contrôle de propriété sur commandes, devis, adresses, fichiers ; protection contre la double soumission de commande ; renouvellement de l'identifiant de session à la connexion ; fichiers sensibles refusés (`_app`, `.git`, `.env`, `composer.json`…).

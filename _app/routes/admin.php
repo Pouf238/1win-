@@ -42,15 +42,16 @@ route('POST', '/admin/mfa', function () {
 route('GET', '/admin/mfa/activer', function () {
     $u = pending_user(); if (!$u) redirect('/admin/connexion'); if ($u['mfa_enabled']) redirect('/admin/mfa');
     if (empty($_SESSION['mfa_setup'])) $_SESSION['mfa_setup'] = mfa_new_secret(); $sec = $_SESSION['mfa_setup'];
-    page('admin/mfa_setup', ['secret' => $sec, 'uri' => 'otpauth://totp/' . rawurlencode('Symo Print:' . $u['email']) . '?secret=' . $sec . '&issuer=' . rawurlencode('Symo Print') . '&algorithm=SHA1&digits=6&period=30'], ['title' => 'Activer la vérification en deux étapes', 'noindex' => true]);
+    page('admin/mfa_setup', ['needCode' => enroll_code_required($u), 'personal' => !empty($u['enroll_hash']), 'secret' => $sec, 'uri' => 'otpauth://totp/' . rawurlencode('Symo Print:' . $u['email']) . '?secret=' . $sec . '&issuer=' . rawurlencode('Symo Print') . '&algorithm=SHA1&digits=6&period=30'], ['title' => 'Activer la vérification en deux étapes', 'noindex' => true]);
 });
 route('POST', '/admin/mfa/activer', function () {
     $u = pending_user(); if (!$u) redirect('/admin/connexion'); if ($u['mfa_enabled'] || empty($_SESSION['mfa_setup'])) redirect('/admin/mfa');
     $k = 'mfa-enrol:' . $u['id']; if (throttle($k, 8, 900, true)) { flash('error', 'Trop d\'essais. Réessayez dans 15 minutes.'); redirect('/admin/mfa/activer'); }
+    if (enroll_code_required($u) && !enroll_code_ok($u, (string) ($_POST['setup_code'] ?? ''))) { throttle($k, 8, 900); audit('mfa_enroll_denied', mask_email($u['email']), [], 'warn', (int) $u['id']); alert_mail('Enrôlement MFA refusé : mauvais code d\'activation', mask_email($u['email'])); flash('error', 'Code d\'activation incorrect.'); redirect('/admin/mfa/activer'); }
     $code = preg_replace('/\s+/', '', (string) ($_POST['code'] ?? '')); $sec = $_SESSION['mfa_setup']; $good = false; $now = intdiv(time(), 30);
     if (preg_match('/^\d{6}$/', $code)) for ($d = -1; $d <= 1; $d++) if (hash_equals(totp_at($sec, $now + $d), $code)) { $good = true; $used = $now + $d; }
     if (!$good) { throttle($k, 8, 900); flash('error', 'Code incorrect. Vérifiez l\'heure de votre téléphone et réessayez.'); redirect('/admin/mfa/activer'); }
-    $backup = mfa_enable_for((int) $u['id'], $sec); DB::q('UPDATE users SET mfa_used=? WHERE id=?', [je([$used]), $u['id']]); unset($_SESSION['mfa_setup']);
+    $backup = mfa_enable_for((int) $u['id'], $sec); DB::q('UPDATE users SET mfa_used=?, enroll_hash=NULL WHERE id=?', [je([$used]), $u['id']]); unset($_SESSION['mfa_setup']);
     audit('mfa_enrolled', mask_email($u['email']), [], 'warn', (int) $u['id']); security_alert('Double authentification activée', mask_email($u['email']));
     $u = DB::find('users', (int) $u['id']); session_init($u, true); $_SESSION['backup_codes'] = $backup; DB::q('UPDATE users SET last_login=? WHERE id=?', [now(), $u['id']]);
     audit('login_ok', mask_email($u['email']), ['mfa' => 'enrol'], 'info', (int) $u['id']); redirect('/admin/mfa/codes');
@@ -132,9 +133,9 @@ route('POST', '/admin/commandes/{id}/paiement', function ($a) {
         audit('payment_confirmed', $o['ref'], ['amount' => (int) $o['total'], 'method' => $o['payment_method'], 'ref' => $ref ?: $o['payment_ref']], 'warn'); flash('ok', 'Paiement confirmé.');
     } elseif ($act === 'refunded') {
         require_reauth(); DB::upd('orders', (int) $o['id'], ['payment_status' => 'refunded', 'updated_at' => now()]); DB::ins('order_events', ['order_id' => $o['id'], 'status' => $o['status'], 'note' => 'Paiement remboursé', 'user_id' => $me['id']]);
-        audit('payment_refunded', $o['ref'], ['amount' => (int) $o['total']], 'warn'); flash('ok', 'Marqué remboursé.');
+        audit('payment_refunded', $o['ref'], ['amount' => (int) $o['total']], 'warn'); alert_mail('Paiement remboursé', $o['ref'] . ' — ' . money($o['total'])); flash('ok', 'Marqué remboursé.');
     } elseif ($act === 'pending') {
-        if ($o['payment_status'] === 'paid') require_reauth(); DB::upd('orders', (int) $o['id'], ['payment_status' => 'pending', 'updated_at' => now()]); audit('payment_reset', $o['ref'], ['from' => $o['payment_status']], 'warn'); flash('ok', 'Paiement remis en attente.');
+        if ($o['payment_status'] === 'paid') require_reauth(); DB::upd('orders', (int) $o['id'], ['payment_status' => 'pending', 'updated_at' => now()]); audit('payment_reset', $o['ref'], ['from' => $o['payment_status']], 'warn'); if ($o['payment_status'] === 'paid') alert_mail('Paiement confirmé remis en attente', $o['ref']); flash('ok', 'Paiement remis en attente.');
     }
     redirect('/admin/commandes/' . $o['id']);
 });
@@ -205,15 +206,17 @@ route('POST', '/admin/reglages', function () {
     foreach (['tax_enabled', 'prices_include_tax', 'pickup_enabled'] as $k) Settings::set($k, post($k) ? '1' : '0');
     $wa = preg_replace('/\D+/', '', post('whatsapp')); if ($wa) Settings::set('whatsapp', $wa);
     $m = []; foreach (payment_methods(false) as $pm) { $k = $pm['key']; $pm['enabled'] = !empty($_POST['pm_on'][$k]) ? 1 : 0; $pm['label'] = trim($_POST['pm_label'][$k] ?? $pm['label']) ?: $pm['label']; $pm['instructions'] = trim($_POST['pm_ins'][$k] ?? $pm['instructions']); if ($pm['type'] === 'gateway') $pm['enabled'] = 0; $m[] = $pm; }
-    Settings::set('payment_methods', $m); audit('settings_saved', '', ['keys' => count($_POST)], 'warn'); flash('ok', 'Réglages enregistrés.'); redirect('/admin/reglages');
+    Settings::set('payment_methods', $m); audit('settings_saved', '', ['keys' => count($_POST)], 'warn'); alert_mail('Réglages de la boutique modifiés', 'Coordonnées de paiement, livraison, TVA ou réglages généraux enregistrés.'); flash('ok', 'Réglages enregistrés.'); redirect('/admin/reglages');
 });
 route('GET', '/admin/utilisateurs', function () { require_perm('users'); adm('users', ['rows' => DB::all("SELECT * FROM users WHERE role<>'customer' ORDER BY id")], 'Équipe et rôles', 'users'); });
 route('POST', '/admin/utilisateurs', function () {
     $me = require_perm('users'); require_reauth(); $em = strtolower(post('email')); $role = post('role'); $pw = (string) ($_POST['password'] ?? '');
     if (!valid_email($em) || !is_staff_role($role) || ($m = pw_policy($pw, $em, true))) { flash('error', $m ?? 'E-mail valide, rôle valide et mot de passe fort (12 caractères minimum) requis.'); redirect('/admin/utilisateurs'); }
     if (DB::val('SELECT COUNT(*) FROM users WHERE email=?', [$em])) { flash('error', 'Cet e-mail existe déjà.'); redirect('/admin/utilisateurs'); }
-    $id = DB::ins('users', ['email' => $em, 'password_hash' => pw_hash($pw), 'name' => mb_substr(post('name'), 0, 150), 'role' => $role, 'email_verified' => 1, 'must_change_pw' => 1]);
-    audit('user_created', mask_email($em), ['role' => $role, 'id' => $id], 'warn'); flash('ok', 'Membre ajouté : il devra changer son mot de passe et activer la double authentification à sa première connexion.'); redirect('/admin/utilisateurs');
+    [$plain, $hash] = enroll_code_new();
+    $id = DB::ins('users', ['email' => $em, 'password_hash' => pw_hash($pw), 'name' => mb_substr(post('name'), 0, 150), 'role' => $role, 'email_verified' => 1, 'must_change_pw' => 1, 'enroll_hash' => $hash]);
+    audit('user_created', mask_email($em), ['role' => $role, 'id' => $id], 'warn'); alert_mail('Nouveau membre de l\'équipe créé', mask_email($em) . ' — rôle ' . $role);
+    flash('ok', 'Membre ajouté. Transmettez-lui, par un canal séparé du mot de passe, ce CODE D\'ACTIVATION (affiché une seule fois) : ' . $plain . ' — il en aura besoin pour activer la double authentification à sa première connexion.'); redirect('/admin/utilisateurs');
 });
 route('POST', '/admin/utilisateurs/{id}', function ($a) {
     $me = require_perm('users'); $u = DB::find('users', (int) $a['id']);
@@ -226,9 +229,10 @@ route('POST', '/admin/utilisateurs/{id}', function ($a) {
     $active = post('active') ? 1 : 0; if ($active !== (int) $u['active']) { $d['active'] = $active; $log['active'] = $active; }
     if (($u['role'] === 'superadmin') && ((isset($d['role']) && $d['role'] !== 'superadmin') || (isset($d['active']) && !$d['active'])) && (int) DB::val("SELECT COUNT(*) FROM users WHERE role='superadmin' AND active=1 AND id<>?", [$u['id']]) < 1) { flash('error', 'Impossible : il doit rester au moins un super administrateur actif.'); redirect('/admin/utilisateurs'); }
     if (post('password') !== '') { if ($m = pw_policy((string) $_POST['password'], $u['email'], true)) { flash('error', $m); redirect('/admin/utilisateurs'); } $d['password_hash'] = pw_hash((string) $_POST['password']); $d['must_change_pw'] = 1; $log['password'] = 'réinitialisé'; }
-    if (post('mfa_reset')) { $d['mfa_enabled'] = 0; $d['mfa_secret'] = null; $d['mfa_backup'] = null; $d['mfa_used'] = null; $log['mfa'] = 'réinitialisée'; }
-    if ($d) { DB::upd('users', (int) $u['id'], $d); revoke_sessions((int) $u['id']); audit('user_updated', mask_email($u['email']), $log, 'warn'); }
-    flash('ok', 'Membre mis à jour (ses sessions ont été fermées).'); redirect('/admin/utilisateurs');
+    $newCode = '';
+    if (post('mfa_reset')) { [$newCode, $h] = enroll_code_new(); $d['mfa_enabled'] = 0; $d['mfa_secret'] = null; $d['mfa_backup'] = null; $d['mfa_used'] = null; $d['enroll_hash'] = $h; $log['mfa'] = 'réinitialisée'; }
+    if ($d) { DB::upd('users', (int) $u['id'], $d); revoke_sessions((int) $u['id']); audit('user_updated', mask_email($u['email']), $log, 'warn'); alert_mail('Compte de l\'équipe modifié', mask_email($u['email']) . ' : ' . implode(', ', array_map(fn($k, $v) => "$k=$v", array_keys($log), $log))); }
+    flash('ok', 'Membre mis à jour (ses sessions ont été fermées).' . ($newCode ? ' CODE D\'ACTIVATION à lui transmettre pour reconfigurer la double authentification (affiché une seule fois) : ' . $newCode : '')); redirect('/admin/utilisateurs');
 });
 route('GET', '/admin/securite', function () {
     require_perm('security'); $lvl = in_array(get('level'), ['info', 'warn', 'alert'], true) ? get('level') : ''; $q = get('q');
@@ -246,16 +250,16 @@ function csv_cell($v): string { $v = str_replace(["\r", "\n", ';'], ' ', (string
 // ---------------------------------------------------------------- suppression (administrateur uniquement : commandes/devis de test, spam)
 function purge_files(string $where, array $params): void { foreach (DB::all("SELECT * FROM files WHERE $where", $params) as $f) { @unlink(Files::path($f)); DB::del('files', (int) $f['id']); } }
 route('POST', '/admin/commandes/{id}/supprimer', function ($a) {
-    require_perm('destroy'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); require_reauth(); audit('order_delete', $o['ref'], ['total' => (int) $o['total'], 'payment' => $o['payment_status']], 'alert');
+    require_perm('destroy'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); require_reauth(); audit('order_delete', $o['ref'], ['total' => (int) $o['total'], 'payment' => $o['payment_status']], 'alert'); alert_mail('Commande supprimée définitivement', $o['ref'] . ' — ' . money($o['total']) . ' (paiement : ' . $o['payment_status'] . ')');
     purge_files('order_id=?', [$o['id']]); DB::q('DELETE FROM order_items WHERE order_id=?', [$o['id']]); DB::q('DELETE FROM order_events WHERE order_id=?', [$o['id']]); DB::q('UPDATE quotes SET order_id=0 WHERE order_id=?', [$o['id']]); DB::del('orders', (int) $o['id']);
     flash('ok', 'Commande ' . $o['ref'] . ' supprimée définitivement.'); redirect('/admin/commandes');
 });
 route('POST', '/admin/devis/{id}/supprimer', function ($a) {
-    require_perm('destroy'); $q = DB::find('quotes', (int) $a['id']); if (!$q) abort(404); require_reauth(); audit('quote_delete', $q['ref'], [], 'alert');
+    require_perm('destroy'); $q = DB::find('quotes', (int) $a['id']); if (!$q) abort(404); require_reauth(); audit('quote_delete', $q['ref'], [], 'alert'); alert_mail('Devis supprimé définitivement', $q['ref']);
     purge_files('quote_id=?', [$q['id']]); DB::q('DELETE FROM quote_items WHERE quote_id=?', [$q['id']]); DB::del('quotes', (int) $q['id']); flash('ok', 'Devis ' . $q['ref'] . ' supprimé.'); redirect('/admin/devis');
 });
 route('POST', '/admin/clients/{id}/supprimer', function ($a) {
-    require_perm('destroy'); $u = DB::find('users', (int) $a['id']); if (!$u || $u['role'] !== 'customer') abort(404); require_reauth(); audit('customer_delete', mask_email($u['email']), [], 'alert');
+    require_perm('destroy'); $u = DB::find('users', (int) $a['id']); if (!$u || $u['role'] !== 'customer') abort(404); require_reauth(); audit('customer_delete', mask_email($u['email']), [], 'alert'); alert_mail('Compte client supprimé par l\'équipe', mask_email($u['email']));
     if (DB::val('SELECT COUNT(*) FROM orders WHERE user_id=?', [$u['id']])) { flash('error', 'Ce client a des commandes : désactivez son compte plutôt que de le supprimer.'); redirect('/admin/clients/' . $u['id']); }
     DB::q('DELETE FROM addresses WHERE user_id=?', [$u['id']]); DB::q('DELETE FROM favorites WHERE user_id=?', [$u['id']]); DB::q('DELETE FROM carts WHERE user_id=?', [$u['id']]); DB::q('UPDATE quotes SET user_id=0 WHERE user_id=?', [$u['id']]); DB::del('users', (int) $u['id']);
     flash('ok', 'Compte client supprimé.'); redirect('/admin/clients');

@@ -35,10 +35,13 @@ switch ($cmd) {
     case 'dumpaudit': echo json_encode(function_exists('audit_verify') ? audit_verify() : ['ok' => null]), "\n"; break;
     case 'auditdump': foreach (DB::all('SELECT action, details FROM audit_log') as $r) echo $r['action'] . ' ' . $r['details'] . "\n"; break;
     case 'tamperaudit': DB::q("UPDATE audit_log SET details='{\"x\":\"tamper\"}' WHERE id=(SELECT MIN(id) FROM audit_log)"); echo "ok\n"; break;
+    case 'adduser': mkuser($argv[2], $argv[4] ?? 'Test-Pass-2026-xyz!', ucfirst(strtok($argv[2], '@')), $argv[3]); echo (int) DB::val('SELECT id FROM users WHERE email=?', [$argv[2]]), "\n"; break;
+    case 'userexists': echo (int) DB::val('SELECT COUNT(*) FROM users WHERE email=?', [$argv[2]]), "\n"; break;
     case 'setpage': DB::q('UPDATE pages SET content=? WHERE slug=?', [$argv[3], $argv[2]]); echo "ok\n"; break;
     case 'hashalgo': $h = DB::val('SELECT password_hash FROM users WHERE email=?', [$argv[2]]); echo password_get_info((string) $h)['algoName'], "\n"; break;
     case 'setbcrypt': DB::q('UPDATE users SET password_hash=? WHERE email=?', [password_hash($argv[3], PASSWORD_BCRYPT, ['cost' => 10]), $argv[2]]); echo "ok\n"; break;
     case 'setpw': DB::q('UPDATE users SET password_hash=? WHERE email=?', [pw_hash($argv[3]), $argv[2]]); echo "ok\n"; break;
+    case 'setsetting': Settings::set($argv[2], $argv[3]); echo "ok\n"; break;
     case 'setting': echo (string) DB::val('SELECT svalue FROM settings WHERE skey=?', [$argv[2]]), "\n"; break;
     case 'delproduct': DB::q('DELETE FROM products WHERE slug LIKE ?', [$argv[2] . '%']); echo "ok\n"; break;
     default: echo "commande inconnue\n"; exit(1);

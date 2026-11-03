@@ -121,3 +121,32 @@ route('POST', '/compte/profil', function () {
     if ($changed) { revoke_sessions((int) $u['id']); $_SESSION['ep'] = (int) $u['session_epoch'] + 1; session_regenerate_id(true); $GLOBALS['_user'] = null; audit('password_change', '', [], 'info'); }
     flash('ok', $changed ? 'Profil et mot de passe mis à jour. Vos autres sessions ont été fermées.' : 'Profil mis à jour.'); redirect('/compte/profil');
 });
+
+// ---- droits sur les données personnelles : copie (accès/portabilité) et suppression du compte (effacement)
+route('GET', '/compte/mes-donnees', function () { $u = require_login(); acc_page('data', 'data', compact('u'), 'Mes données'); });
+route('POST', '/compte/mes-donnees/export', function () {
+    $u = require_login(); rate_limit('dataexp', 5, 3600, (string) $u['id']);
+    if (!pw_verify($u, (string) ($_POST['password'] ?? ''))) { audit('data_export_denied', '', [], 'warn'); flash('error', 'Mot de passe incorrect.'); redirect('/compte/mes-donnees'); }
+    $id = (int) $u['id'];
+    $orders = []; foreach (DB::all('SELECT * FROM orders WHERE user_id=? ORDER BY id', [$id]) as $o) $orders[] = ['reference' => $o['ref'], 'date' => $o['created_at'], 'statut' => $o['status'], 'paiement' => $o['payment_status'], 'mode_paiement' => $o['payment_method'], 'total_fcfa' => (int) $o['total'], 'livraison' => $o['delivery_method'], 'adresse_facturation' => jd($o['billing']), 'adresse_livraison' => jd($o['shipping_addr']),
+        'articles' => array_map(fn($i) => ['produit' => $i['name'], 'quantite' => (int) $i['qty'], 'prix_unitaire_fcfa' => (int) $i['unit_price'], 'total_fcfa' => (int) $i['total'], 'details' => jd($i['summary'])], order_items((int) $o['id']))];
+    $quotes = []; foreach (DB::all('SELECT * FROM quotes WHERE user_id=? ORDER BY id', [$id]) as $q) $quotes[] = ['reference' => $q['ref'], 'date' => $q['created_at'], 'statut' => $q['status'], 'message' => $q['message'], 'total_fcfa' => (int) $q['total']];
+    $data = ['exporte_le' => now(), 'profil' => ['e-mail' => $u['email'], 'nom' => $u['name'], 'telephone' => $u['phone'], 'entreprise' => $u['company'], 'compte_cree_le' => $u['created_at'], 'derniere_connexion' => $u['last_login']],
+        'adresses' => array_map(fn($a) => array_diff_key($a, ['id' => 1, 'user_id' => 1]), DB::all('SELECT * FROM addresses WHERE user_id=?', [$id])), 'commandes' => $orders, 'devis' => $quotes,
+        'favoris' => array_column(DB::all('SELECT p.name FROM products p JOIN favorites f ON f.product_id=p.id WHERE f.user_id=?', [$id]), 'name'),
+        'fichiers' => array_map(fn($f) => ['nom' => $f['orig_name'], 'taille_octets' => (int) $f['size'], 'envoye_le' => $f['created_at']], DB::all("SELECT orig_name, size, created_at FROM files WHERE user_id=? AND kind='client'", [$id]))];
+    audit('data_export', '', [], 'info'); header('Content-Type: application/json; charset=utf-8'); header('Content-Disposition: attachment; filename="mes-donnees-symoprint.json"'); header('Cache-Control: private, no-store');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT); exit;
+});
+route('POST', '/compte/mes-donnees/supprimer', function () {
+    $u = require_login(); rate_limit('datadel', 5, 3600, (string) $u['id']); $id = (int) $u['id'];
+    if (is_staff_role($u['role'])) { flash('error', 'Un compte de l\'équipe se supprime depuis l\'administration (Équipe et rôles).'); redirect('/compte/mes-donnees'); }
+    if (!pw_verify($u, (string) ($_POST['password'] ?? '')) || trim((string) ($_POST['confirm'] ?? '')) !== 'SUPPRIMER') { audit('account_delete_denied', '', [], 'warn'); flash('error', 'Mot de passe incorrect ou confirmation manquante (tapez SUPPRIMER).'); redirect('/compte/mes-donnees'); }
+    foreach (DB::all("SELECT * FROM files WHERE user_id=? AND order_id=0 AND quote_id=0", [$id]) as $f) { try { @unlink(Files::path($f)); } catch (Throwable $e) { } DB::del('files', (int) $f['id']); }   // envois en attente, jamais rattachés à une commande
+    DB::$pdo->beginTransaction();
+    try {
+        DB::q('DELETE FROM addresses WHERE user_id=?', [$id]); DB::q('DELETE FROM favorites WHERE user_id=?', [$id]); DB::q('DELETE FROM carts WHERE user_id=?', [$id]); DB::q('DELETE FROM password_resets WHERE user_id=?', [$id]);
+        DB::q('UPDATE orders SET user_id=0 WHERE user_id=?', [$id]); DB::q('UPDATE quotes SET user_id=0 WHERE user_id=?', [$id]); DB::q('UPDATE files SET user_id=0 WHERE user_id=?', [$id]); DB::del('users', $id); DB::$pdo->commit();
+    } catch (Throwable $e) { DB::$pdo->rollBack(); throw $e; }
+    audit('account_deleted', mask_email($u['email']), [], 'warn', $id); session_kill(); flash('ok', 'Votre compte a été supprimé. Merci de votre confiance.'); redirect('/');
+});

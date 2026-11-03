@@ -1,6 +1,6 @@
 <?php
 // Migrations de schéma (idempotentes). La version appliquée est mémorisée dans settings.schema_version.
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 function migrate(): void {
     $try = function (string $sql) { try { DB::schema([$sql]); } catch (Throwable $e) { /* colonne/index déjà présent : sans conséquence */ } };
@@ -13,10 +13,11 @@ function migrate(): void {
     $try('CREATE INDEX idx_audit_action ON audit_log (action, ts)');
     $try('CREATE INDEX idx_audit_ts ON audit_log (ts)');
     $try('CREATE INDEX idx_files_owner ON files (owner_token, order_id)');
+    $try('ALTER TABLE users ADD COLUMN enroll_hash VARCHAR(64) NULL');   // v3 : code d'activation personnel pour l'enrôlement MFA
     // ---- migration des DONNÉES : une seule fois (le gagnant de la course met à jour schema_version)
     try { DB::q('INSERT INTO settings (skey, svalue) VALUES (?,?)', ['schema_version', '1']); } catch (Throwable $e) { }
-    $won = DB::q('UPDATE settings SET svalue=? WHERE skey=? AND svalue=?', [(string) SCHEMA_VERSION, 'schema_version', '1'])->rowCount() === 1;
-    if (!$won) return;
+    $won = DB::q('UPDATE settings SET svalue=? WHERE skey=? AND svalue=?', ['2', 'schema_version', '1'])->rowCount() === 1;
+    if (!$won) { DB::q('UPDATE settings SET svalue=? WHERE skey=? AND svalue=?', ['3', 'schema_version', '2']); return; }
     // anciens rôles → nouveaux rôles (ordre important : admin → superadmin AVANT manager → admin)
     DB::q("UPDATE users SET role='superadmin' WHERE role='admin'");
     DB::q("UPDATE users SET role='admin' WHERE role='manager'");
@@ -25,5 +26,6 @@ function migrate(): void {
     DB::q("UPDATE users SET email_verified=1 WHERE role='customer'");
     // comptes de l'équipe existants : MFA à configurer et mot de passe à renouveler à la prochaine connexion
     DB::q("UPDATE users SET email_verified=1, must_change_pw=1 WHERE role<>'customer'");
-    audit('schema_migrated', 'v' . SCHEMA_VERSION, ['staff_must_change_pw' => true], 'info', 0);
+    audit('schema_migrated', 'v2', ['staff_must_change_pw' => true], 'info', 0);
+    DB::q('UPDATE settings SET svalue=? WHERE skey=? AND svalue=?', ['3', 'schema_version', '2']); audit('schema_migrated', 'v3', [], 'info', 0);
 }

@@ -8,18 +8,19 @@
 - [x] Sauvegarde base + fichiers clients **avant** migration (réalisée le 3 nov. 2026, 02:55) ; cron de sauvegarde quotidien créé.
 - [x] Vérifications préalables de la production : PHP 8.3, Argon2id, `openssl`/`dom`/`zip` présents, `REMOTE_ADDR` = IP réelle, base non exposée.
 - [ ] **Autorisation explicite du propriétaire** de déployer en production.
-- [ ] Ajouter `app_key` (base64, 32 octets aléatoires) et `'auto_install' => false` dans `_app/config.local.php` **avant** le reste.
+- [ ] Ajouter dans `_app/config.local.php` **avant** le reste : `app_key` (base64, 32 octets aléatoires), `'auto_install' => false`, `mfa_setup_code` (valeur aléatoire à communiquer à l'administrateur par un canal sûr), `'pwned_check' => true`, `audit_retention_days` (730).
 - [ ] Déposer les fichiers **nouveaux** (inertes pour l'ancien code), puis les fichiers modifiés hors noyau, puis **`_app/lib/core.php` et `_app/bootstrap.php` en dernier**, puis `.htaccess` (courte fenêtre transitoire de quelques secondes).
 - [ ] Première requête = migration v2 automatique. Vérifier : accueil, `/catalogue`, `/p/…`, commande invité complète (paiement à la livraison), `/admin/connexion`.
-- [ ] **Connexion de l'administrateur existant** : mot de passe actuel → **enrôlement MFA** (clé à saisir dans Google Authenticator/Authy/Microsoft Authenticator) → **noter les 8 codes de secours** → choisir un nouveau mot de passe (12+ caractères).
+- [ ] **Connexion de l'administrateur existant** : mot de passe actuel → **enrôlement MFA** avec le **code d'activation** (`mfa_setup_code`) puis la clé à saisir dans Google Authenticator/Authy/Microsoft Authenticator → **noter les 8 codes de secours** → choisir un nouveau mot de passe (12+ caractères).
 - [ ] *Sécurité et journal* : intégrité « Valide », MFA « Activée » ; créer les autres comptes de l'équipe (rôle minimal nécessaire).
+- [ ] Après l'enrôlement de l'administrateur, **retirer `mfa_setup_code`** de la configuration.
 - [ ] Contrôles passifs : en-têtes (CSP avec `object-src 'none'`, `X-Frame-Options: DENY`), absence de `X-Powered-By` (sinon R-08), cookie `__Host-sp_sess`, fichiers sensibles toujours en 403.
 - [ ] **Rotation des secrets** (R-09, `09` §5) : mot de passe MySQL, jeton d'installation.
 - [ ] Vérifier la délivrabilité des e-mails de confirmation/réinitialisation (R-01) **avant** de communiquer sur les comptes clients.
 
 ## B. Configuration externe à votre charge
 - [ ] DNS e-mail : SPF complet, DKIM de l'expéditeur réel, DMARC progressif (`p=none` → `quarantine`), MX si réception souhaitée (R-01).
-- [ ] Boîte `no-reply@symoprint.com` + SMTP authentifié (amélioration de code à planifier).
+- [ ] Boîte `no-reply@symoprint.com` créée dans hPanel + bloc `smtp` dans `_app/config.local.php` : `'mail_driver' => 'smtp', 'smtp' => ['host' => '…', 'port' => 465, 'secure' => 'ssl', 'user' => 'no-reply@symoprint.com', 'pass' => '…', 'from' => 'no-reply@symoprint.com']` (valeurs exactes dans hPanel → E-mails → configuration manuelle). Le code SMTP est prêt et testé, jamais essayé sur le vrai serveur (**à vérifier**).
 - [ ] WAF / anti-bot / protection DDoS (Cloudflare ou option Hostinger) et captcha sur formulaires publics (R-02).
 - [ ] GitHub : activer la **protection de branche** exigeant le job `gate` du workflow `security`, l'alerte de secrets et Dependabot (réglages du dépôt).
 - [ ] Copie hors serveur des sauvegardes et du journal d'audit ; sauvegarde de `app_key` (R-04, R-07).

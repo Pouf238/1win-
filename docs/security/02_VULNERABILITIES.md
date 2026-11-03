@@ -9,9 +9,9 @@ Classification : **Critique** (compromission directe, données ou argent), **Él
 | Sévérité | Constats | Corrigés dans le code | Déployés en production |
 |---|---|---|---|
 | Critique | 5 | 5 | 0 (en attente d'autorisation) |
-| Élevée | 10 | 10 | 0 (en attente d'autorisation) |
-| Moyenne | 3 | 3 | 0 (en attente d'autorisation) |
-| Faible | 1 | 1 | 0 (en attente d'autorisation) |
+| Élevée | 12 | 12 | 0 (en attente d'autorisation) |
+| Moyenne | 5 | 5 | 0 (en attente d'autorisation) |
+| Faible | 4 | 4 | 0 (en attente d'autorisation) |
 
 ## Constats
 
@@ -223,6 +223,83 @@ Classification : **Critique** (compromission directe, données ou argent), **Él
 - **Preuve avant** : HDR-03
 - **Retest** : 1/1 tests réussis (HDR-03)
 - **État** : Corrigé dans le code. **À revérifier en production** : l'en-tête peut aussi être ajouté par le serveur (R-08).
+
+### V-20 — Enrôlement MFA « à la première utilisation » : un attaquant connaissant seulement le mot de passe pouvait enrôler son propre téléphone
+- **Sévérité** : Élevée
+- **Localisation** : `routes/admin.php` `/admin/mfa/activer`
+- **Fonctionnalité** : Double authentification
+- **Risque** : Rien ne prouvait que la personne qui enrôle la MFA est bien le titulaire du compte.
+- **Conséquences possibles** : Prise de contrôle d'un compte d'équipe dont la MFA n'était pas encore configurée (compte migré ou nouveau).
+- **Correctif** : **Code d'activation** exigé : personnel (généré à la création du compte ou à la réinitialisation MFA, affiché une seule fois, stocké haché) ou `mfa_setup_code` de la configuration du serveur ; refus journalisé + alerte e-mail.
+- **Preuve avant** : ENROLL-01, ENROLL-02
+- **Retest** : 2/2 tests réussis (ENROLL-01, ENROLL-02)
+- **État** : Corrigé dans le code.
+
+### V-21 — Droits sur les données personnelles (accès/portabilité, effacement) absents en libre-service
+- **Sévérité** : Moyenne
+- **Localisation** : `routes/account.php` `/compte/mes-donnees`
+- **Fonctionnalité** : Espace client
+- **Risque** : Seule la demande manuelle à l'entreprise était possible.
+- **Conséquences possibles** : Non-conformité aux droits d'accès et d'effacement ; délais et risques d'erreur.
+- **Correctif** : Export JSON de **ses propres** données (mot de passe exigé, plafonné) ; suppression du compte (mot de passe + confirmation) : profil/adresses/favoris/panier effacés, sessions fermées, commandes et devis conservés **sans lien avec un compte** pour les obligations comptables.
+- **Preuve avant** : DATA-01, DATA-02
+- **Retest** : 2/2 tests réussis (DATA-01, DATA-02)
+- **État** : Corrigé dans le code. *Revue juridique des durées de conservation à faire (R-11).*
+
+### V-22 — Aucune alerte sur les actions sensibles de l'équipe
+- **Sévérité** : Moyenne
+- **Localisation** : `routes/admin.php`
+- **Fonctionnalité** : Détection
+- **Risque** : Une suppression, un remboursement, un changement de réglages ou d'équipe ne prévenait personne.
+- **Conséquences possibles** : Fraude interne ou compte compromis découverts tard.
+- **Correctif** : `alert_mail()` : e-mail au propriétaire (limité à 10/h/sujet) pour suppression de commande/devis/client, remboursement, paiement remis en attente, réglages, ajustement massif des prix, création/modification d'un membre.
+- **Preuve avant** : ALERT-01
+- **Retest** : 1/1 tests réussis (ALERT-01)
+- **État** : Corrigé dans le code. *Dépend de la délivrabilité des e-mails (R-01).*
+
+### V-23 — Journal d'audit sans politique de rétention
+- **Sévérité** : Faible
+- **Localisation** : `lib/security.php`
+- **Fonctionnalité** : Journalisation
+- **Risque** : Croissance illimitée du journal, durée de conservation non définie.
+- **Conséquences possibles** : Données personnelles conservées sans limite (IP).
+- **Correctif** : `audit_prune()` appelée par la sauvegarde quotidienne : suppression au-delà de 24 mois (`audit_retention_days`), **ancre** mémorisée pour que la chaîne reste vérifiable ; suppression/falsification toujours détectées.
+- **Preuve avant** : — (constat par lecture de code)
+- **Retest** : 0/2 tests réussis (AUDIT-prune (unitaire), AUDIT-anchor (unitaire))
+- **État** : Corrigé dans le code.
+
+### V-24 — CSP autorisant les blocs `<style>` en ligne
+- **Sévérité** : Faible
+- **Localisation** : `lib/security.php`
+- **Fonctionnalité** : En-têtes
+- **Risque** : `style-src 'unsafe-inline'`.
+- **Conséquences possibles** : Injection de CSS (exfiltration, hameçonnage visuel).
+- **Correctif** : `style-src 'self'` ; seuls les attributs `style=""` restent tolérés (`style-src-attr`). Parcours e2e sans violation de CSP.
+- **Preuve avant** : CSP-02
+- **Retest** : 1/1 tests réussis (CSP-02)
+- **État** : Corrigé dans le code (reste : attributs en ligne, R-06).
+
+### V-25 — Mots de passe déjà publiés dans des fuites non détectés
+- **Sévérité** : Faible
+- **Localisation** : `lib/security.php` `pw_pwned()`
+- **Fonctionnalité** : Mots de passe
+- **Risque** : Un mot de passe compliqué mais fuité était accepté.
+- **Conséquences possibles** : Prise de compte par bourrage d'identifiants.
+- **Correctif** : Vérification **k-anonymat** (seuls 5 caractères d'empreinte quittent le serveur), **échec ouvert** si le service est injoignable, activée par `pwned_check` dans la configuration.
+- **Preuve avant** : — (constat par lecture de code)
+- **Retest** : 0/3 tests réussis (PWNED-01, PWNED-02, PWNED-03 (unitaires))
+- **État** : Corrigé dans le code (activé en production via la configuration).
+
+### V-26 — E-mails sortants non authentifiés (PHP `mail()`)
+- **Sévérité** : Élevée
+- **Localisation** : `lib/mail.php`
+- **Fonctionnalité** : E-mails de confirmation / réinitialisation / alertes
+- **Risque** : Envoi depuis le serveur web sans authentification, dépendant d'un SPF incomplet.
+- **Conséquences possibles** : Messages en spam ou rejetés : confirmation de compte, mot de passe oublié et alertes inopérants.
+- **Correctif** : Pilote **SMTP authentifié** (TLS implicite ou STARTTLS, certificat vérifié, identifiants jamais en clair ni journalisés, en-têtes assainis, repli sur `mail()`). **Le DNS (SPF/DKIM/DMARC) et la boîte e-mail restent à configurer chez l'hébergeur (R-01).**
+- **Preuve avant** : — (constat par lecture de code)
+- **Retest** : 0/1 tests réussis (SMTP-01 à SMTP-04 (unitaires))
+- **État** : Code prêt et testé ; **configuration externe à faire**.
 
 ## Constats informationnels et durcissements (sans test d'échec initial)
 

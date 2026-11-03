@@ -11,6 +11,8 @@
 | `/api/upload` | POST | aucune (jeton de panier) | CSRF, 60/h/IP, quota 40 fichiers / 300 Mo par panier, validation complète du fichier |
 | `/api/upload/supprimer` | POST | propriétaire du fichier (jeton de panier) | CSRF, comparaison constante, uniquement fichiers non rattachés |
 | `/api/favori` | POST | session client | CSRF, produit existant |
+| `/compte/mes-donnees/export` | POST | session client + mot de passe | CSRF, plafond 5/h, uniquement les données du compte connecté |
+| `/compte/mes-donnees/supprimer` | POST | session client + mot de passe + confirmation | CSRF, plafond 5/h, comptes d'équipe exclus |
 | `/panier/ajouter` | POST | aucune (panier cookie) | CSRF, 120/h, 40 articles max, configuration **re-validée et re-tarifée** serveur, fichiers : seuls ceux du même jeton de panier |
 | `/devis/depuis-produit` | POST | aucune | CSRF, même validation que ci-dessus |
 
