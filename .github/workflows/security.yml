@@ -89,9 +89,36 @@ jobs:
           name: resultats-tests-securite
           path: ${{ runner.temp }}/results-ci.json
 
+  platform-mysql:
+    name: "Tests de la plateforme sur MariaDB (même famille que le MySQL de la production)"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      db:
+        image: mariadb:10.11
+        env: { MARIADB_ROOT_PASSWORD: root, MARIADB_DATABASE: symo_ci }
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', extensions: 'pdo_mysql, pdo_sqlite, mbstring, openssl, dom, fileinfo, zip, gd', ini-values: 'upload_max_filesize=64M, post_max_size=64M' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: "Configuration de test (base MariaDB jetable)"
+        run: |
+          printf '%s\n' '<?php return ["db" => ["driver" => "mysql", "host" => "127.0.0.1", "name" => "symo_ci", "user" => "root", "pass" => "root"], "auto_install" => true];' > "$RUNNER_TEMP/mysql.config.php"
+      - name: "Tests fonctionnels de la plateforme sur MariaDB (clés, longueurs de colonnes, SQL propre à MySQL)"
+        run: bash tests/platform/run.sh 8100
+        env:
+          SECURITY_OUT: ${{ runner.temp }}
+          SYMO_CONFIG: ${{ runner.temp }}/mysql.config.php
+
   gate:
     name: Porte de déploiement
-    needs: [lint, secrets, sast, security-tests]
+    needs: [lint, secrets, sast, security-tests, platform-mysql]
     runs-on: ubuntu-24.04
     steps:
       - run: echo "Tous les contrôles de sécurité sont passés, le déploiement est autorisé."

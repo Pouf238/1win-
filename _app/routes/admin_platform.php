@@ -9,7 +9,7 @@ route('POST', '/admin/statuts', function () {
         DB::q('UPDATE order_statuses SET label=?, tone=?, sort=?, active=?, notify=? WHERE skey=?', [$label, in_array($f['tone'] ?? '', $tones, true) ? $f['tone'] : 'info', max(0, min(999, (int) ($f['sort'] ?? 0))), in_array($k, $locked, true) || !empty($f['active']) ? 1 : 0, !empty($f['notify']) ? 1 : 0, $k]);
     }
     $nl = mb_substr(trim(post('new_label')), 0, 80);
-    if ($nl !== '') { $key = 'c_' . substr(slugify($nl), 0, 24); if (DB::val('SELECT COUNT(*) FROM order_statuses WHERE skey=?', [$key])) flash('error', 'Un statut de ce nom existe déjà.'); else DB::ins('order_statuses', ['skey' => $key, 'label' => $nl, 'tone' => in_array(post('new_tone'), $tones, true) ? post('new_tone') : 'info', 'sort' => max(0, min(999, (int) post('new_sort', 65))), 'active' => 1, 'notify' => !empty($_POST['new_notify']) ? 1 : 0, 'is_system' => 0]); }
+    if ($nl !== '') { $key = 'c_' . rtrim(substr(slugify($nl), 0, 18), '-'); if (DB::val('SELECT COUNT(*) FROM order_statuses WHERE skey=?', [$key])) flash('error', 'Un statut de ce nom existe déjà.'); else DB::ins('order_statuses', ['skey' => $key, 'label' => $nl, 'tone' => in_array(post('new_tone'), $tones, true) ? post('new_tone') : 'info', 'sort' => max(0, min(999, (int) post('new_sort', 65))), 'active' => 1, 'notify' => !empty($_POST['new_notify']) ? 1 : 0, 'is_system' => 0]); }
     audit('statuses_saved', '', [], 'info'); flash('ok', 'Statuts enregistrés.'); redirect('/admin/statuts');
 });
 route('POST', '/admin/statuts/{key}/supprimer', function ($a) {

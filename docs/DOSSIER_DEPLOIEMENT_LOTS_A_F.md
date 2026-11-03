@@ -1,0 +1,103 @@
+# Dossier de décision — déploiement des lots A à F (3 novembre 2026)
+
+> **Statut : NON DÉPLOYÉ.** Rien de ce dossier n'est en production. Le déploiement attend votre autorisation écrite après examen de ce document.
+> Rien n'est supprimé, aucune commande n'est touchée, le fonctionnement des paiements n'est pas modifié (voir §5).
+
+## 0. Ce qui a été vérifié aujourd'hui (nouveau)
+| Vérification | Résultat |
+|---|---|
+| **Base MariaDB 10.11 locale** (même famille que le MySQL de Hostinger), schéma identique à la production (24 tables, v3, 52 produits) créé par le code actuellement en ligne | migration v4 appliquée : **seules différences** = numéro de version 3→4, +1 ligne dans le journal d'audit, colonnes ajoutées vides. **Aucune ligne existante modifiée ou supprimée** (140 lignes comparées) |
+| Retour arrière réel `down 3` sur MariaDB, puis remontée `up` | réussi : retour à 24 tables / v3 ; l'option `--i-have-a-backup` est exigée (refus sans elle) |
+| Suite de tests de la plateforme (17 scénarios) **sur MariaDB** | a trouvé **un défaut réel invisible sous SQLite** : la clé d'un statut personnalisé pouvait dépasser la largeur de la colonne `orders.status` (20 caractères) → erreur à l'enregistrement en production. **Corrigé** (clé limitée à 20 caractères) ; 17/17 sur MariaDB **et** sur SQLite |
+| **Ancien code (celui en ligne) sur une base déjà migrée en v4** | pages publiques, 11 commandes (dont statut personnalisé), 6 devis : toutes affichées sans erreur → **le retour arrière « fichiers seulement » est sûr** (voir §8) |
+| Nouvelle tâche d'intégration continue | les tests de la plateforme tournent désormais aussi sur MariaDB à chaque modification |
+
+## 1. État réel de la production (inventaire en lecture seule, 3 nov. 2026 11:52 UTC)
+Base MySQL, version de schéma **v3**. **1 client, 1 membre d'équipe, 0 commande**, 1 devis (« en cours de chiffrage »), 2 fichiers, 52 produits, 21 entrées au journal d'audit, aucun abonné ni message de contact.
+→ **Aucune commande ne peut être perturbée aujourd'hui** (il n'y en a aucune) ; le seul enregistrement « métier » à préserver est le devis en cours (testé : il garde son affichage, ses nouvelles colonnes sont vides).
+**À noter** : les réglages « E-mail public » et « E-mail de notification » sont **vides** en production. Conséquences : les messages internes (nouveau devis, nouvelle commande, formulaire de contact) n'ont aucun destinataire, et les e-mails clients n'ont pas d'adresse « Répondre à ». À renseigner dans *Administration → Paramètres* (proposition : `contact@symoprint.com`).
+
+## 2. Détail de chaque lot
+### Lot A — Fondations de données
+- **Fonctionnalités** : migrations réversibles (« up » / « down » testés), commande `php tools/migrate.php status|up|down <v> --i-have-a-backup`.
+- **Base de données (migration v4, ajouts uniquement)** : 6 tables `payments`, `payment_events`, `notifications`, `message_templates`, `order_statuses` (13 statuts de départ), `quote_messages` ; colonnes `quotes.service_type/details/desired_date`, `orders.carrier/tracking_ref`, `files.width/height/warn`, `products.availability`.
+- **Fichiers** : `_app/sql/migrate.php` (M), `tools/migrate.php` (A), `_app/bootstrap.php` (M, charge `notify.php` et les nouveaux fichiers de routes).
+- **Risques** : échec de la migration au premier chargement → pages en erreur 500 jusqu'au retour arrière (une minute, voir §8). Atténué : testée sur MariaDB (v3→v4, down, re-up, concurrence, idempotence).
+
+### Lot B — Invités et comptes
+- **Fonctionnalités** : « Retrouver ma commande » (`/suivi`, lien envoyé uniquement à l'adresse de la commande, réponse identique dans tous les cas, plafonds) ; rattachement au compte des commandes/devis passés en invité **après confirmation de l'e-mail** ; invitation à créer un compte sur la page de commande.
+- **Fichiers** : `routes/shop.php`, `routes/account.php`, `lib/security.php` (`claim_guest_records`), `views/shop/track.php` (A), `views/shop/order.php`, `views/account/register.php`, `views/layout/main.php` (lien « Suivre ma commande »).
+- **Base** : aucune table propre (utilise les colonnes existantes).
+- **Tests** : TRACK-01/02, CLAIM-01/02 + parcours e2e. **Risques** : envoi d'e-mails de suivi → dépend du SMTP (quota 100 e-mails/jour de la boîte, voir R3).
+
+### Lot C — Devis
+- **Fonctionnalités** : formulaire adaptatif (5 types de prestation + « autre », date souhaitée), échanges client ↔ équipe dans le devis, expiration automatique, statut « Terminé », le client transforme son devis accepté en commande (montant du devis, livraison recalculée côté serveur, une seule commande même en double clic).
+- **Fichiers** : `routes/quotes_ext.php` (A), `views/shop/quote.php`, `quote_view.php`, `quote_order.php` (A), `views/admin/quote.php`, `assets/js/quote.js` (A), `lib/core.php` (statut « Terminé »), `cli/backup.php` (déclenche l'expiration chaque nuit).
+- **Base** : colonnes `quotes.*` et table `quote_messages`. **Tests** : QUOTE-01 à 04. **Risques** : la commande issue d'un devis crée une commande « en attente de paiement » sans paiement en ligne (le mode de paiement reste celui déjà en place).
+
+### Lot D — Statuts et notifications
+- **Fonctionnalités** : statuts de commande configurables (3 nouveaux : *Production terminée*, *Prête à être retirée*, *En livraison* ; 4 statuts indispensables protégés), 5 modèles de messages éditables avec variables, **journal des notifications** (envoyé / échec / non envoyé + raison, renvoi), notifications dans le compte client. **L'interface n'affirme jamais « envoyé » si ce n'est pas vrai.**
+- **Fichiers** : `lib/notify.php` (A), `routes/admin_platform.php` (A), `views/admin/statuses.php`, `templates.php`, `notifications.php` (A), `views/account/notifications.php` (A), `routes/admin.php`, `routes/shop.php`, `routes/public.php` (le formulaire de contact passe par le journal), vues commandes/clients/tableau de bord, `views/layout/admin.php`.
+- **Base** : tables `order_statuses`, `message_templates`, `notifications`. **Tests** : STATUS-01, NOTIF-01/02, TPL-01 (+ MariaDB). **Risques** : les e-mails clients partent réellement (confirmation de commande, changement de statut) ; les messages internes restent « non envoyés » tant que l'adresse de notification est vide.
+
+### Lots E et F — Fichiers et catalogue
+- **Fonctionnalités** : suppression/remplacement de fichier tant que la production n'a pas démarré, alerte de faible résolution (< 1000 px), fichiers « toute la commande » enfin visibles côté client (défaut existant corrigé) ; action groupée « Texte à inscrire » pour les gadgets ; galerie photos (8 max) ; disponibilité (*disponible / sur devis / indisponible*) ; réglage « tarifs non confirmés : vente sur devis uniquement » (**par défaut : comportement actuel conservé**).
+- **Fichiers** : `routes/files_ext.php` (A), `lib/files.php`, `views/shop/_order_files.php` (A), `routes/admin_catalog.php`, `lib/cart.php`, `views/admin/product_form.php`, `products.php`, `settings.php`, `views/shop/product.php`.
+- **Base** : colonnes `files.width/height/warn`, `products.availability`. **Tests** : FILE-01, TEXT-01, GAL-01, AVAIL-01, DEMO-01. **Risques** : faibles ; envoi de fichiers non modifié dans ses contrôles de sécurité.
+
+**Total : 43 fichiers (13 nouveaux, 30 modifiés), ≈ 490 lignes ajoutées.** Liste exacte : `git diff --name-status 5559a24..HEAD -- . ':!docs' ':!tests' ':!.github'`.
+
+## 3. Modifications de la base de données — récapitulatif
+Uniquement des **ajouts** (6 tables, 9 colonnes, 6 index) + 13 lignes de statuts de départ + le numéro de version. Rien n'est supprimé ni réécrit. Le « down » retire exactement ces ajouts (les données qui y auront été saisies sont perdues).
+
+## 4. Tests réalisés
+| Suite | Résultat |
+|---|---|
+| Plateforme (invités, devis, notifications, fichiers, catalogue) — **SQLite** | 17 / 17 |
+| Plateforme — **MariaDB 10.11** | 17 / 17 (après correction du défaut de longueur de clé) |
+| Migrations (up, down, ré-up, idempotence, concurrence) | 6 / 6 (+ essai réel sur MariaDB) |
+| Sécurité (scénarios d'attaque) | 119 / 119 (dernière exécution complète sur SQLite, avant la correction d'aujourd'hui qui ne touche pas à la sécurité) |
+| Unitaires (SMTP, journal chaîné, TOTP, mots de passe fuités) | 21 / 21 |
+| Parcours navigateur e2e | 85 / 85 |
+| Mise à jour depuis l'ancienne base ; ancien code sur base v4 | réussis |
+| **Non testé** | la suite de sécurité complète sur MariaDB (seule la suite plateforme l'est) ; les e-mails réels en conditions de forte charge ; la version exacte du MySQL/MariaDB de Hostinger n'est pas connue |
+
+## 5. Paiements
+**Non modifiés.** La table `payments` est créée vide et n'est lue par aucune page ; les modes de paiement, la confirmation manuelle par l'équipe (référence obligatoire) et les montants calculés côté serveur sont inchangés. Le paiement en ligne (Lot G) n'est pas inclus : il exige votre choix de prestataire et des clés de test.
+
+## 6. Risques et parades
+| # | Risque | Probabilité / impact | Parade |
+|---|---|---|---|
+| R1 | La migration échoue sur le MySQL réel → erreur 500 | faible / élevé mais court | essai MariaDB ; migration lancée **en premier et seule**, contrôlée avant le reste ; retour : remettre l'ancien `migrate.php` (< 1 min) |
+| R2 | Longueurs de colonnes MySQL (type du défaut trouvé) | faible / moyen | tests MariaDB + nouvelle tâche CI ; correction faite |
+| R3 | **Quota d'envoi de la boîte : 100 e-mails/jour** (forfait Starter) | moyen dès que le volume monte / moyen | repli automatique sur `mail()` (non garanti) ; journal des notifications montre les échecs ; surveiller, passer à un forfait supérieur **seulement avec votre accord** |
+| R4 | E-mails clients envoyés avec des modèles non relus | moyen / faible | relire *Administration → Modèles de messages* avant ouverture au public |
+| R5 | Réglages d'e-mail vides (§1) | certain / faible | les renseigner (votre décision) |
+| R6 | Retour arrière de la base = perte des données saisies après le déploiement | faible / faible aujourd'hui (0 commande) | privilégier le retour **fichiers seulement** (sûr, testé), garder la base en v4 |
+
+## 7. Opérations irréversibles
+- **Le déploiement lui-même : aucune** (ajouts uniquement, sauvegardes avant).
+- **Irréversibles si on les exécute plus tard** : `migrate down` (supprime 6 tables et 9 colonnes et leur contenu) et la restauration de la sauvegarde SQL (écrase les tables). Je ne les lancerai **jamais sans vous prévenir**.
+
+## 8. Plan de sauvegarde et de retour arrière
+**Avant (≈ 5 min)**
+1. Sauvegarde fraîche : `php _app/cli/backup.php --uploads` (base compressée `.sql.gz` + archive des fichiers clients) dans `~/domains/symoprint.com/backups` (0700, hors web) ; contrôle des tailles.
+2. Copie du **code actuel** sur le serveur : `tar czf backups/code-avant-lots-AF.tgz -C public_html --exclude=_app/storage .` (le retour est alors un simple `tar xzf`, sans moi).
+3. Configuration : copie déjà faite aujourd'hui (`backups/cfg-avant-smtp-20261103.bak`, empreinte vérifiée) — la configuration n'est **pas** renvoyée lors de ce déploiement.
+4. Inventaire en lecture seule (comptes avant/après).
+
+**Déploiement (≈ 5 min, incrémental, aucun fichier supprimé)**
+1. `_app/sql/migrate.php` + `tools/migrate.php` → première requête = migration v4 ; contrôle : version = 4, 30 tables, inventaire identique (aucune ligne perdue).
+2. Nouveaux fichiers (inertes pour l'ancien code) → fichiers modifiés → **noyau et amorçage en dernier**.
+3. Vérifications passives : pages publiques, `/suivi`, connexion, devis, en-têtes de sécurité, fichiers sensibles toujours en 403, absence d'erreurs au journal.
+
+**Retour arrière**
+- *Niveau 1 — code seulement (< 2 min, recommandé)* : restaurer les anciens fichiers (`tar xzf` de la copie du serveur, ou re-dépôt depuis le commit `5559a24`). L'ancien code fonctionne sur une base v4 (testé). La base reste intacte.
+- *Niveau 2 — base aussi (optionnel)* : après le niveau 1, remettre l'ancien `migrate.php` **après** avoir exécuté `php tools/migrate.php down 3 --i-have-a-backup` (sinon la migration se relance toute seule). Perd les données des 6 tables ajoutées.
+- *Niveau 3 — dernier recours* : restaurer le `.sql.gz` de l'étape 1 (écrase la base ; perd tout ce qui a été créé depuis).
+- Déclencheurs d'un retour : erreur 500 persistante, migration incomplète, inventaire différent, page critique cassée.
+
+## 9. Décisions que j'attends de vous
+1. Autorisation de déployer les lots A à F selon ce plan (oui / non / avec modifications).
+2. Renseigner « E-mail public » et « E-mail de notification » (je peux le faire avec votre accord, ou vous dans *Paramètres*).
+3. Relecture des modèles de messages clients avant ouverture au public.
