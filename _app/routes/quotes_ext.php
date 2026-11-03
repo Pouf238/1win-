@@ -14,6 +14,7 @@ function quote_services(): array {
 }
 /** Lit les champs du type choisi : validation stricte côté serveur (liste blanche, longueurs, bornes) ; retourne [type, [[libellé, valeur], …]]. */
 function quote_collect_details(): array {
+    if (!feature('quotes.adaptive')) return ['', []];
     $svc = (string) post('service_type'); $defs = quote_services(); if (!isset($defs[$svc])) return ['', []]; $out = [];
     foreach ($defs[$svc]['fields'] as $f) {
         $raw = $_POST['d_' . $f['k']] ?? ''; if (!is_string($raw) || trim($raw) === '') continue; $raw = trim($raw);
@@ -24,10 +25,11 @@ function quote_collect_details(): array {
     }
     return [$svc, $out];
 }
-function quote_desired_date(): ?string { $d = post('desired_date'); if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) return null; $t = strtotime($d); return ($t && $t >= strtotime('today') && $t <= strtotime('+730 days')) ? date('Y-m-d', $t) : null; }
+function quote_desired_date(): ?string { if (!feature('quotes.adaptive')) return null; $d = post('desired_date'); if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) return null; $t = strtotime($d); return ($t && $t >= strtotime('today') && $t <= strtotime('+730 days')) ? date('Y-m-d', $t) : null; }
 
 /** Passe en « expiré » les devis envoyés dont la validité est dépassée. Appelée par la maintenance et par la sauvegarde quotidienne. */
 function quotes_expire_due(): int {
+    if (!feature('quotes.expiry')) return 0;
     $n = 0; foreach (DB::all("SELECT id, ref FROM quotes WHERE status='sent' AND valid_until IS NOT NULL AND valid_until<?", [date('Y-m-d')]) as $q) { if (DB::q("UPDATE quotes SET status='expired', updated_at=? WHERE id=? AND status='sent'", [now(), $q['id']])->rowCount()) { $n++; audit('quote_expired', $q['ref'], [], 'info', 0); } }
     return $n;
 }

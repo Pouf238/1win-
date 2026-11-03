@@ -16,7 +16,7 @@ function filter_sql(): array {
 }
 
 route('GET', '/', function () {
-    $banners = DB::all('SELECT * FROM banners WHERE active=1 ORDER BY sort, id');
+    $banners = array_values(array_filter(DB::all('SELECT * FROM banners WHERE active=1 ORDER BY sort, id'), fn($b) => href_available((string) $b['link'])));   // pas de bannière qui mène à une fonction fermée
     $cats = array_values(array_filter(nav_tree()));
     $best = DB::all('SELECT * FROM products WHERE active=1 AND bestseller=1 ORDER BY sort, name LIMIT 8');
     $pop = DB::all('SELECT * FROM products WHERE active=1 AND featured=1 ORDER BY sort, name LIMIT 8');
@@ -74,8 +74,8 @@ route('GET', '/p/{slug}', function ($a) {
     $ld = [['@context' => 'https://schema.org', '@type' => 'Product', 'name' => $p['name'], 'description' => $p['short_desc'], 'sku' => 'SP-' . $p['id'], 'brand' => ['@type' => 'Brand', 'name' => shop('shop_name')],
             'image' => $img ? [abs_url($img)] : [abs_url('assets/img/og.png')], 'offers' => ['@type' => 'Offer', 'priceCurrency' => 'XOF', 'price' => (int) $p['price_from'], 'availability' => 'https://schema.org/InStock', 'url' => abs_url('/p/' . $p['slug']), 'seller' => ['@type' => 'Organization', 'name' => shop('shop_name')]]],
         ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($c2, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $c2[0]], $crumbs, array_keys($crumbs))]];
-    $gal = array_values(array_filter(array_merge([$p['image']], jd($p['gallery']))));
-    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée', 'desc' => $p['seo_desc'] ?: $p['short_desc'], 'jsonld' => $ld, 'scripts' => ['js/configurator.js'], 'body' => 'has-mob', 'og_image' => $img]);
+    $gal = array_values(array_filter(array_merge([$p['image']], feature('catalog.gallery') ? jd($p['gallery']) : [])));
+    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée', 'desc' => $p['seo_desc'] ?: $p['short_desc'], 'jsonld' => $ld, 'scripts' => feature('customization') ? ['js/configurator.js'] : [], 'body' => feature('customization') ? 'has-mob' : '', 'og_image' => $img]);
 });
 
 // ---------------- API : prix (calcul serveur), fichiers, favoris

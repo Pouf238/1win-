@@ -94,6 +94,7 @@ route('POST', '/panier/promo', function () {
 
 // ================================================================ commande
 route('GET', '/commande', function () {
+    if (!user() && !feature('guest_checkout')) { flash('info', 'Connectez-vous pour passer commande.'); redirect('/compte/connexion'); }   // commande sans compte désactivée
     $items = Cart::items(); if (!$items) { flash('info', 'Votre panier est vide.'); redirect('/panier'); }
     foreach ($items as $it) if (!$it['quote'] || !$it['quote']['ok']) { flash('error', 'Un article de votre panier n\'est plus valide. Veuillez le vérifier.'); redirect('/panier'); }
     $min = (int) Settings::get('min_order', 0); $t = Cart::totals($items); if ($min && $t['subtotal'] < $min) { flash('error', 'Montant minimum de commande : ' . money($min)); redirect('/panier'); }
@@ -106,6 +107,7 @@ route('POST', '/api/livraison', function () {
     json_out(['ok' => true, 'fee' => $s['fee'], 'fee_fmt' => $s['fee'] ? money($s['fee']) : 'Gratuit', 'total_fmt' => money($t['total']), 'tax_fmt' => money($t['tax']), 'days' => $s['days']]);
 });
 route('POST', '/commande', function () {
+    if (!user() && !feature('guest_checkout')) { flash('info', 'Connectez-vous pour passer commande.'); redirect('/compte/connexion'); }   // commande sans compte désactivée
     $items = Cart::items(); if (!$items) redirect('/panier'); $_SESSION['old'] = $_POST;
     foreach ($items as $it) if (!$it['quote'] || !$it['quote']['ok'] || product_sale_mode($it['product']) !== 'ok') { flash('error', 'Un article de votre panier n\'est plus disponible à la vente en ligne : retirez-le ou demandez un devis.'); redirect('/panier'); }
     $u = user(); $name = post('name'); $email = strtolower(post('email')); $phone = post('phone'); $err = [];
@@ -186,6 +188,7 @@ route('GET', '/fichier/{id}', function ($a) {
 
 // ================================================================ devis
 route('POST', '/devis/depuis-produit', function () {
+    if (!feature('customization')) feature_blocked('customization');   // le calcul d'une configuration relève de la personnalisation
     $in = body_json(); $p = DB::row('SELECT * FROM products WHERE id=? AND active=1', [(int) ($in['product_id'] ?? 0)]); if (!$p) json_out(['ok' => false, 'error' => 'Produit introuvable.'], 404);
     if (product_sale_mode($p) === 'unavailable') json_out(['ok' => false, 'error' => 'Ce produit est momentanément indisponible.'], 422);
     $q = Pricing::quote($p, Pricing::read_cfg($in['cfg'] ?? [])); if (!$q['ok']) json_out(['ok' => false, 'error' => implode(' ', $q['errors'])], 422);
@@ -208,7 +211,7 @@ route('POST', '/devis', function () {
     foreach ($items as $it) DB::ins('quote_items', ['quote_id' => $qid, 'product_id' => $it['pid'], 'name' => $it['name'], 'config' => je($it['cfg']), 'summary' => je($it['summary']), 'qty' => $it['qty'], 'est_price' => $it['est']]);
     if ($free !== '') DB::ins('quote_items', ['quote_id' => $qid, 'product_id' => 0, 'name' => mb_substr($free, 0, 190), 'config' => '{}', 'summary' => '[]', 'qty' => max(1, (int) post('free_qty', 1)), 'est_price' => 0]);
     foreach ($items as $it) foreach ($it['files'] as $fid) DB::q('UPDATE files SET quote_id=?, user_id=? WHERE id=? AND owner_token=?', [$qid, $u['id'] ?? 0, $fid, Cart::token()]);
-    $list = $_FILES['files'] ?? null; $nf = 0;
+    $list = feature('files') ? ($_FILES['files'] ?? null) : null; $nf = 0;
     if ($list && is_array($list['name'])) for ($i = 0; $i < min(count($list['name']), 5); $i++) { if ($list['error'][$i] === UPLOAD_ERR_NO_FILE) continue; try { Files::save(['name' => $list['name'][$i], 'tmp_name' => $list['tmp_name'][$i], 'size' => $list['size'][$i], 'error' => $list['error'][$i]], 'quote-' . $qid, 'client', ['quote_id' => $qid, 'user_id' => $u['id'] ?? 0]); $nf++; } catch (RuntimeException $e) { flash('error', $list['name'][$i] . ' : ' . $e->getMessage()); } }
     unset($_SESSION['quote_items']);
     $link = abs_url('/devis/' . $ref . '?t=' . $tok);
@@ -224,7 +227,7 @@ route('GET', '/devis/{ref}', function ($a) {
 route('GET', '/devis/{ref}/pdf', function ($a) { $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q) || !jd($q['qlines'])) abort(404); send_pdf(quote_pdf($q), 'devis-' . $q['ref'] . '.pdf'); });
 route('POST', '/devis/{ref}/reponse', function ($a) {
     $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q) || $q['status'] !== 'sent') abort(404); $ok = post('action') === 'accept';
-    if ($q['valid_until'] && $q['valid_until'] < date('Y-m-d')) { DB::q("UPDATE quotes SET status='expired', updated_at=? WHERE id=?", [now(), $q['id']]); flash('error', 'Ce devis a expiré le ' . fdate($q['valid_until']) . '. Contactez-nous pour obtenir un devis à jour.'); redirect('/devis/' . $q['ref'] . '?t=' . $q['access_token']); }
+    if (feature('quotes.expiry') && $q['valid_until'] && $q['valid_until'] < date('Y-m-d')) { DB::q("UPDATE quotes SET status='expired', updated_at=? WHERE id=?", [now(), $q['id']]); flash('error', 'Ce devis a expiré le ' . fdate($q['valid_until']) . '. Contactez-nous pour obtenir un devis à jour.'); redirect('/devis/' . $q['ref'] . '?t=' . $q['access_token']); }
     DB::upd('quotes', (int) $q['id'], ['status' => $ok ? 'accepted' : 'declined', 'updated_at' => now()]);
     notify_staff('quote_response_admin', 'Devis ' . $q['ref'] . ($ok ? ' ACCEPTÉ' : ' refusé'), '<p>' . e($q['name']) . ' a ' . ($ok ? 'accepté' : 'refusé') . ' le devis ' . e($q['ref']) . ' (' . money($q['total']) . ').</p><p><a href="' . e(abs_url('/admin/devis/' . $q['id'])) . '">Ouvrir</a></p>');
     flash('ok', $ok ? 'Merci ! Votre accord est enregistré : notre équipe vous contacte pour lancer la commande.' : 'Votre réponse est enregistrée.'); redirect('/devis/' . $q['ref'] . '?t=' . $q['access_token']);

@@ -12,6 +12,7 @@ class Files {
     static function dir(): string { $d = APP . '/storage/uploads/' . date('Y/m'); if (!is_dir($d)) mkdir($d, 0775, true); return $d; }
     /** Enregistre un fichier envoyé ; retourne la ligne `files` ou lance une exception avec un message clair. */
     static function save(array $f, string $ownerToken, string $kind = 'client', array $extra = []): array {
+        if ($kind === 'client' && !feature('files')) throw new RuntimeException("L'envoi de fichiers est momentanément indisponible.");   // garde « backend » : aucun chemin ne contourne l'interrupteur (les fichiers de l'équipe, comme les BAT, ne sont pas concernés)
         if (($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) throw new RuntimeException(($f['error'] ?? 0) === UPLOAD_ERR_INI_SIZE || ($f['error'] ?? 0) === UPLOAD_ERR_FORM_SIZE ? 'Fichier trop volumineux.' : "Le fichier n'a pas pu être envoyé.");
         $orig = mb_substr(preg_replace('/[^\p{L}\p{N}._ ()-]+/u', '_', basename($f['name'])), 0, 200); $ext = strtolower(pathinfo($orig, PATHINFO_EXTENSION));
         if (!in_array($ext, self::allowed(), true)) throw new RuntimeException('Format non accepté. Formats acceptés : ' . strtoupper(implode(', ', self::allowed())) . '.');

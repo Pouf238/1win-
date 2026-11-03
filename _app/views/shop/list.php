@@ -16,6 +16,6 @@
         <select id="sort" name="sort" data-autosubmit><?= select_opts(['' => 'Pertinence', 'price_asc' => 'Prix croissant', 'price_desc' => 'Prix décroissant', 'new' => 'Nouveautés', 'name' => 'Nom (A-Z)'], get('sort')) ?></select></form></div>
     <?php if ($rows): ?><div class="grid g3"><?php foreach ($rows as $p) echo pcard($p); ?></div>
     <?php if ($pages > 1): ?><nav class="pager" aria-label="Pagination"><?php for ($i = 1; $i <= $pages; $i++): ?><?= $i === $pg ? '<span class="on">' . $i . '</span>' : '<a href="' . e($base . qs(['page' => $i > 1 ? $i : ''])) . '">' . $i . '</a>' ?><?php endfor; ?></nav><?php endif; ?>
-    <?php else: ?><div class="panel center"><h2>Aucun produit trouvé</h2><p class="muted">Modifiez vos filtres ou demandez-nous un devis pour un produit sur mesure.</p><a class="btn btn-a" href="/devis">Demander un devis</a></div><?php endif; ?>
+    <?php else: ?><div class="panel center"><h2>Aucun produit trouvé</h2><p class="muted">Modifiez vos filtres<?= feature('quotes') ? ' ou demandez-nous un devis pour un produit sur mesure' : '' ?>.</p><?php if (feature('quotes')): ?><a class="btn btn-a" href="/devis">Demander un devis</a><?php endif; ?></div><?php endif; ?>
   </section>
 </div></div>

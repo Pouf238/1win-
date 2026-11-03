@@ -200,7 +200,7 @@ function user(): ?array {
     if (is_staff_role($u['role']) && empty($_SESSION['mfa_ok'])) return null;
     return $GLOBALS['_user'] = $u;
 }
-function login_user(array $u): void { session_init($u, true); $GLOBALS['_user'] = null; DB::q('UPDATE users SET last_login=? WHERE id=?', [now(), $u['id']]); Cart::adopt((int) $u['id']); $n = claim_guest_records((int) $u['id']); if ($n) flash('ok', "$n commande(s) ou devis passés avec votre adresse e-mail ont été ajoutés à votre compte."); }
+function login_user(array $u): void { session_init($u, true); $GLOBALS['_user'] = null; DB::q('UPDATE users SET last_login=? WHERE id=?', [now(), $u['id']]); Cart::adopt((int) $u['id']); $n = feature('accounts.claim') ? claim_guest_records((int) $u['id']) : 0; if ($n) flash('ok', "$n commande(s) ou devis passés avec votre adresse e-mail ont été ajoutés à votre compte."); }
 /** Rattache au compte les commandes, devis et fichiers passés SANS compte avec la même adresse e-mail, uniquement si l'adresse du compte est CONFIRMÉE (preuve que la boîte appartient au titulaire). */
 function claim_guest_records(int $uid): int {
     $u = DB::row("SELECT id, email, email_verified, role FROM users WHERE id=? AND active=1", [$uid]); if (!$u || $u['role'] !== 'customer' || empty($u['email_verified'])) return 0; $em = strtolower($u['email']); $n = 0;

@@ -9,5 +9,5 @@
     <p><?= ic('wa') ?> <b>WhatsApp</b><br><a href="<?= e(wa_link()) ?>"><?= e(shop('phone2')) ?></a></p><p><?= ic('phone') ?> <b>Téléphone</b><br><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= e(shop('phone')) ?></a></p>
     <?php if (shop('email')): ?><p><?= ic('mail') ?> <b>E-mail</b><br><a href="mailto:<?= e(shop('email')) ?>"><?= e(shop('email')) ?></a></p><?php endif; ?>
     <p><?= ic('pin') ?> <b>Atelier</b><br><?= e(shop('address')) ?><br><?= e(shop('city')) ?>, <?= e(shop('country')) ?></p><?php if (shop('hours')): ?><p><?= ic('clock') ?> <b>Horaires</b><br><?= nl2br(e(shop('hours'))) ?></p><?php endif; ?>
-    <a class="btn btn-p btn-block" href="/devis">Demander un devis</a></div></aside>
+    <?php if (feature('quotes')): ?><a class="btn btn-p btn-block" href="/devis">Demander un devis</a><?php endif; ?></div></aside>
 </div>

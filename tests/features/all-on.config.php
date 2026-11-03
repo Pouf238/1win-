@@ -1,0 +1,4 @@
+<?php
+// Configuration de TEST : toutes les fonctions activées (famille et modules), pour que les suites existantes (sécurité, plateforme) vérifient le comportement complet.
+// Les interrupteurs eux-mêmes sont testés par tests/features, avec leurs propres configurations.
+return ['features_default' => ['orders' => true, 'quotes' => true, 'payments' => true, 'accounts' => true, 'guest_checkout' => true, 'customization' => true, 'files' => true, 'tracking' => true, 'notifications' => true, 'tracking.lookup' => true, 'accounts.claim' => true, 'quotes.adaptive' => true, 'quotes.thread' => true, 'quotes.expiry' => true, 'quotes.convert' => true, 'tracking.statuses' => true, 'notifications.admin' => true, 'notifications.account' => true, 'files.manage' => true, 'catalog.gallery' => true, 'catalog.availability' => true]];

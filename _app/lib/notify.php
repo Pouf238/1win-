@@ -7,12 +7,20 @@ function order_status_map(bool $all = false): array {
     static $cache = [null, null];
     if ($cache[(int) $all] !== null) return $cache[(int) $all];
     $map = [];
+    if (!feature('tracking.statuses')) return $cache[(int) $all] = ORDER_STATUS;   // module non validé : statuts historiques uniquement
     try { foreach (DB::all('SELECT skey, label, tone, active FROM order_statuses ORDER BY sort, skey') as $r) if ($all || $r['active']) $map[$r['skey']] = [$r['label'], $r['tone']]; } catch (Throwable $e) { $map = []; }
     if (!$map) $map = ORDER_STATUS;
     return $cache[(int) $all] = $map;
 }
 function order_status_all(): array { $m = order_status_map(true); return $m; }   // y compris désactivés : un ancien statut doit rester lisible
 function order_status_notify(string $status): bool { try { return (bool) DB::val('SELECT notify FROM order_statuses WHERE skey=?', [$status]); } catch (Throwable $e) { return in_array($status, ['paid', 'bat_pending', 'production', 'shipped', 'delivered', 'cancelled', 'files_received'], true); } }
+/** Statut affiché au CLIENT : détaillé si le suivi de production est activé, sinon simplifié en 4 états (l'équipe garde le détail en interne). */
+function order_status_public(string $status): array {
+    if (feature('tracking')) return order_status_all()[$status] ?? [$status, 'info'];
+    if ($status === 'cancelled') return ['Annulée', 'bad']; if (in_array($status, ['shipped', 'delivered', 'ready_pickup', 'out_for_delivery', 'production_done'], true)) return ['Terminée', 'ok'];
+    if (in_array($status, ['pending_payment', 'paid'], true)) return ['Commande reçue', 'info']; return ['En cours de traitement', 'info'];
+}
+function order_badge_public(string $status): string { [$l, $t] = order_status_public($status); return '<span class="badge b-' . e($t) . '">' . e($l) . '</span>'; }
 function order_status_reset_cache(): void { /* le cache est par requête : rien à faire, présent pour lisibilité */ }
 
 /** Textes par défaut (modifiables dans Administration → Modèles de messages). Variables : {name} {ref} {total} {status} {note} {link} {shop} {items} {message} {button}. */
@@ -52,22 +60,81 @@ function notify_template(string $event): array {
     try { $r = DB::row('SELECT subject, body, active FROM message_templates WHERE event=?', [$event]); if ($r && $r['active'] && trim((string) $r['body']) !== '') return ['subject' => $r['subject'] ?: $d['subject'], 'body' => $r['body'], 'button' => $d['button'], 'custom' => true]; } catch (Throwable $e) { }
     return ['subject' => $d['subject'], 'body' => $d['body'], 'button' => $d['button'], 'custom' => false];
 }
-/** Enregistre la notification dans le journal et tente l'envoi. Retourne ['ok' => bool, 'status' => sent|failed|skipped, 'error' => string]. */
-function notify_deliver(string $event, string $to, string $subject, string $html, array $ctx = [], array $attach = []): array {
+// ---------------------------------------------------------------- file d'attente, plafond, anti-doublon, priorités
+/** Fonction (interrupteur) dont dépend chaque e-mail CLIENT ; les messages internes à l'équipe n'en ont pas. Un e-mail dont la fonction est désactivée n'est jamais envoyé. */
+const NOTIFY_FEATURE = ['order_created' => 'orders', 'order_from_quote' => 'orders', 'order_status' => 'tracking', 'tracking_link' => 'tracking.lookup', 'quote_received' => 'quotes', 'quote_sent' => 'quotes', 'quote_message' => 'quotes.thread'];
+/** Priorité : 1 = message transactionnel important (le client l'attend), 2 = courant, 3 = secondaire. Les messages internes sont traités comme importants. */
+const NOTIFY_PRIORITY = ['tracking_link' => 1, 'order_created' => 1, 'order_from_quote' => 1, 'quote_received' => 1, 'quote_sent' => 1, 'order_status' => 2, 'quote_message' => 2];
+function notify_priority(string $event): int { return NOTIFY_PRIORITY[$event] ?? (str_ends_with($event, '_admin') ? 1 : 3); }
+/** Limites configurables (Administration → Fonctionnalités). Plafond initial : 100 e-mails par 24 h glissantes (limite du forfait e-mail actuel). */
+function notify_limits(): array {
+    return ['mail_daily_cap' => max(1, (int) Settings::get('mail_daily_cap', 100)), 'mail_dedupe_minutes' => max(0, (int) Settings::get('mail_dedupe_minutes', 60)), 'mail_reserve_pct' => max(0, min(50, (int) Settings::get('mail_reserve_pct', 10))), 'mail_per_recipient_hour' => max(1, (int) Settings::get('mail_per_recipient_hour', 6))];
+}
+function notify_sent_24h(): int { try { return (int) DB::val("SELECT COUNT(*) FROM notifications WHERE channel='email' AND status='sent' AND sent_at>?", [date('Y-m-d H:i:s', time() - 86400)]); } catch (Throwable $e) { return 0; } }
+/** Reste-t-il de la place sous le plafond ? Les messages importants peuvent utiliser TOUTE la capacité ; les autres laissent une réserve (messages de sécurité, rappels). */
+function notify_capacity(int $priority): bool { $l = notify_limits(); $reserve = (int) floor($l['mail_daily_cap'] * $l['mail_reserve_pct'] / 100); return notify_sent_24h() < ($priority <= 1 ? $l['mail_daily_cap'] : $l['mail_daily_cap'] - $reserve); }
+/** Même message (événement, destinataire, références, objet ET contenu identiques) déjà envoyé ou en file dans la fenêtre → doublon. */
+function notify_duplicate(string $event, string $to, string $subject, string $html, array $ctx): bool {
+    $m = notify_limits()['mail_dedupe_minutes']; if ($m <= 0) return false;
+    try { return (bool) DB::val("SELECT COUNT(*) FROM notifications WHERE channel='email' AND event=? AND to_address=? AND order_id=? AND quote_id=? AND subject=? AND body=? AND status IN ('queued','sending','sent') AND created_at>?", [$event, mb_substr($to, 0, 190), (int) ($ctx['order_id'] ?? 0), (int) ($ctx['quote_id'] ?? 0), mb_substr($subject, 0, 255), $html, date('Y-m-d H:i:s', time() - $m * 60)]); } catch (Throwable $e) { return false; }
+}
+/** Protection contre l'inondation d'une adresse (un tiers qui déclencherait des e-mails vers la boîte d'une victime). */
+function notify_flooded(string $to): bool { try { return (int) DB::val("SELECT COUNT(*) FROM notifications WHERE channel='email' AND to_address=? AND status IN ('queued','sending','sent') AND created_at>?", [mb_substr($to, 0, 190), date('Y-m-d H:i:s', time() - 3600)]) >= notify_limits()['mail_per_recipient_hour']; } catch (Throwable $e) { return false; } }
+
+/** Enregistre la notification dans le journal et tente l'envoi. Retourne ['ok' => bool, 'status' => sent|failed|skipped|queued, 'error' => string].
+ *  Ordre : fonction activée ? → adresse valide ? → doublon ? → inondation ? → plafond ? (sinon mise en file) → envoi. $opt['force'] contourne l'anti-doublon (renvoi demandé par l'équipe). */
+function notify_deliver(string $event, string $to, string $subject, string $html, array $ctx = [], array $attach = [], array $opt = []): array {
     $row = ['channel' => 'email', 'event' => $event, 'to_address' => mb_substr($to, 0, 190), 'user_id' => (int) ($ctx['user_id'] ?? 0), 'order_id' => (int) ($ctx['order_id'] ?? 0), 'quote_id' => (int) ($ctx['quote_id'] ?? 0), 'subject' => mb_substr($subject, 0, 255), 'body' => $html, 'status' => 'queued'];
-    $id = 0; try { $id = DB::ins('notifications', $row); } catch (Throwable $e) { error_log('[symoprint] journal des notifications indisponible : ' . $e->getMessage()); }
-    $status = 'sent'; $err = '';
-    if (!filter_var($to, FILTER_VALIDATE_EMAIL)) { $status = 'skipped'; $err = $to === '' ? 'aucune adresse e-mail' : 'adresse e-mail invalide'; }
-    else { try { $ok = Mail::send($to, $subject, Mail::layout($subject, $html), $attach); if (!$ok) { $status = 'failed'; $err = "le serveur d'envoi a refusé le message"; } elseif (cfg('mail_driver') === 'log') { $err = 'mode test : écrit dans le journal, pas envoyé'; } } catch (Throwable $e) { $status = 'failed'; $err = 'erreur : ' . mb_substr($e->getMessage(), 0, 120); } }
-    if ($id) { try { DB::upd('notifications', $id, ['status' => $status, 'error' => $err, 'sent_at' => $status === 'sent' ? now() : null]); } catch (Throwable $e) { } }
+    $need = NOTIFY_FEATURE[$event] ?? null; $status = 'sent'; $err = '';
+    if ($need !== null && !feature('notifications')) { $status = 'skipped'; $err = 'notifications e-mail aux clients désactivées'; }
+    elseif ($need !== null && !feature($need)) { $status = 'skipped'; $err = 'fonction « ' . feature_label($need) . ' » désactivée'; }
+    elseif (!filter_var($to, FILTER_VALIDATE_EMAIL)) { $status = 'skipped'; $err = $to === '' ? 'aucune adresse e-mail' : 'adresse e-mail invalide'; }
+    elseif (empty($opt['force']) && notify_duplicate($event, $to, $subject, $html, $ctx)) { $status = 'skipped'; $err = 'doublon évité : le même message vient déjà d\'être envoyé'; }
+    elseif ($need !== null && notify_flooded($to)) { $status = 'skipped'; $err = 'protection : trop de messages vers cette adresse en une heure'; }
+    elseif (!notify_capacity(notify_priority($event))) {
+        if ($attach) { $status = 'failed'; $err = 'plafond quotidien d\'e-mails atteint (message avec pièce jointe : à renvoyer plus tard)'; }
+        else { $status = 'queued'; $err = 'plafond quotidien d\'e-mails atteint : le message partira automatiquement dès que possible'; }
+    }
+    $id = 0; try { $id = DB::ins('notifications', ['status' => $status === 'sent' ? 'queued' : $status, 'error' => $err] + $row); } catch (Throwable $e) { error_log('[symoprint] journal des notifications indisponible : ' . $e->getMessage()); }
+    if ($status === 'sent') {
+        try { $ok = Mail::send($to, $subject, Mail::layout($subject, $html), $attach); if (!$ok) { $status = 'failed'; $err = "le serveur d'envoi a refusé le message"; } elseif (cfg('mail_driver') === 'log') { $err = 'mode test : écrit dans le journal, pas envoyé'; } } catch (Throwable $e) { $status = 'failed'; $err = 'erreur d\'envoi : ' . mb_substr($e->getMessage(), 0, 120); }
+        if ($id) { try { DB::upd('notifications', $id, ['status' => $status, 'error' => $err, 'sent_at' => $status === 'sent' ? now() : null]); } catch (Throwable $e) { } }
+    }
     if ($status === 'failed') audit('notification_failed', $event, ['to' => mask_email($to), 'why' => $err], 'warn', 0);
     return ['ok' => $status === 'sent', 'status' => $status, 'error' => $err, 'id' => $id];
+}
+/** Vide la file d'attente (plafond libéré) : priorité d'abord, puis ancienneté ; un message dont la fonction a été désactivée entre-temps n'est pas envoyé. Retourne le nombre envoyé. */
+function notify_drain(int $max = 10): int {
+    $sent = 0;
+    try {
+        DB::q("UPDATE notifications SET status='queued' WHERE channel='email' AND status='sending' AND created_at<?", [date('Y-m-d H:i:s', time() - 600)]);   // envoi interrompu : on remet en file
+        DB::q("UPDATE notifications SET status='failed', error=? WHERE channel='email' AND status='queued' AND created_at<?", ['expiré après 48 h en file d\'attente', date('Y-m-d H:i:s', time() - 172800)]);
+        $rows = DB::all("SELECT * FROM notifications WHERE channel='email' AND status='queued' ORDER BY id LIMIT 200");
+        usort($rows, fn($a, $b) => [notify_priority($a['event']), (int) $a['id']] <=> [notify_priority($b['event']), (int) $b['id']]);
+        foreach ($rows as $r) {
+            if ($sent >= $max) break;
+            $need = NOTIFY_FEATURE[$r['event']] ?? null;
+            if ($need !== null && (!feature('notifications') || !feature($need))) { DB::q("UPDATE notifications SET status='skipped', error=? WHERE id=? AND status='queued'", ['fonction désactivée avant l\'envoi', $r['id']]); continue; }
+            if (!notify_capacity(notify_priority($r['event']))) continue;
+            if (DB::q("UPDATE notifications SET status='sending' WHERE id=? AND status='queued'", [$r['id']])->rowCount() !== 1) continue;   // un autre processus l'a pris
+            try { $ok = Mail::send((string) $r['to_address'], (string) $r['subject'], Mail::layout((string) $r['subject'], (string) $r['body'])); DB::upd('notifications', (int) $r['id'], ['status' => $ok ? 'sent' : 'failed', 'error' => $ok ? (cfg('mail_driver') === 'log' ? 'mode test : écrit dans le journal, pas envoyé' : '') : "le serveur d'envoi a refusé le message", 'sent_at' => $ok ? now() : null]); if ($ok) $sent++; else audit('notification_failed', $r['event'], ['why' => 'refus du serveur (file)'], 'warn', 0); }
+            catch (Throwable $e) { DB::upd('notifications', (int) $r['id'], ['status' => 'failed', 'error' => 'erreur d\'envoi : ' . mb_substr($e->getMessage(), 0, 120)]); }
+        }
+    } catch (Throwable $e) { error_log('[symoprint] file des notifications : ' . $e->getMessage()); }
+    return $sent;
+}
+/** Appelée en fin de requête (après l'envoi de la réponse), au plus une fois par minute : vide la file sans ralentir le visiteur. */
+function notify_tick(): void {
+    $f = APP . '/storage/.notify-tick'; if (is_file($f) && filemtime($f) > time() - 60) return; @touch($f);
+    try { if (!DB::val("SELECT COUNT(*) FROM notifications WHERE channel='email' AND status IN ('queued','sending')")) return; } catch (Throwable $e) { return; }
+    if (function_exists('litespeed_finish_request')) @litespeed_finish_request(); elseif (function_exists('fastcgi_finish_request')) @fastcgi_finish_request();
+    notify_drain(10);
 }
 /** Message au client à partir d'un modèle ; copie dans le compte si le client a un compte. */
 function notify(string $event, string $to, array $vars, array $ctx = [], array $attach = []): array {
     $tpl = notify_template($event); $subject = preg_replace_callback('/\{([a-z_]+)\}/', fn($m) => (string) ($vars[$m[1]] ?? ''), $tpl['subject']); $html = notify_render($tpl['body'], $vars, $tpl['button']);
     $r = notify_deliver($event, $to, trim(str_replace(["\r", "\n"], ' ', $subject)), $html, $ctx, $attach);
-    if (!empty($ctx['user_id'])) { try { DB::ins('notifications', ['channel' => 'inapp', 'event' => $event, 'to_address' => '', 'user_id' => (int) $ctx['user_id'], 'order_id' => (int) ($ctx['order_id'] ?? 0), 'quote_id' => (int) ($ctx['quote_id'] ?? 0), 'subject' => trim(str_replace(["\r", "\n"], ' ', $subject)), 'body' => '', 'status' => 'sent', 'sent_at' => now()]); } catch (Throwable $e) { } }
+    if (!empty($ctx['user_id']) && feature('notifications.account')) { try { DB::ins('notifications', ['channel' => 'inapp', 'event' => $event, 'to_address' => '', 'user_id' => (int) $ctx['user_id'], 'order_id' => (int) ($ctx['order_id'] ?? 0), 'quote_id' => (int) ($ctx['quote_id'] ?? 0), 'subject' => trim(str_replace(["\r", "\n"], ' ', $subject)), 'body' => '', 'status' => 'sent', 'sent_at' => now()]); } catch (Throwable $e) { } }
     return $r;
 }
 /** Message interne à l'équipe (adresse « notify_email » ou e-mail de la boutique). Journalisé même si aucune adresse n'est configurée. */
@@ -76,5 +143,5 @@ function notify_staff(string $event, string $subject, string $html, array $ctx =
 }
 /** Libellé honnête pour l'interface : jamais « envoyé » si l'envoi a échoué. */
 function notify_say(array $r, string $who = 'au client'): string {
-    return match ($r['status'] ?? 'failed') { 'sent' => "E-mail $who : envoyé" . ($r['error'] ? ' (' . $r['error'] . ')' : '') . '.', 'skipped' => "E-mail $who : non envoyé (" . $r['error'] . ').', default => "E-mail $who : ÉCHEC (" . ($r['error'] ?: 'raison inconnue') . '). Contactez le client autrement (WhatsApp, téléphone).' };
+    return match ($r['status'] ?? 'failed') { 'queued' => "E-mail $who : en file d'attente (" . $r['error'] . ').', 'sent' => "E-mail $who : envoyé" . ($r['error'] ? ' (' . $r['error'] . ')' : '') . '.', 'skipped' => "E-mail $who : non envoyé (" . $r['error'] . ').', default => "E-mail $who : ÉCHEC (" . ($r['error'] ?: 'raison inconnue') . '). Contactez le client autrement (WhatsApp, téléphone).' };
 }

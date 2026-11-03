@@ -79,6 +79,10 @@ jobs:
         run: bash tests/platform/run.sh 8100
         env:
           SECURITY_OUT: ${{ runner.temp }}
+      - name: "Interrupteurs de fonctionnalités (59 scénarios : chaque famille et module, accès directs, API, contournements, données préservées, notifications, base indisponible)"
+        run: bash tests/features/run.sh 8300
+        env:
+          SECURITY_OUT: ${{ runner.temp }}
       - name: "Chemin de mise à jour (ancienne base vers nouveau code)"
         run: bash tests/security/upgrade.sh a200885 8096
         env:
@@ -115,6 +119,11 @@ jobs:
         env:
           SECURITY_OUT: ${{ runner.temp }}
           SYMO_CONFIG: ${{ runner.temp }}/mysql.config.php
+      - name: "Interrupteurs de fonctionnalités sur MariaDB"
+        run: bash tests/features/run.sh 8300
+        env:
+          SECURITY_OUT: ${{ runner.temp }}
+          FEATURES_DB_CONFIG: ${{ runner.temp }}/mysql.config.php
 
   gate:
     name: Porte de déploiement

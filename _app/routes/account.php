@@ -1,7 +1,7 @@
 <?php
 // Espace client : authentification, profil, adresses, commandes, devis, favoris, fichiers.
 function acc_page(string $active, string $tpl, array $d, string $title): void {
-    $u = user(); $unread = $u ? (int) DB::val("SELECT COUNT(*) FROM notifications WHERE user_id=? AND channel='inapp' AND read_at IS NULL", [$u['id']]) : 0;
+    $u = user(); $unread = ($u && feature('notifications.account')) ? (int) DB::val("SELECT COUNT(*) FROM notifications WHERE user_id=? AND channel='inapp' AND read_at IS NULL", [$u['id']]) : 0;
     page('account/shell', ['active' => $active, 'inner' => view("account/$tpl", $d), 'title' => $title, 'unread' => $unread], ['title' => $title, 'noindex' => true]);
 }
 function safe_next(): string { $n = $_SESSION['after_login'] ?? ''; unset($_SESSION['after_login']); return safe_path($n, ''); }
@@ -55,7 +55,7 @@ route('POST', '/compte/inscription', function () {
 });
 route('GET', '/compte/verifier/{token}', function ($a) {
     rate_limit('verify', 30, 3600); $r = token_find($a['token'], 'verify');
-    if ($r && token_consume($r)) { DB::upd('users', (int) $r['user_id'], ['email_verified' => 1]); audit('email_verified', '', [], 'info', (int) $r['user_id']); $n = claim_guest_records((int) $r['user_id']); flash('ok', 'Adresse confirmée. Vous pouvez vous connecter.' . ($n ? " $n commande(s) ou devis passés avec cette adresse ont été ajoutés à votre compte." : '')); redirect('/compte/connexion'); }
+    if ($r && token_consume($r)) { DB::upd('users', (int) $r['user_id'], ['email_verified' => 1]); audit('email_verified', '', [], 'info', (int) $r['user_id']); $n = feature('accounts.claim') ? claim_guest_records((int) $r['user_id']) : 0; flash('ok', 'Adresse confirmée. Vous pouvez vous connecter.' . ($n ? " $n commande(s) ou devis passés avec cette adresse ont été ajoutés à votre compte." : '')); redirect('/compte/connexion'); }
     flash('error', 'Lien invalide ou expiré. Demandez un nouvel e-mail de confirmation.'); redirect('/compte/connexion');
 });
 route('POST', '/compte/renvoyer-verification', function () {

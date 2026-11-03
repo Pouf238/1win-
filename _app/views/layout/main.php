@@ -3,7 +3,7 @@
 $name = shop('shop_name', 'Symo Print');
 $title = $meta['title'] ? $meta['title'] . ' | ' . $name : $name . ' : imprimerie en ligne à Abidjan, ' . shop('tagline');
 $desc = $meta['desc'] ?: "Symo Print, imprimerie moderne, fiable et professionnelle à Abidjan : flyers, cartes de visite, bâches, roll-up, t-shirts, objets personnalisés. Commandez en ligne en FCFA, livraison en Côte d'Ivoire.";
-$canon = $meta['canon'] ?? (abs_url(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH)));
+$canon = $meta['canon'] ?? (abs_url((string) (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/')));
 $ogimg = abs_url($meta['og_image'] ?? 'assets/img/og.png');
 $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs());
 ?><!doctype html>
@@ -39,7 +39,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
   <div class="hact">
     <a href="<?= $u ? '/compte' : '/compte/connexion' ?>"><?= ic('user') ?><span><?= $u ? e(explode(' ', trim($u['name'] ?: 'Compte'))[0]) : 'Connexion' ?></span></a>
     <a href="/compte/favoris"><?= ic('heart') ?><span>Favoris</span></a>
-    <a href="/panier" aria-label="Panier, <?= $cartN ?> article(s)"><?= ic('cart') ?><span>Panier</span><i class="cnt" data-cart-count data-n="<?= $cartN ?>"><?= $cartN ?: '' ?></i></a>
+    <?php if (feature('orders')): ?><a href="/panier" aria-label="Panier, <?= $cartN ?> article(s)"><?= ic('cart') ?><span>Panier</span><i class="cnt" data-cart-count data-n="<?= $cartN ?>"><?= $cartN ?: '' ?></i></a><?php endif; ?>
     <button class="burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false" data-burger><?= ic('menu') ?></button>
   </div>
 </div>
@@ -50,7 +50,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
       <?php foreach ($c['children'] as $s): ?><a href="/c/<?= e($s['slug']) ?>"><?= e($s['name']) ?></a><?php endforeach; ?>
       <a class="all" href="/c/<?= e($c['slug']) ?>">Voir tout : <?= e($c['name']) ?> →</a></div><?php endif; ?></div>
   <?php endforeach; ?>
-  <div class="nl"><a href="/devis">Devis gratuit</a></div>
+  <?php if (feature('quotes')): ?><div class="nl"><a href="/devis">Devis gratuit</a></div><?php endif; ?>
   <div class="nl hot"><a href="/nos-services">Services</a></div>
 </div></nav>
 </header>
@@ -63,7 +63,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
   <div><img src="<?= e(asset('img/brand/logo-light.png')) ?>" alt="<?= e($name) ?>" width="140" height="43" loading="lazy"><p><?= e(shop('tagline')) ?>. Impression et personnalisation sur tout type de support, à Abidjan et dans toute la Côte d'Ivoire.</p>
     <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Moov Money</span><span>Wave</span></div></div>
   <div><h4>Catalogue</h4><ul><?php foreach ($tree as $c): ?><li><a href="/c/<?= e($c['slug']) ?>"><?= e($c['name']) ?></a></li><?php endforeach; ?></ul></div>
-  <div><h4>Informations</h4><ul><li><a href="/devis">Demander un devis</a></li><li><a href="/suivi">Suivre ma commande</a></li><li><a href="/nos-services">Nos services</a></li><li><a href="/guide-fichiers">Guide des fichiers</a></li><li><a href="/guide-papiers">Papiers et matériaux</a></li><li><a href="/faq">Questions fréquentes</a></li><li><a href="/livraison">Livraison</a></li><li><a href="/remboursement">Remboursement</a></li><li><a href="/a-propos">À propos</a></li></ul></div>
+  <div><h4>Informations</h4><ul><?php if (feature('quotes')): ?><li><a href="/devis">Demander un devis</a></li><?php endif; ?><?php if (feature('tracking.lookup')): ?><li><a href="/suivi">Suivre ma commande</a></li><?php endif; ?><li><a href="/nos-services">Nos services</a></li><li><a href="/guide-fichiers">Guide des fichiers</a></li><li><a href="/guide-papiers">Papiers et matériaux</a></li><li><a href="/faq">Questions fréquentes</a></li><li><a href="/livraison">Livraison</a></li><li><a href="/remboursement">Remboursement</a></li><li><a href="/a-propos">À propos</a></li></ul></div>
   <div><h4>Nous contacter</h4><ul class="ct">
     <li><?= ic('wa') ?><a href="<?= e(wa_link()) ?>">WhatsApp : <?= e(shop('phone2')) ?></a></li><li><?= ic('phone') ?><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= e(shop('phone')) ?></a></li>
     <?php if (shop('email')): ?><li><?= ic('mail') ?><a href="mailto:<?= e(shop('email')) ?>"><?= e(shop('email')) ?></a></li><?php endif; ?>

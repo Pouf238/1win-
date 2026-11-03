@@ -8,3 +8,4 @@ _app/storage/uploads/*
 !_app/storage/uploads/.gitkeep
 _app/storage/sessions/*
 !_app/storage/sessions/.gitkeep
+_app/storage/.notify-tick

@@ -7,10 +7,10 @@ $CFG = ['app_url' => 'http://localhost:8080', 'db' => ['driver' => 'sqlite', 'pa
         'install_token' => '', 'auto_install' => true, 'mail_driver' => 'log', 'debug' => false];
 if (is_file(APP . '/config.local.php')) { $CFG = array_replace($CFG, (array) require APP . '/config.local.php'); }
 // Instance de test isolée : SYMO_CONFIG pointe vers un fichier de configuration supplémentaire (délais courts, etc.). Jamais utilisé en production.
-if (($__x = getenv('SYMO_CONFIG')) && is_file($__x)) { $CFG = array_replace($CFG, (array) require $__x); }
+if ($__x = getenv('SYMO_CONFIG')) foreach (explode(PATH_SEPARATOR, $__x) as $__f) if (is_file($__f)) $CFG = array_replace($CFG, (array) require $__f);   // plusieurs fichiers possibles (séparés par « : »)
 ini_set('log_errors', '1'); ini_set('error_log', APP . '/storage/logs/php.log');
 ini_set('display_errors', $CFG['debug'] ? '1' : '0'); error_reporting(E_ALL); ini_set('expose_php', '0');
-foreach (['core', 'security', 'db', 'pricing', 'cart', 'files', 'mail', 'notify', 'art', 'pdf', 'ui'] as $f) require APP . "/lib/$f.php";
+foreach (['core', 'security', 'db', 'features', 'pricing', 'cart', 'files', 'mail', 'notify', 'art', 'pdf', 'ui'] as $f) require APP . "/lib/$f.php";
 send_security_headers();
 
 // ---- session : stockage privé hors web, mode strict, cookie HttpOnly + SameSite, durée de vie maîtrisée
@@ -22,22 +22,26 @@ session_name(is_https() ? '__Host-sp_sess' : 'sp_sess');   // préfixe __Host- :
 session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => is_https(), 'httponly' => true, 'samesite' => 'Lax']);
 session_start();
 
-DB::connect($CFG['db']);
-session_enforce();
-if ($CFG['auto_install']) {
-    require_once APP . '/sql/install.php';
-    if (!DB::tableExists('settings')) install_all();
-    elseif (!DB::tableExists('subscribers')) repair_incomplete_install();   // installation interrompue : réinstallation SANS perte (aucune donnée métier)
-}
-Settings::load();
-require_once APP . '/sql/migrate.php';
-if ((int) Settings::get('schema_version', 1) < SCHEMA_VERSION) { migrate(); Settings::load(); }
-maintenance();
+try {   // base de données indisponible : page de maintenance autonome (503), jamais de trace technique ; les interrupteurs d'urgence de la config n'ont pas besoin de la base
+    DB::connect($CFG['db']);
+    session_enforce();
+    if ($CFG['auto_install']) {
+        require_once APP . '/sql/install.php';
+        if (!DB::tableExists('settings')) install_all();
+        elseif (!DB::tableExists('subscribers')) repair_incomplete_install();   // installation interrompue : réinstallation SANS perte (aucune donnée métier)
+    }
+    Settings::load();
+    require_once APP . '/sql/migrate.php';
+    if ((int) Settings::get('schema_version', 1) < SCHEMA_VERSION) { migrate(); Settings::load(); }
+    maintenance();
+} catch (PDOException $e) { service_unavailable($e); }
 require APP . '/routes/public.php';
 require APP . '/routes/shop.php';
 require APP . '/routes/account.php';
 require APP . '/routes/admin.php';
 require APP . '/routes/admin_catalog.php';
 require APP . '/routes/admin_platform.php';
+require APP . '/routes/admin_features.php';
 require APP . '/routes/quotes_ext.php';
 require APP . '/routes/files_ext.php';
+if (PHP_SAPI !== 'cli') register_shutdown_function('notify_tick');   // vide la file d'envoi (plafond libéré) après l'envoi de la réponse, au plus une fois par minute

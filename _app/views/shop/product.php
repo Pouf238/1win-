@@ -10,7 +10,7 @@ function mod_label(array $c): string {
 $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 'max' => (int) $qc['max'], 'step' => (int) $qc['step'], 'files' => Files::allowed(), 'maxmb' => (int) Settings::get('upload_max_mb', 50), 'name' => $p['name'], 'tax' => (bool) Settings::get('tax_enabled', 0)];
 ?>
 <div class="wrap"><?= crumbs($crumbs) ?>
-<script type="application/json" id="pcfg"><?= jsafe($jsCfg) ?></script>
+<?php if (feature('customization')): ?><script type="application/json" id="pcfg"><?= jsafe($jsCfg) ?></script><?php endif; ?>
 <div class="pp" data-product="<?= (int) $p['id'] ?>">
 <div class="main-col">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><?php if ($p['promo_label']): ?><span class="tag"><?= e($p['promo_label']) ?></span><?php endif; ?><?php if ($p['is_new']): ?><span class="tag t-p">Nouveau</span><?php endif; ?><?php if ($p['bestseller']): ?><span class="tag t-n">Best-seller</span><?php endif; ?></div>
@@ -18,6 +18,7 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
   <?php if ($p['pricing_status'] === 'demo'): ?><div class="alert a-warn" style="font-size:14px">Tarif indicatif : le prix définitif est confirmé par notre équipe avant production.</div><?php endif; ?>
   <div class="gallery mb"><div class="main" id="gmain"><?= product_img($p) ?></div><?php if (count($gal) > 1): ?><div class="thumbs"><?php foreach ($gal as $i => $g): ?><button type="button" class="<?= $i ? '' : 'on' ?>" data-img="<?= e(asset('img/produits/' . basename($g) . '.webp')) ?>" aria-label="Photo <?= $i + 1 ?>"><img src="<?= e(asset('img/produits/' . basename($g) . '.webp')) ?>" alt="" loading="lazy"></button><?php endforeach; ?></div><?php endif; ?></div>
 
+  <?php if (feature('customization')): ?>
   <form id="cfg" class="cfg" autocomplete="off" novalidate>
   <?php $n = 0; ?>
   <?php if ($isArea): ?><div class="og"><h3><span><?= ++$n ?>. Dimensions</span></h3><p class="hlp">En centimètres. Largeur de <?= (int) $pr['w']['min'] ?> à <?= (int) $pr['w']['max'] ?> cm, hauteur de <?= (int) $pr['h']['min'] ?> à <?= (int) $pr['h']['max'] ?> cm.</p>
@@ -43,11 +44,14 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
     <div class="delays"><?php foreach ($x['delays'] as $d): $d1 = Pricing::date_fr(Pricing::add_workdays(time(), (int) $d['days'][0])); $d2 = Pricing::date_fr(Pricing::add_workdays(time(), (int) ($d['days'][1] ?? $d['days'][0]))); ?>
       <label class="opt"><input type="radio" name="delay" value="<?= e($d['key']) ?>" <?= $cfg['delay'] === $d['key'] ? 'checked' : '' ?>><span class="box"><span><b><?= e($d['label']) ?></b><small style="display:block" data-dl="<?= e($d['key']) ?>">Prêt : <?= e($d1) ?><?= $d1 !== $d2 ? ' – ' . e($d2) : '' ?></small></span><span class="pm"><?= (float) $d['percent'] > 0 ? '+' . (float) $d['percent'] . ' %' : 'Inclus' ?></span></span></label><?php endforeach; ?></div></div>
 
-  <div class="og"><h3><span><?= ++$n ?>. Votre fichier <span class="muted" style="font-weight:500;font-size:14px">(facultatif à ce stade)</span></span></h3><p class="hlp">Formats : <?= e(strtoupper(implode(', ', Files::allowed()))) ?> · <?= (int) Settings::get('upload_max_mb', 50) ?> Mo max par fichier. Vous pourrez aussi l'envoyer plus tard depuis votre espace client ou par WhatsApp.</p>
+  <div class="og"<?= feature('files') ? '' : ' hidden' ?>><h3><span><?= ++$n ?>. Votre fichier <span class="muted" style="font-weight:500;font-size:14px">(facultatif à ce stade)</span></span></h3><p class="hlp">Formats : <?= e(strtoupper(implode(', ', Files::allowed()))) ?> · <?= (int) Settings::get('upload_max_mb', 50) ?> Mo max par fichier. Vous pourrez aussi l'envoyer plus tard depuis votre espace client ou par WhatsApp.</p>
     <label class="drop" id="drop" tabindex="0"><?= ic('upload', 'ic') ?><strong>Glissez votre fichier ici ou cliquez pour parcourir</strong><small>Vérification par nos équipes avant impression</small><input type="file" id="fileinp" multiple></label><ul class="flist" id="flist" aria-live="polite"></ul></div>
 
   <div class="og"><h3><span><?= ++$n ?>. Instructions <span class="muted" style="font-weight:500;font-size:14px">(facultatif)</span></span></h3><textarea class="inp" name="note" maxlength="500" rows="3" placeholder="Précisions sur votre commande, lieu de livraison, couleurs…" style="min-height:80px"></textarea></div>
   </form>
+  <?php else: ?><div class="panel"><h2>Sur mesure</h2><p class="muted">Ce produit se personnalise avec notre équipe. Décrivez votre besoin (format, quantité, support, délai) : nous revenons vers vous avec un prix confirmé.</p>
+    <?php if (feature('quotes')): ?><a class="btn btn-a" href="/devis?produit=<?= e(rawurlencode($p['name'])) ?>">Demander un devis pour ce produit</a> <?php endif; ?><a class="btn btn-o" href="<?= e(wa_link('Bonjour Symo Print, je souhaite des informations sur : ' . $p['name'])) ?>" rel="noopener">WhatsApp</a></div>
+  <?php endif; ?>
 
   <div class="tabs" role="tablist"><button type="button" class="on" data-tab="t1">Description</button><button type="button" data-tab="t2">Exigences des fichiers</button><button type="button" data-tab="t3">Livraison et délais</button></div>
   <div class="tabp on" id="t1"><div class="prose"><?= $p['description'] ? $p['description'] : '<p>' . e($p['short_desc']) . '</p>' ?><p>Ce produit est fabriqué sur mesure dans notre atelier d'Abobo (Abidjan), après validation de votre fichier. Besoin d'aide pour choisir ? <a href="<?= e(wa_link('Bonjour, je souhaite des conseils pour : ' . $p['name'])) ?>">Écrivez-nous sur WhatsApp</a>.</p></div></div>
@@ -55,7 +59,7 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
   <div class="tabp" id="t3"><div class="prose"><p>Le délai de fabrication est indiqué ci-dessus. La livraison à Abidjan prend en général 1 à 3 jours ouvrés selon la commune ; vers l'intérieur du pays, comptez 3 à 6 jours. Le retrait à l'atelier est gratuit. Détails : <a href="/livraison">politique de livraison</a>.</p></div></div>
 </div>
 
-<aside><div class="buybox" id="buybox" aria-live="polite">
+<?php if (feature('customization')): ?><aside><div class="buybox" id="buybox" aria-live="polite">
   <div class="total" id="b-total"><?= money($q['total']) ?></div>
   <div class="unit"><span id="b-unit"><?= money($q['unit_price']) ?></span> / <?= e(rtrim($qc['unit'], 's.') ?: 'unité') ?><?php if (Settings::get('tax_enabled', 0)): ?> · <?= Settings::get('prices_include_tax', 1) ? 'TTC' : 'HT' ?><?php endif; ?></div>
   <div id="b-errors"><?php foreach ($q['errors'] as $er): ?><div class="alert a-warn"><?= e($er) ?></div><?php endforeach; ?></div>
@@ -63,12 +67,12 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
   <p class="muted" style="font-size:13.5px;margin:12px 0"><?= ic('clock') ?> Prêt entre <b id="b-from"><?= e($q['delay']['from']) ?></b> et <b id="b-to"><?= e($q['delay']['to']) ?></b> <span style="opacity:.8">(+ livraison)</span></p>
   <?php $sale = product_sale_mode($p); if ($sale !== 'ok'): ?><div class="hl-box" style="margin-bottom:10px"><?= $sale === 'quote' ? '<b>Produit vendu sur devis.</b> Configurez-le, puis générez votre devis : notre équipe confirme le prix avant toute commande.' : '<b>Momentanément indisponible.</b> Contactez-nous pour connaître les disponibilités.' ?></div><?php endif; ?>
   <button class="btn btn-a btn-lg btn-block" type="button" id="b-add" <?= $sale === 'ok' ? '' : 'hidden disabled' ?>><?= ic('cart') ?> Ajouter au panier</button>
-  <button class="btn btn-o btn-block mt" type="button" id="b-quote" style="margin-top:10px" <?= $sale === 'unavailable' ? 'hidden disabled' : '' ?>><?= ic('file') ?> Générer un devis</button>
+  <button class="btn btn-o btn-block mt" type="button" id="b-quote" style="margin-top:10px" <?= ($sale === 'unavailable' || !feature('quotes')) ? 'hidden disabled' : '' ?>><?= ic('file') ?> Générer un devis</button>
   <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-g btn-sm" type="button" data-fav="<?= (int) $p['id'] ?>" style="flex:1"><?= ic('heart') ?> Favori</button><a class="btn btn-g btn-sm" style="flex:1" href="<?= e(wa_link('Bonjour Symo Print, je souhaite commander : ' . $p['name'])) ?>" rel="noopener"><?= ic('wa') ?> WhatsApp</a></div>
-  <p class="muted" style="font-size:12.5px;margin:12px 0 0">Livraison calculée à la commande selon votre zone. Paiement Mobile Money, virement ou à la livraison.</p>
-</div></aside>
+  <?php if (feature('orders')): ?><p class="muted" style="font-size:12.5px;margin:12px 0 0">Livraison calculée à la commande selon votre zone. Paiement Mobile Money, virement ou à la livraison.</p><?php endif; ?>
+</div></aside><?php else: ?><aside><div class="buybox"><div class="total"><small>À partir de</small> <?= money($p['price_from']) ?></div><p class="muted">Tarif indicatif, confirmé par notre équipe.</p><?php if (feature('quotes')): ?><a class="btn btn-a btn-lg btn-block" href="/devis?produit=<?= e(rawurlencode($p['name'])) ?>"><?= ic('file') ?> Demander un devis</a><?php endif; ?><a class="btn btn-g btn-block" style="margin-top:10px" href="<?= e(wa_link('Bonjour Symo Print, je souhaite des informations sur : ' . $p['name'])) ?>" rel="noopener"><?= ic('wa') ?> WhatsApp</a></div></aside><?php endif; ?>
 </div>
 
 <?php if ($related): ?><section class="mb"><h2>Produits similaires</h2><div class="grid g4"><?php foreach ($related as $r) echo pcard($r); ?></div></section><?php endif; ?>
 </div>
-<div class="mob-bar noprint"><strong id="m-total"><?= money($q['total']) ?></strong><button class="btn btn-a" type="button" id="m-add"><?= ic('cart') ?> Ajouter au panier</button></div>
+<?php if (feature('customization')): ?><div class="mob-bar noprint"><strong id="m-total"><?= money($q['total']) ?></strong><button class="btn btn-a" type="button" id="m-add" <?= ($sale ?? 'ok') === 'ok' ? '' : 'hidden disabled' ?>><?= ic('cart') ?> Ajouter au panier</button></div><?php endif; ?>

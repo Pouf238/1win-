@@ -6,10 +6,11 @@ ROOT="${1:-$REPO}"; PORT="${2:-8090}"; LABEL="${3:-run}"; OUT="${SECURITY_OUT:-/
 cd "$ROOT" || exit 1
 rm -rf _app/storage/dev.sqlite* _app/storage/logs/* _app/storage/uploads/* _app/storage/sessions 2>/dev/null
 [ -f "$ROOT/_app/config.local.php" ] && { echo "REFUS : config.local.php présent dans $ROOT"; exit 2; }
+export SYMO_CONFIG="${SYMO_CONFIG:+$SYMO_CONFIG:}$REPO/tests/features/all-on.config.php"   # suites existantes : toutes les fonctions activées (les interrupteurs ont leur propre suite : tests/features)
 export APP_ROOT="$ROOT" BASE="http://127.0.0.1:$PORT" RESULTS="$OUT/results-$LABEL.json"
 php -d upload_max_filesize=64M -d post_max_size=64M -d memory_limit=512M -S 127.0.0.1:$PORT "$REPO/tools/dev-router.php" >"$OUT/php-$LABEL.log" 2>&1 &
 PID=$!
-SYMO_CONFIG="$HERE/short.config.php" php -d upload_max_filesize=64M -d post_max_size=64M -d memory_limit=512M -S 127.0.0.1:$((PORT+1)) "$REPO/tools/dev-router.php" >"$OUT/php-$LABEL-short.log" 2>&1 &
+SYMO_CONFIG="$HERE/short.config.php:$REPO/tests/features/all-on.config.php" php -d upload_max_filesize=64M -d post_max_size=64M -d memory_limit=512M -S 127.0.0.1:$((PORT+1)) "$REPO/tools/dev-router.php" >"$OUT/php-$LABEL-short.log" 2>&1 &
 PID2=$!; trap "kill $PID $PID2 2>/dev/null" EXIT; sleep 1.2
 export BASE_SHORT="http://127.0.0.1:$((PORT+1))"
 curl -s -o /dev/null "$BASE/"; php "$HERE/helper.php" seed || exit 1

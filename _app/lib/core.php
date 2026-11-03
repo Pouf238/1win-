@@ -77,16 +77,17 @@ function throttle(string $key, int $max, int $window, bool $peek = false): bool 
 $ROUTES = [];
 function route(string $methods, string $pattern, callable $fn): void {
     global $ROUTES; $re = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', rtrim($pattern, '/') ?: '/') . '/?$#u';
-    foreach (explode('|', $methods) as $m) $ROUTES[] = [$m, $re, $fn];
+    foreach (explode('|', $methods) as $m) $ROUTES[] = [$m, $re, $fn, $pattern];   // le motif d'origine sert à la passerelle des interrupteurs de fonctionnalités
 }
 function dispatch(): void {
     global $ROUTES; $m = $_SERVER['REQUEST_METHOD'] ?? 'GET'; if ($m === 'HEAD') $m = 'GET';
     $path = rawurldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
     $seen = false;
-    foreach ($ROUTES as [$rm, $re, $fn]) {
+    foreach ($ROUTES as [$rm, $re, $fn, $pat]) {
         if (!preg_match($re, $path, $mm)) continue;
         $seen = true; if ($rm !== $m) continue;
         $params = array_filter($mm, 'is_string', ARRAY_FILTER_USE_KEY);
+        feature_gate($m, $pat);   // AVANT les contrôles Origin/CSRF : une fonction désactivée répond « indisponible » quoi qu'on envoie
         if ($m === 'POST') { origin_check(); csrf_check(); }
         try { $fn($params); } catch (Throwable $ex) { fail($ex); }
         return;
@@ -95,6 +96,7 @@ function dispatch(): void {
     abort(404);
 }
 function fail(Throwable $ex): void {
+    if ($ex instanceof PDOException && function_exists('service_unavailable') && in_array((string) $ex->getCode(), ['2002', '2006', '2013', 'HY000'], true) && stripos($ex->getMessage(), 'gone away') !== false) service_unavailable($ex);   // connexion perdue en cours de requête
     error_log('[symoprint] ' . get_class($ex) . ': ' . $ex->getMessage() . ' @ ' . $ex->getFile() . ':' . $ex->getLine());
     if (wants_json()) json_out(['ok' => false, 'error' => cfg('debug') ? $ex->getMessage() : 'Erreur serveur. Réessayez.'], 500);
     abort(500, cfg('debug') ? $ex->getMessage() . ' @ ' . basename($ex->getFile()) . ':' . $ex->getLine() : 'Une erreur est survenue. Notre équipe a été informée.');

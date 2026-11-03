@@ -67,7 +67,8 @@ class Cart {
 /** Comment un produit peut être acheté : « ok » (panier), « quote » (devis seulement) ou « unavailable ».
  *  Le réglage « demo_prices_mode = quote_only » interdit la vente en ligne des produits dont le tarif n'est pas encore confirmé. */
 function product_sale_mode(array $p): string {
-    $a = (string) ($p['availability'] ?? 'available'); if ($a === 'unavailable') return 'unavailable'; if ($a === 'on_request') return 'quote';
+    $a = feature('catalog.availability') ? (string) ($p['availability'] ?? 'available') : 'available'; if ($a === 'unavailable') return 'unavailable'; if ($a === 'on_request') return feature('quotes') ? 'quote' : 'unavailable';
+    if (!feature('orders') || !feature('customization')) return feature('quotes') ? 'quote' : 'unavailable';   // commandes fermées, ou configurateur désactivé : pas de vente en ligne
     if (($p['pricing_status'] ?? '') === 'demo' && Settings::get('demo_prices_mode', 'allow') === 'quote_only') return 'quote';
     return 'ok';
 }

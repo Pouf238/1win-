@@ -74,10 +74,10 @@ route('POST', '/admin/produits/{id}', function ($a) {
         'file_info' => post('file_info'), 'file_required' => post('file_required') ? 1 : 0, 'active' => post('active') ? 1 : 0, 'featured' => post('featured') ? 1 : 0, 'bestseller' => post('bestseller') ? 1 : 0, 'is_new' => post('is_new') ? 1 : 0, 'promo_label' => mb_substr(post('promo_label'), 0, 60),
         'pricing_status' => post('pricing_status') === 'confirmed' ? 'confirmed' : 'demo', 'keywords' => post('keywords'), 'sort' => (int) post('sort'), 'seo_title' => post('seo_title'), 'seo_desc' => post('seo_desc'), 'updated_at' => now()];
     try { if (!empty($_FILES['image']['name'])) $d['image'] = save_product_image($_FILES['image'], $slug); elseif (post('remove_image')) $d['image'] = ''; } catch (RuntimeException $e) { flash('error', $e->getMessage()); }
-    $d['availability'] = in_array(post('availability'), ['available', 'on_request', 'unavailable'], true) ? post('availability') : 'available';
+    if (feature('catalog.availability')) $d['availability'] = in_array(post('availability'), ['available', 'on_request', 'unavailable'], true) ? post('availability') : 'available';   // module désactivé : la valeur enregistrée n'est pas modifiée
     $gal = array_values(array_diff(jd($old['gallery'] ?? ''), array_map('strval', (array) ($_POST['gallery_remove'] ?? [])))); $gf = $_FILES['gallery'] ?? null;   // galerie : retraits puis ajouts (8 images maximum)
     if ($gf && is_array($gf['name'])) for ($i = 0; $i < count($gf['name']) && count($gal) < 8; $i++) { if (($gf['error'][$i] ?? 4) === UPLOAD_ERR_NO_FILE) continue; try { $gal[] = save_product_image(['name' => $gf['name'][$i], 'tmp_name' => $gf['tmp_name'][$i], 'size' => $gf['size'][$i], 'error' => $gf['error'][$i]], $slug); } catch (RuntimeException $e) { flash('error', $gf['name'][$i] . ' : ' . $e->getMessage()); } }
-    $d['gallery'] = je($gal);
+    if (feature('catalog.gallery')) $d['gallery'] = je($gal);   // module désactivé : la galerie enregistrée n'est pas modifiée
     if ($id) DB::upd('products', $id, $d); else $id = DB::ins('products', $d);
     $p = DB::find('products', $id); DB::upd('products', $id, ['price_from' => Pricing::from($p)]); flash('ok', 'Produit enregistré. Prix « à partir de » : ' . money(Pricing::from($p))); audit('product_saved', 'p' . $id, ['new' => !$old]); redirect('/admin/produits/' . $id);
 });
