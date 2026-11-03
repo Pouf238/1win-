@@ -1,19 +1,22 @@
-# Symo Print — configuration Apache (Hostinger)
-DirectoryIndex index.html index.php
+# Symo Print — plateforme d'impression en ligne
 Options -Indexes
+DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
-# HTTPS obligatoire
 RewriteCond %{HTTPS} !=on
 RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)
 RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [L,R=301]
-# www -> sans www
 RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
 RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
+# Code, docs, outils et dépôt : jamais accessibles
+RewriteRule ^(_app|tools|docs|\.git|\.hostinger)(/|$) - [F,L]
+RewriteRule ^(composer\.(json|lock)|CNAME|.*\.(sql|md|log|sh|py))$ - [F,L]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+RewriteRule ^ index.php [L,QSA]
 </IfModule>
-
-ErrorDocument 404 /404.html
 
 <IfModule mod_headers.c>
 Header always set X-Content-Type-Options "nosniff"
@@ -21,15 +24,13 @@ Header always set X-Frame-Options "SAMEORIGIN"
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
 Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 Header always set Strict-Transport-Security "max-age=31536000"
-Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'"
-<FilesMatch "\.(woff2|css|js|svg|png)$">
-Header set Cache-Control "public, max-age=31536000, immutable"
-</FilesMatch>
-<FilesMatch "\.(html|php)$">
-Header set Cache-Control "no-cache"
+Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'"
+<FilesMatch "\.(woff2|css|js|svg|png|webp|jpg|ico)$">
+Header set Cache-Control "public, max-age=2592000"
 </FilesMatch>
 </IfModule>
 
 <IfModule mod_deflate.c>
-AddOutputFilterByType DEFLATE text/html text/css application/javascript image/svg+xml application/json
+AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
 </IfModule>
+php_flag display_errors off

@@ -1,0 +1,2 @@
+<section class="phead"><div class="wrap"><?= crumbs([['Questions fréquentes', '']]) ?><h1>Questions fréquentes</h1><p>Commande, paiement, fichiers, délais, livraison : les réponses à vos questions.</p></div></section>
+<div class="wrap section"><div class="faq" style="max-width:860px"><?php foreach ($faqs as $f): ?><details><summary><?= e($f['question']) ?></summary><div class="ans"><?= nl2br(e($f['answer'])) ?></div></details><?php endforeach; ?></div></div>

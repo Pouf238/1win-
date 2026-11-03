@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /envoyer.php
-Disallow: /merci/
-
-Sitemap: https://symoprint.com/sitemap.xml

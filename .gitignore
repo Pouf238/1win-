@@ -1,2 +1,8 @@
 __pycache__/
 *.pyc
+_app/config.local.php
+_app/storage/*.sqlite*
+_app/storage/logs/*
+!_app/storage/logs/.gitkeep
+_app/storage/uploads/*
+!_app/storage/uploads/.gitkeep

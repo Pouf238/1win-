@@ -1,0 +1,1 @@
+<?php if ($rows): ?><div class="grid g3"><?php foreach ($rows as $p) echo pcard($p); ?></div><?php else: ?><div class="panel center"><p class="muted">Vous n'avez pas encore de favoris. Cliquez sur le cœur d'un produit pour le retrouver ici.</p><a class="btn btn-a" href="/catalogue">Voir le catalogue</a></div><?php endif; ?>

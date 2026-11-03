@@ -1,0 +1,2 @@
+<div class="wrap section center" style="max-width:640px"><p class="muted" style="font-weight:700;letter-spacing:.1em">ERREUR <?= (int) $code ?></p><h1 style="font-size:40px">Oups, <?= $code == 404 ? 'cette page est introuvable' : 'une erreur est survenue' ?></h1><p class="muted"><?= e($msg) ?></p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px"><a class="btn btn-p" href="/">Retour à l'accueil</a><a class="btn btn-o" href="/catalogue">Voir le catalogue</a></div></div>
