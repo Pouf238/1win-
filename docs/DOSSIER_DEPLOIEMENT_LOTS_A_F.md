@@ -15,7 +15,7 @@
 ## 1. État réel de la production (inventaire en lecture seule, 3 nov. 2026 11:52 UTC)
 Base MySQL, version de schéma **v3**. **1 client, 1 membre d'équipe, 0 commande**, 1 devis (« en cours de chiffrage »), 2 fichiers, 52 produits, 21 entrées au journal d'audit, aucun abonné ni message de contact.
 → **Aucune commande ne peut être perturbée aujourd'hui** (il n'y en a aucune) ; le seul enregistrement « métier » à préserver est le devis en cours (testé : il garde son affichage, ses nouvelles colonnes sont vides).
-**À noter** : les réglages « E-mail public » et « E-mail de notification » sont **vides** en production. Conséquences : les messages internes (nouveau devis, nouvelle commande, formulaire de contact) n'ont aucun destinataire, et les e-mails clients n'ont pas d'adresse « Répondre à ». À renseigner dans *Administration → Paramètres* (proposition : `contact@symoprint.com`).
+**Mis à jour le 3 nov. 2026 (12:53 UTC, avec votre autorisation)** : « E-mail public » et « E-mail de notification » valent désormais `contact@symoprint.com` (ils étaient vides). Contrôlé en production : l'adresse apparaît sur la page d'accueil et la page Contact ; inventaire inchangé (1 client, 1 membre d'équipe, 1 devis, 2 fichiers, 52 produits, 0 commande) ; la version du schéma reste v3 ; 2 entrées d'audit « settings_saved » ajoutées au journal (21 → 23). Séparation vérifiée (voir `docs/EMAIL_CONFIGURATION.md` §4).
 
 ## 2. Détail de chaque lot
 ### Lot A — Fondations de données
@@ -60,6 +60,7 @@ Uniquement des **ajouts** (6 tables, 9 colonnes, 6 index) + 13 lignes de statuts
 | Unitaires (SMTP, journal chaîné, TOTP, mots de passe fuités) | 21 / 21 |
 | Parcours navigateur e2e | 85 / 85 |
 | Mise à jour depuis l'ancienne base ; ancien code sur base v4 | réussis |
+| **Répétition de restauration** : sauvegarde faite par le script DE PRODUCTION (`cli/backup.php`, code 5559a24) sur une base MariaDB identique à la production, puis `gunzip -c … \| mysql` dans une base vide | 24 tables, 140 lignes restaurées ; comparaison avec la source : **identique, accents compris**, à une seule exception voulue (la ligne d'audit « backup » écrite après la sauvegarde) |
 | **Non testé** | la suite de sécurité complète sur MariaDB (seule la suite plateforme l'est) ; les e-mails réels en conditions de forte charge ; la version exacte du MySQL/MariaDB de Hostinger n'est pas connue |
 
 ## 5. Paiements
@@ -80,6 +81,13 @@ Uniquement des **ajouts** (6 tables, 9 colonnes, 6 index) + 13 lignes de statuts
 - **Irréversibles si on les exécute plus tard** : `migrate down` (supprime 6 tables et 9 colonnes et leur contenu) et la restauration de la sauvegarde SQL (écrase les tables). Je ne les lancerai **jamais sans vous prévenir**.
 
 ## 8. Plan de sauvegarde et de retour arrière
+**Sauvegardes déjà présentes sur le serveur — vérifiées le 3 nov. 2026 (lecture seule)** : dossier `~/domains/symoprint.com/backups` (permissions 0700, hors web).
+- 4 sauvegardes de la base (`db-…sql.gz`, 02:55 → 04:57 UTC) : **intégrité gzip validée sur les 4** ; la plus récente contient **24 tables** et sa ligne de fin (« -- fin de sauvegarde »), donc complète.
+- 2 archives de fichiers clients (`uploads-…zip`) : **aucune erreur** dans les données compressées. Elles contiennent 1 fichier ; un second fichier client (envoyé à 05:27) est **postérieur** à ces archives et n'y figure pas encore.
+- Configuration : `cfg-avant-smtp-20261103.bak` (empreinte identique à l'original).
+- **Restauration répétée** (§4) : procédure `gunzip -c … | mysql` rejouée sur une base vide, résultat identique à la source.
+- **Limites à connaître** : la dernière sauvegarde de base date de 04:57 UTC (avant les réglages d'e-mail de 12:53) ; les archives de fichiers ne sont faites que le dimanche ou à la demande ; la rotation automatique ne conserve que les 14 dernières bases / 4 dernières archives. **C'est pourquoi une sauvegarde fraîche, nommée à part (hors rotation), est la toute première étape du déploiement.**
+
 **Avant (≈ 5 min)**
 1. Sauvegarde fraîche : `php _app/cli/backup.php --uploads` (base compressée `.sql.gz` + archive des fichiers clients) dans `~/domains/symoprint.com/backups` (0700, hors web) ; contrôle des tailles.
 2. Copie du **code actuel** sur le serveur : `tar czf backups/code-avant-lots-AF.tgz -C public_html --exclude=_app/storage .` (le retour est alors un simple `tar xzf`, sans moi).
@@ -96,6 +104,17 @@ Uniquement des **ajouts** (6 tables, 9 colonnes, 6 index) + 13 lignes de statuts
 - *Niveau 2 — base aussi (optionnel)* : après le niveau 1, remettre l'ancien `migrate.php` **après** avoir exécuté `php tools/migrate.php down 3 --i-have-a-backup` (sinon la migration se relance toute seule). Perd les données des 6 tables ajoutées.
 - *Niveau 3 — dernier recours* : restaurer le `.sql.gz` de l'étape 1 (écrase la base ; perd tout ce qui a été créé depuis).
 - Déclencheurs d'un retour : erreur 500 persistante, migration incomplète, inventaire différent, page critique cassée.
+
+## 8 bis. Déploiement progressif, lot par lot : ce qui est possible
+Réponse honnête à votre question : **le schéma (Lot A) se déploie seul et se vérifie seul ; les lots B à F ne sont pas indépendants au niveau du code.**
+- Les routes des lots B, C, D, E et F sont chargées ensemble par `_app/bootstrap.php` ; `lib/notify.php` (Lot D) est appelée par `routes/shop.php`, `routes/public.php`, `routes/admin.php`, `routes/quotes_ext.php` (C) et `routes/files_ext.php` (E) ; plusieurs fichiers mélangent des lots (`shop.php` : suivi B + notifications D + mode de vente F ; `views/shop/order.php` : B + E). Tout le code nouveau suppose que la migration v4 (Lot A) est faite.
+- **Étapes réalisables avec vérification et arrêt possible après chacune :**
+  0. Sauvegardes (§8) et contrôle de leur lisibilité.
+  1. **Lot A seul** : dépôt de `sql/migrate.php` + `tools/migrate.php` ; la migration s'exécute ; le site reste sur l'ancien code (testé). Contrôles : version v4, 30 tables, inventaire identique (§1), pages inchangées. *C'est la seule étape qui touche à la base.*
+  2. Dépôt des **nouveaux fichiers** (inertes tant que `bootstrap.php` ne les charge pas) puis des **fichiers modifiés non critiques** ; contrôle : aucune page ne change.
+  3. **Activation** : `lib/core.php` puis `bootstrap.php` en dernier ; contrôles page par page (accueil, catalogue, produit, devis, `/suivi`, connexion, espace client) ; retour arrière « fichiers » immédiat si anomalie.
+- **Activation séparée par famille de fonctions (option, non faite à ce jour)** : ajouter un interrupteur de configuration par famille de routes nouvelles (statuts/modèles/notifications = D ; devis étendus = C ; fichiers = E ; suivi invité = B), pour les activer une par une après le dépôt. Cela demande une petite modification du code et de ses tests (≈ une demi-journée de travail et de vérification) ; les fichiers partagés (`shop.php`, `admin.php`…) resteraient actifs dès l'étape 3. **À ne faire que si vous le demandez.**
+- Recommandation : étapes 0 → 1 (validation par vous) → 2 → 3, sans activation séparée.
 
 ## 9. Décisions que j'attends de vous
 1. Autorisation de déployer les lots A à F selon ce plan (oui / non / avec modifications).
