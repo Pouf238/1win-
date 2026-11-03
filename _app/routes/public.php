@@ -23,9 +23,10 @@ route('GET', '/', function () {
     $promo = DB::all("SELECT * FROM products WHERE active=1 AND promo_label<>'' ORDER BY id DESC LIMIT 4");
     $new = DB::all('SELECT * FROM products WHERE active=1 AND is_new=1 ORDER BY id DESC LIMIT 4');
     $tests = DB::all('SELECT * FROM testimonials WHERE active=1 ORDER BY sort, id LIMIT 6');
+    $vitrine = vitrine_products();
     $ld = [['@context' => 'https://schema.org', '@type' => 'LocalBusiness', 'name' => shop('shop_name'), 'url' => abs_url('/'), 'telephone' => shop('phone'), 'image' => abs_url('assets/img/og.png'), 'description' => shop('tagline') . '. Imprimerie à Abidjan.',
         'address' => ['@type' => 'PostalAddress', 'streetAddress' => shop('address'), 'addressLocality' => shop('city'), 'addressCountry' => 'CI'], 'priceRange' => 'FCFA']];
-    page('shop/home', compact('banners', 'cats', 'best', 'pop', 'promo', 'new', 'tests'), ['jsonld' => $ld, 'body' => 'home']);
+    page('shop/home', compact('banners', 'cats', 'best', 'pop', 'promo', 'new', 'tests', 'vitrine'), ['jsonld' => $ld, 'body' => 'home', 'scripts' => $vitrine ? ['js/vitrine.js'] : []]);
 });
 
 route('GET', '/catalogue', function () {

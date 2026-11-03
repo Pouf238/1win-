@@ -39,3 +39,14 @@ function product_img(array $p, string $cls = ''): string {
     if (!empty($p['image'])) { $f = ROOT . '/assets/img/produits/' . basename($p['image']) . '.webp'; if (is_file($f)) return '<img src="' . e(asset('img/produits/' . basename($p['image']) . '.webp')) . '" alt="' . e($p['name']) . '" loading="lazy" class="' . e($cls) . '">'; }
     return '<div class="art-wrap ' . e($cls) . '">' . art($p['icon'] ?? 'flyer') . '</div>';
 }
+/** Produits à photo pour la vitrine animée de l'accueil : 3 à 5 produits actifs dont le fichier image existe (sinon la section est masquée). */
+function vitrine_products(int $max = 5): array {
+    $out = []; $seen = [];
+    foreach (DB::all("SELECT * FROM products WHERE active=1 AND image<>'' ORDER BY featured DESC, bestseller DESC, sort, name LIMIT 30") as $p) {
+        $img = basename((string) $p['image']);
+        if (isset($seen[$img]) || !is_file(ROOT . '/assets/img/produits/' . $img . '.webp')) continue;
+        $seen[$img] = 1; $p['image'] = $img; $out[] = $p;
+        if (count($out) >= $max) break;
+    }
+    return count($out) >= 3 ? $out : [];
+}

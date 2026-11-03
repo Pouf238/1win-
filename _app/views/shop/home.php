@@ -23,6 +23,25 @@ $sets = ['objets' => ['parapluie-ouvert', 'mug-liege', 'polo', 'porte-cles-decap
   <div class="cats"><?php foreach ($cats as $c): ?><a class="cat-tile" href="/c/<?= e($c['slug']) ?>"><div class="art-wrap"><?= art($c['icon'] ?: 'flyer') ?></div><h3><?= e($c['name']) ?></h3><p><?= e(mb_strimwidth($c['short_desc'], 0, 70, '…')) ?></p></a><?php endforeach; ?></div>
 </div></section>
 
+<?php if (!empty($vitrine)): $v0 = $vitrine[0]; ?><section class="section vt" aria-labelledby="vt-h"><div class="wrap">
+  <div class="sec-head"><div><span class="bar"></span><h2 id="vt-h">Vos objets à votre image</h2><p>Parcourez nos objets : chacun se personnalise avec votre logo.</p></div></div>
+  <div class="vt-grid" data-vitrine>
+    <div class="vt-side">
+      <div class="vt-menu" role="group" aria-label="Objets personnalisables">
+        <?php foreach ($vitrine as $i => $p): ?><a class="vt-item<?= $i === 0 ? ' on' : '' ?>" href="/p/<?= e($p['slug']) ?>"<?= $i === 0 ? ' aria-current="true"' : '' ?> data-img="<?= e(asset('img/produits/' . $p['image'] . '.webp')) ?>" data-name="<?= e($p['name']) ?>" data-desc="<?= e($p['short_desc']) ?>"><span class="vt-name"><?= e($p['name']) ?></span><span class="vt-sub"><?= e($p['short_desc']) ?></span></a>
+        <?php endforeach; ?>
+        <span class="vt-pill" aria-hidden="true"></span>
+      </div>
+      <a class="btn btn-a vt-cta" href="/p/<?= e($v0['slug']) ?>" aria-label="Voir <?= e($v0['name']) ?>">Voir le produit <?= ic('arrow') ?></a>
+    </div>
+    <div class="vt-stage">
+      <span class="vt-shadow" aria-hidden="true"></span>
+      <figure class="vt-card"><img src="<?= e(asset('img/produits/' . $v0['image'] . '.webp')) ?>" alt="<?= e($v0['name']) ?>" width="900" height="900" decoding="async"></figure>
+      <p class="sr" aria-live="polite" data-vt-live></p>
+    </div>
+  </div>
+</div></section><?php endif; ?>
+
 <?php if ($best): ?><section class="section soft"><div class="wrap">
   <div class="sec-head"><div><span class="bar"></span><h2>Meilleures ventes</h2><p>Les produits que nos clients commandent le plus.</p></div></div>
   <div class="grid g4"><?php foreach ($best as $p) echo pcard($p); ?></div>

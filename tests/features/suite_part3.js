@@ -107,5 +107,27 @@ module.exports = async function (X) {
     return { pass: !/Momentanément indisponible/.test(pub.body) && !/name="availability"/.test(form.body) && /Momentanément indisponible/.test(pub2.body) && /name="availability"/.test(form2.body), note: '' };
   });
   await t('M-13', 'les 12 modules sont désactivés dans les valeurs par défaut du code (aucune activation automatique)', async () => { fh('setfeatures', '{}'); const s = state(); const on = ['tracking.lookup', 'accounts.claim', 'quotes.adaptive', 'quotes.thread', 'quotes.expiry', 'quotes.convert', 'tracking.statuses', 'notifications.admin', 'notifications.account', 'files.manage', 'catalog.gallery', 'catalog.availability'].filter(k => s[k][0] === 1 || s[k][1] === 1); return { pass: on.length === 0, note: on.join(',') }; });
+
+  sect('7. Vitrine animée de l\'accueil (effets de physique sur les photos produits)');
+  await t('V-01', 'accueil : la vitrine propose 3 à 5 objets à photo, chaque lien mène à une fiche produit existante, 1re photo servie sans JavaScript', async () => {
+    fh('setfeatures', '{}'); const h = await new Client().r('GET', '/'); const links = [...h.body.matchAll(/class="vt-item[^"]*" href="(\/p\/[a-z0-9-]+)"/g)].map(m => m[1]);
+    const ok = []; for (const l of links) ok.push((await new Client().r('GET', l)).status);
+    return { pass: h.status === 200 && links.length >= 3 && links.length <= 5 && ok.every(x => x === 200) && /<figure class="vt-card"><img src="\/assets\/img\/produits\/[a-z0-9-]+\.webp/.test(h.body) && /data-vt-live/.test(h.body), note: links.length + ' objets, fiches ' + ok.join(',') };
+  });
+  await t('V-02', 'compatible avec la CSP : script externe uniquement (aucun script ni gestionnaire en ligne, aucun <style>), le fichier est servi', async () => {
+    const c = new Client(), h = await c.r('GET', '/'); const csp = h.h.get('content-security-policy') || '';
+    const js = await c.r('GET', (h.body.match(/<script src="(\/assets\/js\/vitrine\.js[^"]*)"/) || [])[1] || '/assets/js/vitrine.js');
+    const inline = (h.body.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/g) || []).length;
+    return { pass: js.status === 200 && /Vitrine animée/.test(js.body) && inline === 0 && !/<style[\s>]/i.test(h.body) && !/\son(click|load|pointerenter|focus)=/i.test(h.body) && /script-src 'self'/.test(csp) && !/script-src[^;]*unsafe-inline/.test(csp), note: 'inline=' + inline + ' csp=' + csp.slice(0, 60) };
+  });
+  await t('V-03', 'le script n\'est chargé que sur l\'accueil (pas sur le catalogue ni les fiches) et la section n\'existe que là', async () => {
+    const a = await new Client().r('GET', '/catalogue'), b = await new Client().r('GET', '/p/' + sh('getcol', 'products', 'id=7', 'slug'));
+    return { pass: !/vitrine\.js/.test(a.body + b.body) && !/data-vitrine/.test(a.body + b.body), note: '' };
+  });
+  await t('V-04', 'la vitrine ne dépend d\'aucun interrupteur : accueil identique et disponible avec toutes les fonctions fermées (préréglage vitrine) comme ouvertes', async () => {
+    fh('setfeatures', '{}'); const a = await new Client().r('GET', '/'); fh('allon'); const b = await new Client().r('GET', '/'); fh('setfeatures', '{}');
+    const n = x => (x.body.match(/class="vt-item/g) || []).length;
+    return { pass: a.status === 200 && b.status === 200 && n(a) === n(b) && n(a) >= 3, note: n(a) + '/' + n(b) };
+  });
   fh('setfeatures', '{}');
 };
