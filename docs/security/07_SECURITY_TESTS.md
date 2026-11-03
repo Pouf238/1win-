@@ -6,7 +6,7 @@
 - **Environnement** : instance PHP locale jetable (SQLite, e-mails dans un journal), **jamais la production** — `tests/security/helper.php` et `suite.js` refusent toute cible contenant `symoprint.com`.
 - **Principe** : écrire d'abord les attaques, les exécuter sur le code initial (`a200885`), corriger, **rejouer** après chaque série de correctifs. Un correctif n'est déclaré « fait » que si le test correspondant passe.
 - **Lancer** : `bash tests/security/run.sh [racine_du_code] [port] [étiquette]` (Node ≥ 22, PHP ≥ 8.1). Une seconde instance à délais d'inactivité courts (`tests/security/short.config.php`) sert à `SESS-04`.
-- **CI** : le job `security-tests` de `.github/workflows/security.yml` rejoue la suite à chaque push ; son échec bloque la « porte de déploiement ».
+- **CI** : le job `security-tests` de `.github/workflows/security.yml` rejoue la suite à chaque push ; son échec bloque la « porte de déploiement ». Le premier passage a révélé un test dépendant de la configuration PHP (`UPL-12`), corrigé depuis ; `run.sh` impose désormais les mêmes limites PHP partout.
 
 ## 2. Résultat global
 | | Avant (`a200885`) | Après |
@@ -22,7 +22,7 @@
 | Test fonctionnel e2e (Playwright) | exécuté | 85/85, aucune erreur JavaScript/console, aucune erreur PHP |
 | Chemin de mise à jour (`tests/security/upgrade.sh`) : base créée par l'ancien code (`a200885`) → nouveau code | exécuté | migration automatique sans perte (comptes identiques, `schema_version=2`), 9 vérifications : ancien administrateur → MFA et mot de passe imposés, ancien client connecté sans re-confirmation, ancien « manager » devenu administrateur |
 | Inventaire des routes | exécuté | 122 routes + 7 entités CRUD |
-| Trivy | **dans la CI uniquement** | non exécuté localement (à voir au premier passage de la CI) |
+| Trivy | **CI, non bloquant** | non exécuté localement ; le premier passage de la CI a échoué (action introuvable), remplacé par l'image officielle — **résultat à vérifier** |
 | OWASP ZAP, Nuclei | **non exécutés** | à lancer sur l'environnement de test par les pentesters / en CI planifiée ; jamais contre la production sans accord |
 | Antivirus (ClamAV) | **non disponible** sur l'hébergement | voir R-05 |
 | Test de restauration MySQL | **à faire** | outil testé sur SQLite ; restauration réelle sur MySQL à vérifier (R-07) |

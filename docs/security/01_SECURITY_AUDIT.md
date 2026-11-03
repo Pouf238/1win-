@@ -48,6 +48,7 @@ Cartographie détaillée des endpoints : `06_PENTEST_SCOPE.md`. Détail du modè
 | Échecs faibles | 1 | 0 |
 | Semgrep (règles PHP/OWASP) | 5 alertes (3 faux positifs vérifiés + 1 durcissement + 1 outil de dev) | 0 (faux positifs annotés avec justification ; durcissement appliqué) |
 | Gitleaks (historique complet) | 0 secret | 0 secret |
+| CI GitHub (1ᵉʳ passage) | — | Gitleaks, Semgrep, syntaxe : réussis ; tests de sécurité : 112/113 (test `UPL-12` dépendant de la config PHP, corrigé) ; Trivy : échec de l'action (rendu non bloquant) — **deuxième passage à vérifier** |
 | Tests fonctionnels e2e | 85 / 85 | 85 / 85 |
 
 Les 57 échecs initiaux correspondent à **19 constats consolidés** (V-01 à V-19) et 6 points informationnels, listés dans `02_VULNERABILITIES.md`. **Aucun test n'a régressé** entre l'état initial et l'état final.

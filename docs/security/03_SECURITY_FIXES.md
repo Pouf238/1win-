@@ -48,9 +48,10 @@ Redirections internes uniquement ; panier modifié par POST ; JSON embarqué enc
 - `config.local.php` : `auto_install=false` en production, `app_key` générée hors dépôt.
 
 ## G. Pipeline DevSecOps (`.github/`)
-`security.yml` : syntaxe PHP, Gitleaks (historique complet), Semgrep (`--error`), Trivy (vuln/secret/misconfig, CRITICAL+HIGH), **113 tests de sécurité** ; job final « porte de déploiement » qui échoue si un contrôle échoue. `dependabot.yml` : mises à jour des actions. *À activer* : protection de branche exigeant le job `gate` (réglage GitHub, voir `10`).
+`security.yml` : syntaxe PHP, Gitleaks (historique complet), Semgrep (`--error`), **113 tests de sécurité** + test du chemin de mise à jour ; Trivy (vuln/secret/misconfig) en job **non bloquant** pour l'instant ; job final « porte de déploiement » qui échoue si l'un des contrôles bloquants échoue. `dependabot.yml` : mises à jour des actions. *À activer* : protection de branche exigeant le job `gate` (réglage GitHub, voir `10`).
 
 ## H. Corrigé en cours de test (bugs trouvés par les tests eux-mêmes)
 - Référence de paiement obligatoire contournable (`NULL` ≠ `''`) → corrigé, test `PAY-06`.
-- Deux requêtes simultanées pouvaient provoquer une erreur 500 sur la table `ratelimits` (insertion concurrente de la même clé) → `throttle()` tolère désormais l'échec d'insertion.
+- Pas de TOTP rejoué mais pas d'erreur de course sur `ratelimits` (insertion concurrente) → `throttle()` tolère l'échec d'insertion.
+- Premier passage de la CI : le test `UPL-12` (fichier trop gros) ne passait que grâce à la limite de 2 Mo du PHP local et non à la règle de l'application (50 Mo) ; il échouait avec la configuration PHP de la CI. Test réécrit (fichier de 51 Mo refusé, 9 Mo accepté) et mêmes limites PHP imposées partout. L'action Trivy référencée n'existait pas : remplacée par l'image officielle, job non bloquant jusqu'à vérification.
 - Seuils de rejet de fichiers calibrés pour ne pas bloquer de vrais PDF volumineux (motif `/JS` abandonné : faux positifs sur flux compressés).
