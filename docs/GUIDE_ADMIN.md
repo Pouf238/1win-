@@ -6,7 +6,7 @@ Connexion : `https://symoprint.com/admin`.
 1. **Réglages > Entreprise** : e-mail public et **e-mail de notification** (pour recevoir commandes et devis), RCCM, NCC, forme juridique.
 2. **Réglages > Paiements** : numéros Wave / Orange / MTN / Moov, coordonnées bancaires, activer ou non chaque moyen.
 3. **Livraison** : vérifier zones, frais et délais.
-4. **Produits** : les 46 produits ont des **tarifs de démonstration** (badge « Démo »). Remplacez par vos vrais prix puis marquez-les « Confirmés » (action groupée disponible).
+4. **Produits** : les 52 produits ont des **tarifs de démonstration** (badge « Démo »). Remplacez par vos vrais prix puis marquez-les « Confirmés » (action groupée disponible).
 5. **Pages** : relire CGV, mentions légales, confidentialité, livraison, remboursement.
 
 ## Prix : comment ça marche
