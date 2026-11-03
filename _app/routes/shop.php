@@ -189,7 +189,7 @@ route('POST', '/devis', function () {
     if ($name === '' || (!filter_var($email, FILTER_VALIDATE_EMAIL) && strlen(preg_replace('/\D/', '', $phone)) < 8)) { flash('error', 'Indiquez votre nom et un e-mail ou un numéro de téléphone valide.'); redirect('/devis'); }
     if (!$items && $msg === '' && $free === '') { flash('error', 'Décrivez votre projet ou choisissez un produit.'); redirect('/devis'); }
     $u = user(); $ref = new_ref('DV', 'quotes'); $tok = bin2hex(random_bytes(16));
-    $qid = DB::ins('quotes', ['ref' => $ref, 'user_id' => $u['id'] ?? 0, 'name' => $name, 'email' => $email, 'phone' => $phone, 'company' => post('company'), 'message' => $msg, 'status' => 'new', 'lines' => '[]', 'access_token' => $tok]);
+    $qid = DB::ins('quotes', ['ref' => $ref, 'user_id' => $u['id'] ?? 0, 'name' => $name, 'email' => $email, 'phone' => $phone, 'company' => post('company'), 'message' => $msg, 'status' => 'new', 'qlines' => '[]', 'access_token' => $tok]);
     foreach ($items as $it) DB::ins('quote_items', ['quote_id' => $qid, 'product_id' => $it['pid'], 'name' => $it['name'], 'config' => je($it['cfg']), 'summary' => je($it['summary']), 'qty' => $it['qty'], 'est_price' => $it['est']]);
     if ($free !== '') DB::ins('quote_items', ['quote_id' => $qid, 'product_id' => 0, 'name' => mb_substr($free, 0, 190), 'config' => '{}', 'summary' => '[]', 'qty' => max(1, (int) post('free_qty', 1)), 'est_price' => 0]);
     foreach ($items as $it) foreach ($it['files'] as $fid) DB::q('UPDATE files SET quote_id=?, user_id=? WHERE id=? AND owner_token=?', [$qid, $u['id'] ?? 0, $fid, Cart::token()]);
@@ -206,7 +206,7 @@ route('GET', '/devis/{ref}', function ($a) {
     $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q)) abort(404);
     page('shop/quote_view', ['q' => $q, 'items' => DB::all('SELECT * FROM quote_items WHERE quote_id=?', [$q['id']]), 'lines' => quote_final_lines($q)], ['title' => 'Devis ' . $q['ref'], 'noindex' => true]);
 });
-route('GET', '/devis/{ref}/pdf', function ($a) { $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q) || !jd($q['lines'])) abort(404); send_pdf(quote_pdf($q), 'devis-' . $q['ref'] . '.pdf'); });
+route('GET', '/devis/{ref}/pdf', function ($a) { $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q) || !jd($q['qlines'])) abort(404); send_pdf(quote_pdf($q), 'devis-' . $q['ref'] . '.pdf'); });
 route('POST', '/devis/{ref}/reponse', function ($a) {
     $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q) || $q['status'] !== 'sent') abort(404); $ok = post('action') === 'accept';
     DB::upd('quotes', (int) $q['id'], ['status' => $ok ? 'accepted' : 'declined', 'updated_at' => now()]);

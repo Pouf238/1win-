@@ -79,27 +79,27 @@ route('POST', '/admin/commandes/{id}/bat', function ($a) {
 route('POST', '/admin/fichiers/{id}/statut', function ($a) { require_perm('orders'); $f = DB::find('files', (int) $a['id']); if ($f && isset(Files::STATUS[post('status')])) { DB::upd('files', (int) $f['id'], ['status' => post('status'), 'note' => post('note')]); } redirect($_SERVER['HTTP_REFERER'] ?? '/admin/commandes'); });
 
 // ---------------------------------------------------------------- devis
-function quote_final_lines(array $q): array { $m = (int) $q['margin_pct']; return array_map(function ($l) use ($m) { $l['unit'] = round_price($l['unit'] * (100 + $m) / 100); return $l; }, jd($q['lines'])); }
+function quote_final_lines(array $q): array { $m = (int) $q['margin_pct']; return array_map(function ($l) use ($m) { $l['unit'] = round_price($l['unit'] * (100 + $m) / 100); return $l; }, jd($q['qlines'])); }
 route('GET', '/admin/devis', function () {
     require_perm('quotes'); $w = ['1=1']; $p = []; if (get('status') !== '') { $w[] = 'status=?'; $p[] = get('status'); } if (get('q') !== '') { $w[] = '(ref LIKE ? OR name LIKE ? OR email LIKE ? OR phone LIKE ?)'; $l = '%' . get('q') . '%'; array_push($p, $l, $l, $l, $l); }
     adm('quotes', ['rows' => DB::all('SELECT * FROM quotes WHERE ' . implode(' AND ', $w) . ' ORDER BY id DESC LIMIT 200', $p)], 'Devis', 'quotes');
 });
 route('GET', '/admin/devis/{id}', function ($a) {
-    require_perm('quotes'); $q = DB::find('quotes', (int) $a['id']); if (!$q) abort(404); $items = DB::all('SELECT * FROM quote_items WHERE quote_id=?', [$q['id']]); $lines = jd($q['lines']);
+    require_perm('quotes'); $q = DB::find('quotes', (int) $a['id']); if (!$q) abort(404); $items = DB::all('SELECT * FROM quote_items WHERE quote_id=?', [$q['id']]); $lines = jd($q['qlines']);
     if (!$lines) foreach ($items as $it) $lines[] = ['desc' => $it['name'], 'sub' => implode(' | ', array_map(fn($x) => $x[0] . ' : ' . $x[1], jd($it['summary']))), 'qty' => (int) $it['qty'], 'unit' => $it['qty'] ? (int) round($it['est_price'] / max(1, $it['qty'])) : 0];
     adm('quote', ['q' => $q, 'items' => $items, 'lines' => $lines, 'files' => DB::all('SELECT * FROM files WHERE quote_id=?', [$q['id']])], 'Devis ' . $q['ref'], 'quotes');
 });
 function save_quote(array $q): array {
     $lines = []; $d = (array) ($_POST['l_desc'] ?? []);
     foreach ($d as $i => $desc) { if (trim($desc) === '') continue; $lines[] = ['desc' => mb_substr(trim($desc), 0, 190), 'sub' => mb_substr(trim($_POST['l_sub'][$i] ?? ''), 0, 400), 'qty' => max(1, (int) ($_POST['l_qty'][$i] ?? 1)), 'unit' => max(0, (int) ($_POST['l_unit'][$i] ?? 0))]; }
-    $m = max(-50, min(300, (int) post('margin_pct'))); $tmp = $q; $tmp['margin_pct'] = $m; $tmp['lines'] = je($lines); $sub = 0; foreach (quote_final_lines($tmp) as $l) $sub += $l['qty'] * $l['unit'];
-    DB::upd('quotes', (int) $q['id'], ['lines' => je($lines), 'margin_pct' => $m, 'subtotal' => $sub, 'total' => $sub, 'valid_until' => post('valid_until') ?: null, 'admin_notes' => post('admin_notes'), 'updated_at' => now(), 'status' => in_array($q['status'], ['new'], true) ? 'in_progress' : $q['status']]);
+    $m = max(-50, min(300, (int) post('margin_pct'))); $tmp = $q; $tmp['margin_pct'] = $m; $tmp['qlines'] = je($lines); $sub = 0; foreach (quote_final_lines($tmp) as $l) $sub += $l['qty'] * $l['unit'];
+    DB::upd('quotes', (int) $q['id'], ['qlines' => je($lines), 'margin_pct' => $m, 'subtotal' => $sub, 'total' => $sub, 'valid_until' => post('valid_until') ?: null, 'admin_notes' => post('admin_notes'), 'updated_at' => now(), 'status' => in_array($q['status'], ['new'], true) ? 'in_progress' : $q['status']]);
     return DB::find('quotes', (int) $q['id']);
 }
 route('POST', '/admin/devis/{id}', function ($a) { require_perm('quotes'); $q = DB::find('quotes', (int) $a['id']); if (!$q) abort(404); save_quote($q); flash('ok', 'Devis enregistré.'); redirect('/admin/devis/' . $q['id']); });
 route('POST', '/admin/devis/{id}/envoyer', function ($a) {
     require_perm('quotes'); $q = DB::find('quotes', (int) $a['id']); if (!$q) abort(404); $q = save_quote($q);
-    if (!jd($q['lines']) || $q['total'] <= 0) { flash('error', 'Ajoutez au moins une ligne chiffrée avant d\'envoyer.'); redirect('/admin/devis/' . $q['id']); }
+    if (!jd($q['qlines']) || $q['total'] <= 0) { flash('error', 'Ajoutez au moins une ligne chiffrée avant d\'envoyer.'); redirect('/admin/devis/' . $q['id']); }
     if (!$q['valid_until']) DB::upd('quotes', (int) $q['id'], ['valid_until' => date('Y-m-d', strtotime('+15 days'))]);
     DB::upd('quotes', (int) $q['id'], ['status' => 'sent', 'updated_at' => now()]); $q = DB::find('quotes', (int) $q['id']); $sent = false;
     if ($q['email']) $sent = Mail::send($q['email'], 'Votre devis ' . $q['ref'] . ' : ' . money($q['total']), Mail::layout('Votre devis est prêt', '<p>Bonjour ' . e($q['name']) . ', veuillez trouver ci-joint votre devis <b>' . e($q['ref']) . '</b> d\'un montant de <b>' . money($q['total']) . '</b>.</p>' . Mail::button('Consulter et accepter le devis', abs_url('/devis/' . $q['ref'] . '?t=' . $q['access_token']))), [['name' => 'devis-' . $q['ref'] . '.pdf', 'data' => quote_pdf($q), 'type' => 'application/pdf']]);

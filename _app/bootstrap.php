@@ -14,7 +14,11 @@ session_name('sp_sess');
 session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => $https, 'httponly' => true, 'samesite' => 'Lax']);
 session_start();
 DB::connect($CFG['db']);
-if ($CFG['auto_install'] && !DB::tableExists('settings')) { require APP . '/sql/install.php'; install_all(); }
+if ($CFG['auto_install']) {
+    require_once APP . '/sql/install.php';
+    if (!DB::tableExists('settings')) install_all();
+    elseif (!DB::tableExists('subscribers')) repair_incomplete_install();   // installation interrompue : réinstallation SANS perte (aucune donnée métier)
+}
 Settings::load();
 require APP . '/routes/public.php';
 require APP . '/routes/shop.php';

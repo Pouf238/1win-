@@ -1,5 +1,12 @@
 <?php
 // Création du schéma et des données initiales (catalogue de DÉMONSTRATION : tarifs à confirmer par l'administrateur).
+/** Une installation interrompue laisse un schéma partiel. On ne réinstalle que s'il n'y a ni client, ni commande, ni devis. */
+function repair_incomplete_install(): void {
+    $data = 0; foreach (['users', 'orders', 'quotes'] as $t) if (DB::tableExists($t)) $data += (int) DB::val("SELECT COUNT(*) FROM $t");
+    if ($data > 0) { error_log('[symoprint] schéma incomplet mais des données existent : réparation manuelle requise'); return; }
+    foreach (['settings', 'ratelimits', 'users', 'addresses', 'password_resets', 'categories', 'products', 'favorites', 'carts', 'files', 'orders', 'order_items', 'order_events', 'quotes', 'quote_items', 'promo_codes', 'delivery_zones', 'banners', 'pages', 'faqs', 'testimonials', 'messages', 'subscribers'] as $t) { try { DB::$pdo->exec("DROP TABLE IF EXISTS $t"); } catch (Throwable $e) { } }
+    install_all();
+}
 function install_all(): void {
     $T = 'created_at DATETIME DEFAULT CURRENT_TIMESTAMP';
     DB::schema([
@@ -16,7 +23,7 @@ function install_all(): void {
         "CREATE TABLE orders (id {ID}, ref VARCHAR(24) NOT NULL UNIQUE, user_id INT DEFAULT 0, email VARCHAR(190), phone VARCHAR(40), name VARCHAR(150), status VARCHAR(20) DEFAULT 'pending_payment', payment_method VARCHAR(30), payment_status VARCHAR(12) DEFAULT 'pending', payment_ref VARCHAR(120), subtotal INT DEFAULT 0, discount INT DEFAULT 0, shipping INT DEFAULT 0, tax INT DEFAULT 0, total INT DEFAULT 0, currency VARCHAR(4) DEFAULT 'XOF', promo_code VARCHAR(40), delivery_method VARCHAR(20), delivery_zone VARCHAR(120), billing TEXT, shipping_addr TEXT, notes TEXT, admin_notes TEXT, access_token VARCHAR(40), $T, updated_at DATETIME NULL){ENGINE}",
         "CREATE TABLE order_items (id {ID}, order_id INT, product_id INT, name VARCHAR(190), config {LONG}, summary TEXT, qty INT, unit_price INT, total INT, delay_label VARCHAR(80), est_date VARCHAR(40), bat_status VARCHAR(12) DEFAULT 'none', bat_comment TEXT){ENGINE}",
         "CREATE TABLE order_events (id {ID}, order_id INT, status VARCHAR(20), note TEXT, user_id INT DEFAULT 0, $T){ENGINE}",
-        "CREATE TABLE quotes (id {ID}, ref VARCHAR(24) NOT NULL UNIQUE, user_id INT DEFAULT 0, name VARCHAR(150), email VARCHAR(190), phone VARCHAR(40), company VARCHAR(150), message TEXT, status VARCHAR(12) DEFAULT 'new', lines {LONG}, margin_pct INT DEFAULT 0, subtotal INT DEFAULT 0, total INT DEFAULT 0, valid_until DATE NULL, admin_notes TEXT, access_token VARCHAR(40), order_id INT DEFAULT 0, $T, updated_at DATETIME NULL){ENGINE}",
+        "CREATE TABLE quotes (id {ID}, ref VARCHAR(24) NOT NULL UNIQUE, user_id INT DEFAULT 0, name VARCHAR(150), email VARCHAR(190), phone VARCHAR(40), company VARCHAR(150), message TEXT, status VARCHAR(12) DEFAULT 'new', qlines {LONG}, margin_pct INT DEFAULT 0, subtotal INT DEFAULT 0, total INT DEFAULT 0, valid_until DATE NULL, admin_notes TEXT, access_token VARCHAR(40), order_id INT DEFAULT 0, $T, updated_at DATETIME NULL){ENGINE}",
         "CREATE TABLE quote_items (id {ID}, quote_id INT, product_id INT, name VARCHAR(190), config {LONG}, summary TEXT, qty INT, est_price INT DEFAULT 0){ENGINE}",
         "CREATE TABLE promo_codes (id {ID}, code VARCHAR(40) NOT NULL UNIQUE, type VARCHAR(10) DEFAULT 'percent', value INT DEFAULT 0, min_order INT DEFAULT 0, starts_at DATE NULL, ends_at DATE NULL, max_uses INT DEFAULT 0, uses INT DEFAULT 0, active TINYINT DEFAULT 1, note VARCHAR(190)){ENGINE}",
         "CREATE TABLE delivery_zones (id {ID}, name VARCHAR(150), areas TEXT, fee INT DEFAULT 0, free_above INT DEFAULT 0, days_min INT DEFAULT 1, days_max INT DEFAULT 3, active TINYINT DEFAULT 1, sort INT DEFAULT 0){ENGINE}",
