@@ -20,10 +20,12 @@ class Files {
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']) ?: 'application/octet-stream';
         if (!in_array($mime, self::MIMES[$ext], true)) { audit('upload_rejected', $ext, ['why' => 'mime ' . $mime], 'warn'); throw new RuntimeException("Le contenu du fichier ne correspond pas à son format (.$ext)."); }
         try { self::inspect($f['tmp_name'], $ext); } catch (RuntimeException $e) { audit('upload_rejected', $ext, ['why' => $e->getMessage()], 'warn'); throw $e; }
+        $w = $h = 0; $warn = '';   // dimensions des images : alerte de faible résolution (information, ne bloque pas l'envoi)
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'tif', 'tiff'], true) && ($gi = @getimagesize($f['tmp_name']))) { $w = (int) $gi[0]; $h = (int) $gi[1]; if ($w * $h > 200000000) throw new RuntimeException('Image aux dimensions excessives : réduisez-la ou exportez-la en PDF.'); if (min($w, $h) < 1000) $warn = "Faible résolution ($w × $h px) : l'impression peut manquer de netteté. Envoyez un fichier plus grand si possible."; }
         $stored = bin2hex(random_bytes(16)) . '.dat'; $dir = self::dir();
         if (!move_uploaded_file($f['tmp_name'], "$dir/$stored")) { if (!@rename($f['tmp_name'], "$dir/$stored")) throw new RuntimeException("Enregistrement impossible."); }
         @chmod("$dir/$stored", 0640);
-        $id = DB::ins('files', ['owner_token' => $ownerToken, 'user_id' => user()['id'] ?? 0, 'kind' => $kind, 'orig_name' => $orig, 'stored_name' => date('Y/m') . '/' . $stored, 'mime' => $mime, 'size' => (int) $f['size'], 'status' => 'received'] + $extra);
+        $id = DB::ins('files', ['owner_token' => $ownerToken, 'user_id' => user()['id'] ?? 0, 'kind' => $kind, 'orig_name' => $orig, 'stored_name' => date('Y/m') . '/' . $stored, 'mime' => $mime, 'size' => (int) $f['size'], 'status' => 'received', 'width' => $w, 'height' => $h, 'warn' => $warn] + $extra);
         return DB::find('files', $id);
     }
     // ---------------------------------------------------------------- inspection du contenu (analyse statique, sans exécuter ni décompresser)

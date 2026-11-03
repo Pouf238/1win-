@@ -200,7 +200,16 @@ function user(): ?array {
     if (is_staff_role($u['role']) && empty($_SESSION['mfa_ok'])) return null;
     return $GLOBALS['_user'] = $u;
 }
-function login_user(array $u): void { session_init($u, true); $GLOBALS['_user'] = null; DB::q('UPDATE users SET last_login=? WHERE id=?', [now(), $u['id']]); Cart::adopt((int) $u['id']); }
+function login_user(array $u): void { session_init($u, true); $GLOBALS['_user'] = null; DB::q('UPDATE users SET last_login=? WHERE id=?', [now(), $u['id']]); Cart::adopt((int) $u['id']); $n = claim_guest_records((int) $u['id']); if ($n) flash('ok', "$n commande(s) ou devis passés avec votre adresse e-mail ont été ajoutés à votre compte."); }
+/** Rattache au compte les commandes, devis et fichiers passés SANS compte avec la même adresse e-mail, uniquement si l'adresse du compte est CONFIRMÉE (preuve que la boîte appartient au titulaire). */
+function claim_guest_records(int $uid): int {
+    $u = DB::row("SELECT id, email, email_verified, role FROM users WHERE id=? AND active=1", [$uid]); if (!$u || $u['role'] !== 'customer' || empty($u['email_verified'])) return 0; $em = strtolower($u['email']); $n = 0;
+    try {
+        $n += DB::q('UPDATE orders SET user_id=? WHERE user_id=0 AND LOWER(email)=?', [$uid, $em])->rowCount(); $n += DB::q('UPDATE quotes SET user_id=? WHERE user_id=0 AND LOWER(email)=?', [$uid, $em])->rowCount();
+        if ($n) { DB::q('UPDATE files SET user_id=? WHERE user_id=0 AND order_id IN (SELECT id FROM orders WHERE user_id=?)', [$uid, $uid]); DB::q('UPDATE files SET user_id=? WHERE user_id=0 AND quote_id IN (SELECT id FROM quotes WHERE user_id=?)', [$uid, $uid]); audit('guest_records_claimed', '', ['count' => $n], 'info', $uid); }
+    } catch (Throwable $e) { error_log('[symoprint] rattachement des commandes invité : ' . $e->getMessage()); }
+    return $n;
+}
 function logout_user(): void { audit('logout', '', [], 'info'); session_kill(); }
 function revoke_sessions(int $uid): void { DB::q('UPDATE users SET session_epoch=session_epoch+1 WHERE id=?', [$uid]); }
 
@@ -227,7 +236,7 @@ function mask_email(string $e): string { [$l, $d] = array_pad(explode('@', $e, 2
 function maintenance(): void {
     if (random_int(1, 150) !== 1) return;
     try {
-        $n = time(); DB::q('DELETE FROM ratelimits WHERE expires<?', [$n]); DB::q('DELETE FROM password_resets WHERE expires_at<?', [date('Y-m-d H:i:s', $n - 7 * 86400)]);
+        $n = time(); if (function_exists('quotes_expire_due')) quotes_expire_due(); try { DB::q('DELETE FROM notifications WHERE created_at<?', [date('Y-m-d H:i:s', $n - 180 * 86400)]); } catch (Throwable $e) { } DB::q('DELETE FROM ratelimits WHERE expires<?', [$n]); DB::q('DELETE FROM password_resets WHERE expires_at<?', [date('Y-m-d H:i:s', $n - 7 * 86400)]);
         DB::q("DELETE FROM carts WHERE user_id=0 AND updated_at<?", [date('Y-m-d H:i:s', $n - 90 * 86400)]);
         foreach (DB::all('SELECT * FROM files WHERE order_id=0 AND quote_id=0 AND created_at<? LIMIT 200', [date('Y-m-d H:i:s', $n - 30 * 86400)]) as $f) { @unlink(Files::path($f)); DB::del('files', (int) $f['id']); }
     } catch (Throwable $e) { error_log('[symoprint] maintenance : ' . $e->getMessage()); }

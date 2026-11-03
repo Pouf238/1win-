@@ -37,6 +37,15 @@ switch ($cmd) {
     case 'tamperaudit': DB::q("UPDATE audit_log SET details='{\"x\":\"tamper\"}' WHERE id=(SELECT MIN(id) FROM audit_log)"); echo "ok\n"; break;
     case 'adduser': mkuser($argv[2], $argv[4] ?? 'Test-Pass-2026-xyz!', ucfirst(strtok($argv[2], '@')), $argv[3]); echo (int) DB::val('SELECT id FROM users WHERE email=?', [$argv[2]]), "\n"; break;
     case 'userexists': echo (int) DB::val('SELECT COUNT(*) FROM users WHERE email=?', [$argv[2]]), "\n"; break;
+    case 'quote': $q = DB::row('SELECT ref,status,user_id,total,order_id,service_type,details,desired_date,valid_until FROM quotes WHERE ref=?', [$argv[2]]); echo json_encode($q ?: new stdClass(), JSON_UNESCAPED_UNICODE), "\n"; break;
+    case 'qid': echo (int) DB::val('SELECT id FROM quotes WHERE ref=?', [$argv[2]]), "\n"; break;
+    case 'oid': echo (int) DB::val('SELECT id FROM orders WHERE ref=?', [$argv[2]]), "\n"; break;
+    case 'expirequotes': echo quotes_expire_due(), "\n"; break;
+    case 'lastnotif': $n = DB::row("SELECT event, to_address, subject, body, status, error FROM notifications WHERE event=? AND channel='email' ORDER BY id DESC LIMIT 1", [$argv[2]]); echo json_encode($n ?: new stdClass(), JSON_UNESCAPED_UNICODE), "\n"; break;
+    case 'notifcount': echo (int) DB::val('SELECT COUNT(*) FROM notifications WHERE ' . $argv[2]), "\n"; break;
+    case 'setcol': $t = preg_replace('/\W/', '', $argv[2]); $c = preg_replace('/\W/', '', $argv[4]); DB::q("UPDATE $t SET $c=? WHERE " . $argv[3], [$argv[5]]); echo "ok\n"; break;
+    case 'getcol': $t = preg_replace('/\W/', '', $argv[2]); $c = preg_replace('/\W/', '', $argv[4]); echo (string) DB::val("SELECT $c FROM $t WHERE " . $argv[3]), "\n"; break;
+    case 'fileinfo': echo json_encode(DB::row('SELECT id, orig_name, width, height, warn, status, order_id FROM files WHERE id=?', [(int) $argv[2]]) ?: new stdClass(), JSON_UNESCAPED_UNICODE), "\n"; break;
     case 'setpage': DB::q('UPDATE pages SET content=? WHERE slug=?', [$argv[3], $argv[2]]); echo "ok\n"; break;
     case 'hashalgo': $h = DB::val('SELECT password_hash FROM users WHERE email=?', [$argv[2]]); echo password_get_info((string) $h)['algoName'], "\n"; break;
     case 'setbcrypt': DB::q('UPDATE users SET password_hash=? WHERE email=?', [password_hash($argv[3], PASSWORD_BCRYPT, ['cost' => 10]), $argv[2]]); echo "ok\n"; break;

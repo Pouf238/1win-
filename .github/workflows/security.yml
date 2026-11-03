@@ -73,6 +73,12 @@ jobs:
           SECURITY_OUT: ${{ runner.temp }}
       - name: "Tests unitaires (SMTP, journal chaîné, TOTP RFC 6238, mots de passe fuités)"
         run: node tests/security/unit.js
+      - name: "Migrations réversibles (up, down, ré-up)"
+        run: php tests/platform/migrations.php
+      - name: "Tests fonctionnels de la plateforme (invités, devis, notifications, fichiers, catalogue)"
+        run: bash tests/platform/run.sh 8100
+        env:
+          SECURITY_OUT: ${{ runner.temp }}
       - name: "Chemin de mise à jour (ancienne base vers nouveau code)"
         run: bash tests/security/upgrade.sh a200885 8096
         env:

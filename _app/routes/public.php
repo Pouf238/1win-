@@ -135,7 +135,7 @@ route('POST', '/contact', function () {
     $n = post('name'); $em = post('email'); $ph = post('phone'); $msg = post('message');
     if ($n === '' || $msg === '' || (!filter_var($em, FILTER_VALIDATE_EMAIL) && $ph === '')) { flash('error', 'Merci de renseigner votre nom, un message et un e-mail ou un téléphone.'); redirect('/contact'); }
     DB::ins('messages', ['name' => mb_substr($n, 0, 150), 'email' => mb_substr($em, 0, 190), 'phone' => mb_substr($ph, 0, 40), 'message' => mb_substr($msg, 0, 3000), 'status' => 'new']);
-    Mail::admin('Nouveau message de ' . $n, '<p><b>' . e($n) . '</b><br>' . e($em) . ' · ' . e($ph) . '</p><p>' . nl2br(e(mb_substr($msg, 0, 3000))) . '</p>');
+    notify_staff('contact_admin', 'Nouveau message de ' . $n, '<p><b>' . e($n) . '</b><br>' . e($em) . ' · ' . e($ph) . '</p><p>' . nl2br(e(mb_substr($msg, 0, 3000))) . '</p>');
     flash('ok', 'Merci ! Votre message a bien été envoyé. Nous vous répondons très vite.'); redirect('/contact');
 });
 route('GET', '/robots.txt', function () {

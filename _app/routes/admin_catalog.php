@@ -33,6 +33,9 @@ route('POST', '/admin/produits/bulk', function () {
     $in = DB::in($ids);
     if ($act === 'confirm') DB::q("UPDATE products SET pricing_status='confirmed' WHERE id IN ($in)", $ids); elseif ($act === 'demo') DB::q("UPDATE products SET pricing_status='demo' WHERE id IN ($in)", $ids); // nosemgrep: php.lang.security.injection.tainted-sql-string.tainted-sql-string ($in = uniquement des « ? » générés par DB::in(), ids castés en entiers)
     elseif ($act === 'on' || $act === 'off') DB::q("UPDATE products SET active=" . ($act === 'on' ? 1 : 0) . " WHERE id IN ($in)", $ids); // nosemgrep: php.lang.security.injection.tainted-sql-string.tainted-sql-string (idem : placeholders)
+    elseif ($act === 'add_text') { $n = 0; foreach ($ids as $id) { $pr = DB::find('products', $id); if (!$pr) continue; $g = jd($pr['groups_json']); foreach ($g as $gr) if (($gr['key'] ?? '') === 'texte') continue 2;
+            $g[] = ['key' => 'texte', 'label' => 'Texte à inscrire', 'type' => 'text', 'required' => false, 'default' => 'c', 'help' => 'Nom, slogan ou texte à imprimer, graver ou broder (facultatif). Votre logo se joint avec vos fichiers.', 'choices' => [['key' => 'c', 'label' => 'Ex. : votre nom ou slogan', 'price' => ['mode' => 'fixed', 'value' => 0]]], 'show_if' => null]; DB::upd('products', $id, ['groups_json' => je($g), 'updated_at' => now()]); $n++; }
+        audit('products_add_text', $n . ' produits', [], 'info'); flash('ok', $n . ' produit(s) : champ « Texte à inscrire » ajouté.'); redirect('/admin/produits'); }
     elseif ($act === 'adjust') {
         $f = (float) str_replace(',', '.', post('factor', '1')); if ($f <= 0 || $f > 5) { flash('error', 'Coefficient invalide (entre 0,01 et 5).'); redirect('/admin/produits'); }
         require_reauth(); audit('price_bulk_adjust', count($ids) . ' produits', ['factor' => $f], 'warn'); alert_mail('Ajustement massif des prix', count($ids) . ' produit(s), coefficient ' . $f);
@@ -71,6 +74,10 @@ route('POST', '/admin/produits/{id}', function ($a) {
         'file_info' => post('file_info'), 'file_required' => post('file_required') ? 1 : 0, 'active' => post('active') ? 1 : 0, 'featured' => post('featured') ? 1 : 0, 'bestseller' => post('bestseller') ? 1 : 0, 'is_new' => post('is_new') ? 1 : 0, 'promo_label' => mb_substr(post('promo_label'), 0, 60),
         'pricing_status' => post('pricing_status') === 'confirmed' ? 'confirmed' : 'demo', 'keywords' => post('keywords'), 'sort' => (int) post('sort'), 'seo_title' => post('seo_title'), 'seo_desc' => post('seo_desc'), 'updated_at' => now()];
     try { if (!empty($_FILES['image']['name'])) $d['image'] = save_product_image($_FILES['image'], $slug); elseif (post('remove_image')) $d['image'] = ''; } catch (RuntimeException $e) { flash('error', $e->getMessage()); }
+    $d['availability'] = in_array(post('availability'), ['available', 'on_request', 'unavailable'], true) ? post('availability') : 'available';
+    $gal = array_values(array_diff(jd($old['gallery'] ?? ''), array_map('strval', (array) ($_POST['gallery_remove'] ?? [])))); $gf = $_FILES['gallery'] ?? null;   // galerie : retraits puis ajouts (8 images maximum)
+    if ($gf && is_array($gf['name'])) for ($i = 0; $i < count($gf['name']) && count($gal) < 8; $i++) { if (($gf['error'][$i] ?? 4) === UPLOAD_ERR_NO_FILE) continue; try { $gal[] = save_product_image(['name' => $gf['name'][$i], 'tmp_name' => $gf['tmp_name'][$i], 'size' => $gf['size'][$i], 'error' => $gf['error'][$i]], $slug); } catch (RuntimeException $e) { flash('error', $gf['name'][$i] . ' : ' . $e->getMessage()); } }
+    $d['gallery'] = je($gal);
     if ($id) DB::upd('products', $id, $d); else $id = DB::ins('products', $d);
     $p = DB::find('products', $id); DB::upd('products', $id, ['price_from' => Pricing::from($p)]); flash('ok', 'Produit enregistré. Prix « à partir de » : ' . money(Pricing::from($p))); audit('product_saved', 'p' . $id, ['new' => !$old]); redirect('/admin/produits/' . $id);
 });

@@ -124,7 +124,7 @@ const ORDER_STATUS = [
     'checking' => ['En vérification', 'info'], 'bat_pending' => ['BAT en attente de validation', 'warn'], 'bat_approved' => ['BAT validé', 'ok'],
     'production' => ['En production', 'info'], 'shipped' => ['Expédié / prêt au retrait', 'info'], 'delivered' => ['Livré', 'ok'], 'cancelled' => ['Annulé', 'bad'],
 ];
-const QUOTE_STATUS = ['new' => ['Nouvelle demande', 'warn'], 'in_progress' => ['En cours de chiffrage', 'info'], 'sent' => ['Devis envoyé', 'info'], 'accepted' => ['Accepté', 'ok'], 'declined' => ['Refusé', 'bad'], 'converted' => ['Transformé en commande', 'ok'], 'expired' => ['Expiré', 'bad']];
+const QUOTE_STATUS = ['new' => ['Nouvelle demande', 'warn'], 'in_progress' => ['En cours de chiffrage', 'info'], 'sent' => ['Devis envoyé', 'info'], 'accepted' => ['Accepté', 'ok'], 'declined' => ['Refusé', 'bad'], 'converted' => ['Transformé en commande', 'ok'], 'done' => ['Terminé', 'ok'], 'expired' => ['Expiré', 'bad']];
 function status_badge(array $map, string $s): string { [$l, $t] = $map[$s] ?? [$s, 'info']; return '<span class="badge b-' . $t . '">' . e($l) . '</span>'; }
 function fdate(?string $d, bool $time = false): string { if (!$d) return '—'; $t = strtotime($d); return $t ? date($time ? 'd/m/Y H:i' : 'd/m/Y', $t) : '—'; }
 function shop(string $k, $d = '') { return Settings::get($k, $d); }

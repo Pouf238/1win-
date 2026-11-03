@@ -1,0 +1,6 @@
+<section class="phead"><div class="wrap"><?= crumbs([['Retrouver ma commande', '']]) ?><h1>Retrouver ma commande ou mon devis</h1><p>Saisissez votre référence et l'adresse e-mail utilisée : nous vous renvoyons votre lien de suivi sécurisé.</p></div></section>
+<div class="wrap section" style="max-width:560px"><div class="panel"><form method="post" action="/suivi"><?= csrf_field() ?><div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>
+<div class="field"><label for="ref">Référence *</label><input id="ref" name="ref" required placeholder="SP-261103-AB12 ou DV-261103-AB12" autocomplete="off" maxlength="40"></div>
+<div class="field"><label for="em">Adresse e-mail de la commande *</label><input id="em" type="email" name="email" required autocomplete="email"></div>
+<button class="btn btn-a btn-lg btn-block" type="submit">Recevoir mon lien de suivi</button></form>
+<p class="muted" style="font-size:14px;margin:14px 0 0">Pour votre sécurité, le lien n'est envoyé <b>qu'à l'adresse enregistrée sur la commande</b>. Vous avez un compte ? <a href="/compte/commandes">Consultez vos commandes</a>. Un souci ? <a href="<?= e(wa_link('Bonjour Symo Print, je ne retrouve pas ma commande.')) ?>">Écrivez-nous sur WhatsApp</a>.</p></div></div>

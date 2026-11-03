@@ -29,14 +29,13 @@ function shipping_for(string $method, int $zoneId, int $amount): array {
     $z = DB::row('SELECT * FROM delivery_zones WHERE id=? AND active=1', [$zoneId]); if (!$z) return ['ok' => false, 'fee' => 0, 'label' => '', 'days' => [1, 3]];
     $fee = ($z['free_above'] > 0 && $amount >= $z['free_above']) ? 0 : (int) $z['fee']; return ['ok' => true, 'fee' => $fee, 'label' => 'Livraison : ' . $z['name'], 'days' => [(int) $z['days_min'], (int) $z['days_max']]];
 }
-function set_order_status(array $o, string $status, string $note = '', bool $notify = true): void {
-    if (!isset(ORDER_STATUS[$status])) return; $u = user();
+/** Change le statut, journalise, prévient le client si le statut est marqué « notifier » ; retourne le résultat de l'envoi (ou null si aucun message n'était prévu). */
+function set_order_status(array $o, string $status, string $note = '', bool $notify = true): ?array {
+    if (!isset(order_status_all()[$status])) return null; $u = user();
     DB::upd('orders', (int) $o['id'], ['status' => $status, 'updated_at' => now()]); DB::ins('order_events', ['order_id' => $o['id'], 'status' => $status, 'note' => $note, 'user_id' => $u['id'] ?? 0]);
-    if ($notify && $o['email'] && in_array($status, ['paid', 'bat_pending', 'production', 'shipped', 'delivered', 'cancelled', 'files_received'], true)) {
-        $body = '<p>Bonjour ' . e($o['name']) . ',</p><p>Le statut de votre commande <b>' . e($o['ref']) . '</b> est maintenant : <b>' . e(ORDER_STATUS[$status][0]) . '</b>.</p>' . ($note ? '<p>' . nl2br(e($note)) . '</p>' : '')
-            . ($status === 'bat_pending' ? '<p>Un bon à tirer (BAT) vous attend : merci de le valider pour lancer la production.</p>' : '') . Mail::button('Suivre ma commande', order_url($o, true));
-        Mail::send($o['email'], 'Commande ' . $o['ref'] . ' : ' . ORDER_STATUS[$status][0], Mail::layout('Mise à jour de votre commande', $body));
-    }
+    if (!$notify || !order_status_notify($status)) return null;
+    $n = $note; if ($status === 'bat_pending') $n = trim($n . "\n\nUn bon à tirer (BAT) vous attend : merci de le valider pour lancer la production.");
+    return notify('order_status', (string) $o['email'], ['name' => $o['name'], 'ref' => $o['ref'], 'status' => order_status_all()[$status][0], 'note' => $n, 'link' => order_url($o, true)], ['order_id' => (int) $o['id'], 'user_id' => (int) $o['user_id']]);
 }
 function items_summary_html(array $items): string {
     $h = '<table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:14px">';
@@ -47,7 +46,7 @@ function order_pdf(array $o): string {
     $items = order_items((int) $o['id']); $ship = jd($o['shipping_addr']); $bill = jd($o['billing']);
     $rows = array_map(fn($it) => [$it['name'], implode(' | ', array_map(fn($x) => $x[0] . ' : ' . $x[1], jd($it['summary']))), $it['qty'], $it['unit_price'], $it['total']], $items);
     $paid = $o['payment_status'] === 'paid'; $incl = (bool) Settings::get('prices_include_tax', 1);
-    return build_pdf(['title' => $paid ? 'FACTURE' : 'COMMANDE', 'ref' => $o['ref'], 'date' => fdate($o['created_at']), 'status' => ORDER_STATUS[$o['status']][0] . ' / paiement : ' . ['pending' => 'en attente', 'declared' => 'déclaré', 'paid' => 'payé', 'refunded' => 'remboursé'][$o['payment_status']],
+    return build_pdf(['title' => $paid ? 'FACTURE' : 'COMMANDE', 'ref' => $o['ref'], 'date' => fdate($o['created_at']), 'status' => order_status_all()[$o['status']][0] . ' / paiement : ' . ['pending' => 'en attente', 'declared' => 'déclaré', 'paid' => 'payé', 'refunded' => 'remboursé'][$o['payment_status']],
         'customer' => ['name' => $o['name'], 'phone' => $o['phone'], 'email' => $o['email'], 'company' => $bill['company'] ?? '', 'address' => trim(($bill['address'] ?? '') . ' ' . ($bill['commune'] ?? '') . ' ' . ($bill['city'] ?? ''))],
         'items' => $rows, 'subtotal' => $o['subtotal'], 'discount' => $o['discount'], 'shipping' => $o['shipping'], 'tax' => $o['tax'], 'tax_included' => $incl, 'total' => $o['total'],
         'notes' => 'Mode de livraison : ' . ($o['delivery_method'] === 'pickup' ? 'retrait à l\'atelier' : $o['delivery_zone']) . "\nPaiement : " . payment_label((string) $o['payment_method']) . ($o['payment_ref'] ? ' (réf. ' . $o['payment_ref'] . ')' : '')]);
@@ -67,6 +66,7 @@ route('GET', '/panier', function () {
 route('POST', '/panier/ajouter', function () {
     rate_limit('cart', 120, 3600);
     $in = body_json(); $p = DB::row('SELECT * FROM products WHERE id=? AND active=1', [(int) ($in['product_id'] ?? 0)]); if (!$p) json_out(['ok' => false, 'error' => 'Produit introuvable.'], 404);
+    $mode = product_sale_mode($p); if ($mode !== 'ok') json_out(['ok' => false, 'error' => $mode === 'quote' ? 'Ce produit est vendu sur devis : utilisez « Générer un devis ».' : 'Ce produit est momentanément indisponible.'], 422);
     if (Cart::count() >= 40) json_out(['ok' => false, 'error' => 'Votre panier est plein (40 articles maximum). Passez commande ou videz-le.'], 422);
     $q = Pricing::quote($p, Pricing::read_cfg($in['cfg'] ?? [])); if (!$q['ok']) json_out(['ok' => false, 'error' => implode(' ', $q['errors'])], 422);
     $tok = Cart::token(); $fids = [];
@@ -107,7 +107,7 @@ route('POST', '/api/livraison', function () {
 });
 route('POST', '/commande', function () {
     $items = Cart::items(); if (!$items) redirect('/panier'); $_SESSION['old'] = $_POST;
-    foreach ($items as $it) if (!$it['quote'] || !$it['quote']['ok']) { flash('error', 'Un article de votre panier n\'est plus valide.'); redirect('/panier'); }
+    foreach ($items as $it) if (!$it['quote'] || !$it['quote']['ok'] || product_sale_mode($it['product']) !== 'ok') { flash('error', 'Un article de votre panier n\'est plus disponible à la vente en ligne : retirez-le ou demandez un devis.'); redirect('/panier'); }
     $u = user(); $name = post('name'); $email = strtolower(post('email')); $phone = post('phone'); $err = [];
     if ($name === '') $err[] = 'Votre nom est requis.'; if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $err[] = 'Une adresse e-mail valide est requise.'; if (strlen(preg_replace('/\D/', '', $phone)) < 8) $err[] = 'Un numéro de téléphone valide est requis (WhatsApp de préférence).';
     $method = post('delivery_method') === 'pickup' ? 'pickup' : 'delivery'; $sub0 = Cart::totals($items); $ship = shipping_for($method, (int) post('zone'), $sub0['subtotal'] - $sub0['discount']);
@@ -135,9 +135,8 @@ route('POST', '/commande', function () {
     DB::ins('order_events', ['order_id' => $oid, 'status' => 'pending_payment', 'note' => 'Commande passée en ligne', 'user_id' => $u['id'] ?? 0]);
     if ($hasFiles) DB::ins('order_events', ['order_id' => $oid, 'status' => 'files_received', 'note' => 'Fichiers reçus avec la commande']);
     Cart::clear(); unset($_SESSION['old']); $o = DB::find('orders', $oid); $oi = order_items($oid);
-    $body = '<p>Bonjour ' . e($name) . ', merci pour votre commande <b>' . e($ref) . '</b>.</p>' . items_summary_html($oi) . '<p style="text-align:right;font-size:16px"><b>Total : ' . money($o['total']) . '</b></p><p><b>Paiement :</b> ' . e($pm['label']) . '<br>' . nl2br(e($pm['instructions'])) . '</p>' . Mail::button('Suivre ma commande et envoyer mes fichiers', order_url($o, true));
-    Mail::send($email, 'Confirmation de votre commande ' . $ref, Mail::layout('Commande bien reçue', $body));
-    Mail::admin('Nouvelle commande ' . $ref . ' : ' . money($o['total']), '<p>' . e($name) . ' · ' . e($phone) . ' · ' . e($email) . '</p>' . items_summary_html($oi) . '<p>Paiement : ' . e($pm['label']) . '</p><p><a href="' . e(abs_url('/admin/commandes/' . $oid)) . '">Ouvrir dans l\'administration</a></p>');
+    notify('order_created', $email, ['name' => $name, 'ref' => $ref, 'items' => items_summary_html($oi), 'total' => money($o['total']), 'payment' => '<b>' . e($pm['label']) . '</b><br>' . nl2br(e($pm['instructions'])), 'link' => order_url($o, true)], ['order_id' => (int) $oid, 'user_id' => (int) ($u['id'] ?? 0)]);
+    notify_staff('order_admin', 'Nouvelle commande ' . $ref . ' : ' . money($o['total']), '<p>' . e($name) . ' · ' . e($phone) . ' · ' . e($email) . '</p>' . items_summary_html($oi) . '<p>Paiement : ' . e($pm['label']) . '</p><p><a href="' . e(abs_url('/admin/commandes/' . $oid)) . '">Ouvrir dans l\'administration</a></p>');
     redirect(order_url($o) . (str_contains(order_url($o), '?') ? '&' : '?') . 'merci=1');
 });
 
@@ -154,7 +153,7 @@ route('POST', '/commande/{ref}/paiement', function ($a) {
     if (!in_array($o['payment_status'], ['pending', 'declared'], true) || $o['status'] === 'cancelled') { flash('info', 'Le paiement de cette commande est déjà traité : aucune déclaration n\'est nécessaire.'); redirect(order_url($o)); }
     if ($ref === '') { flash('error', 'Indiquez la référence de la transaction.'); redirect(order_url($o)); }
     DB::upd('orders', (int) $o['id'], ['payment_status' => 'declared', 'payment_ref' => mb_substr(($op ? $op . ' : ' : '') . $ref, 0, 120), 'updated_at' => now()]); DB::ins('order_events', ['order_id' => $o['id'], 'status' => $o['status'], 'note' => 'Paiement déclaré par le client : ' . $op . ' ' . $ref]); audit('payment_declared', $o['ref'], ['operator' => $op], 'info');
-    Mail::admin('Paiement déclaré : ' . $o['ref'], '<p>Le client déclare avoir payé <b>' . money($o['total']) . '</b> via ' . e($op) . ', référence <b>' . e($ref) . '</b>.</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Vérifier et confirmer</a></p>');
+    notify_staff('payment_declared_admin', 'Paiement déclaré : ' . $o['ref'], '<p>Le client déclare avoir payé <b>' . money($o['total']) . '</b> via ' . e($op) . ', référence <b>' . e($ref) . '</b>.</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Vérifier et confirmer</a></p>');
     flash('ok', 'Merci ! Votre paiement est en cours de vérification par notre équipe.'); redirect(order_url($o));
 });
 route('POST', '/commande/{ref}/fichier', function ($a) {
@@ -163,7 +162,7 @@ route('POST', '/commande/{ref}/fichier', function ($a) {
     $cnt = is_array($list['name']) ? count($list['name']) : 1; if (throttle('upo:' . client_ip(), 40, 3600)) { flash('error', 'Trop de fichiers. Réessayez plus tard.'); redirect(order_url($o)); }
     for ($i = 0; $i < $cnt; $i++) { $f = ['name' => is_array($list['name']) ? $list['name'][$i] : $list['name'], 'tmp_name' => is_array($list['name']) ? $list['tmp_name'][$i] : $list['tmp_name'], 'size' => is_array($list['name']) ? $list['size'][$i] : $list['size'], 'error' => is_array($list['name']) ? $list['error'][$i] : $list['error']]; if ($f['error'] === UPLOAD_ERR_NO_FILE) continue;
         try { Files::save($f, 'order-' . $o['id'], 'client', ['order_id' => $o['id'], 'item_id' => (int) post('item_id'), 'user_id' => $o['user_id']]); $n++; } catch (RuntimeException $e) { flash('error', $f['name'] . ' : ' . $e->getMessage()); } }
-    if ($n) { DB::ins('order_events', ['order_id' => $o['id'], 'status' => 'files_received', 'note' => $n . ' fichier(s) envoyé(s) par le client']); if (in_array($o['status'], ['pending_payment', 'paid'], true)) DB::q('UPDATE orders SET updated_at=? WHERE id=?', [now(), $o['id']]); Mail::admin('Fichiers reçus : ' . $o['ref'], '<p>' . $n . ' fichier(s) ajouté(s) à la commande ' . e($o['ref']) . '.</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Voir</a></p>'); flash('ok', $n . ' fichier(s) envoyé(s). Nous les vérifions très vite.'); }
+    if ($n) { DB::ins('order_events', ['order_id' => $o['id'], 'status' => 'files_received', 'note' => $n . ' fichier(s) envoyé(s) par le client']); if (in_array($o['status'], ['pending_payment', 'paid'], true)) DB::q('UPDATE orders SET updated_at=? WHERE id=?', [now(), $o['id']]); notify_staff('files_admin', 'Fichiers reçus : ' . $o['ref'], '<p>' . $n . ' fichier(s) ajouté(s) à la commande ' . e($o['ref']) . '.</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Voir</a></p>'); flash('ok', $n . ' fichier(s) envoyé(s). Nous les vérifions très vite.'); }
     redirect(order_url($o));
 });
 route('POST', '/commande/{ref}/bat', function ($a) {
@@ -171,12 +170,12 @@ route('POST', '/commande/{ref}/bat', function ($a) {
     $ok = post('action') === 'approve'; DB::upd('order_items', (int) $it['id'], ['bat_status' => $ok ? 'approved' : 'changes', 'bat_comment' => post('comment')]);
     $left = (int) DB::val("SELECT COUNT(*) FROM order_items WHERE order_id=? AND bat_status='pending'", [$o['id']]); DB::ins('order_events', ['order_id' => $o['id'], 'status' => $ok ? 'bat_approved' : 'bat_pending', 'note' => ($ok ? 'BAT validé' : 'Modification demandée') . ' pour « ' . $it['name'] . ' »' . (post('comment') ? ' : ' . post('comment') : '')]);
     if ($ok && !$left) DB::upd('orders', (int) $o['id'], ['status' => 'bat_approved', 'updated_at' => now()]);
-    Mail::admin(($ok ? 'BAT validé' : 'BAT : modification demandée') . ' : ' . $o['ref'], '<p>' . e($it['name']) . ($ok ? ' : le client a validé le BAT.' : ' : le client demande une modification : ' . e(post('comment'))) . '</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Ouvrir</a></p>');
+    notify_staff('bat_admin', ($ok ? 'BAT validé' : 'BAT : modification demandée') . ' : ' . $o['ref'], '<p>' . e($it['name']) . ($ok ? ' : le client a validé le BAT.' : ' : le client demande une modification : ' . e(post('comment'))) . '</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Ouvrir</a></p>');
     flash('ok', $ok ? 'BAT validé : votre commande peut partir en production.' : 'Votre demande de modification a été transmise.'); redirect(order_url($o));
 });
 route('POST', '/commande/{ref}/recommander', function ($a) {
     $o = order_by_ref($a['ref']); if (!$o || !order_access($o)) abort(404); $n = 0;
-    foreach (order_items((int) $o['id']) as $it) { $p = DB::row('SELECT * FROM products WHERE id=? AND active=1', [$it['product_id']]); if ($p) { $q = Pricing::quote($p, jd($it['config'])); if ($q['ok']) { Cart::add((int) $p['id'], $q['cfg'], [], ''); $n++; } } }
+    foreach (order_items((int) $o['id']) as $it) { $p = DB::row('SELECT * FROM products WHERE id=? AND active=1', [$it['product_id']]); if ($p && product_sale_mode($p) === 'ok') { $q = Pricing::quote($p, jd($it['config'])); if ($q['ok']) { Cart::add((int) $p['id'], $q['cfg'], [], ''); $n++; } } }
     flash($n ? 'ok' : 'error', $n ? 'Articles ajoutés au panier aux tarifs actuels.' : 'Ces produits ne sont plus disponibles.'); redirect('/panier');
 });
 route('GET', '/fichier/{id}', function ($a) {
@@ -188,13 +187,14 @@ route('GET', '/fichier/{id}', function ($a) {
 // ================================================================ devis
 route('POST', '/devis/depuis-produit', function () {
     $in = body_json(); $p = DB::row('SELECT * FROM products WHERE id=? AND active=1', [(int) ($in['product_id'] ?? 0)]); if (!$p) json_out(['ok' => false, 'error' => 'Produit introuvable.'], 404);
+    if (product_sale_mode($p) === 'unavailable') json_out(['ok' => false, 'error' => 'Ce produit est momentanément indisponible.'], 422);
     $q = Pricing::quote($p, Pricing::read_cfg($in['cfg'] ?? [])); if (!$q['ok']) json_out(['ok' => false, 'error' => implode(' ', $q['errors'])], 422);
     $_SESSION['quote_items'][] = ['pid' => (int) $p['id'], 'name' => $p['name'], 'cfg' => $q['cfg'], 'summary' => $q['summary'], 'qty' => $q['qty'], 'est' => $q['total'], 'note' => (string) ($in['note'] ?? ''), 'files' => array_map('intval', (array) ($in['files'] ?? []))];
     json_out(['ok' => true, 'url' => '/devis']);
 });
 route('GET', '/devis', function () {
     $items = $_SESSION['quote_items'] ?? []; $u = user(); $prods = DB::all('SELECT id, name FROM products WHERE active=1 ORDER BY name');
-    page('shop/quote', compact('items', 'u', 'prods'), ['title' => 'Demande de devis gratuit', 'desc' => 'Demandez un devis gratuit à Symo Print : décrivez votre projet d\'impression, joignez vos fichiers, recevez une réponse rapide.', 'noindex' => false]);
+    page('shop/quote', compact('items', 'u', 'prods'), ['scripts' => ['js/quote.js'], 'title' => 'Demande de devis gratuit', 'desc' => 'Demandez un devis gratuit à Symo Print : décrivez votre projet d\'impression, joignez vos fichiers, recevez une réponse rapide.', 'noindex' => false]);
 });
 route('POST', '/devis/retirer', function () { $i = (int) post('i'); if (isset($_SESSION['quote_items'][$i])) { unset($_SESSION['quote_items'][$i]); $_SESSION['quote_items'] = array_values($_SESSION['quote_items']); } redirect('/devis'); });
 route('POST', '/devis', function () {
@@ -203,8 +203,8 @@ route('POST', '/devis', function () {
     $name = post('name'); $email = strtolower(post('email')); $phone = post('phone'); $msg = post('message'); $items = $_SESSION['quote_items'] ?? []; $free = post('free_product');
     if ($name === '' || (!filter_var($email, FILTER_VALIDATE_EMAIL) && strlen(preg_replace('/\D/', '', $phone)) < 8)) { flash('error', 'Indiquez votre nom et un e-mail ou un numéro de téléphone valide.'); redirect('/devis'); }
     if (!$items && $msg === '' && $free === '') { flash('error', 'Décrivez votre projet ou choisissez un produit.'); redirect('/devis'); }
-    $u = user(); $ref = new_ref('DV', 'quotes'); $tok = bin2hex(random_bytes(16));
-    $qid = DB::ins('quotes', ['ref' => $ref, 'user_id' => $u['id'] ?? 0, 'name' => $name, 'email' => $email, 'phone' => $phone, 'company' => post('company'), 'message' => $msg, 'status' => 'new', 'qlines' => '[]', 'access_token' => $tok]);
+    $u = user(); $ref = new_ref('DV', 'quotes'); $tok = bin2hex(random_bytes(16)); [$svc, $details] = quote_collect_details();
+    $qid = DB::ins('quotes', ['ref' => $ref, 'user_id' => $u['id'] ?? 0, 'name' => mb_substr($name, 0, 150), 'email' => mb_substr($email, 0, 190), 'phone' => mb_substr($phone, 0, 40), 'company' => mb_substr(post('company'), 0, 150), 'message' => mb_substr($msg, 0, 3000), 'status' => 'new', 'qlines' => '[]', 'access_token' => $tok, 'service_type' => $svc, 'details' => je($details), 'desired_date' => quote_desired_date()]);
     foreach ($items as $it) DB::ins('quote_items', ['quote_id' => $qid, 'product_id' => $it['pid'], 'name' => $it['name'], 'config' => je($it['cfg']), 'summary' => je($it['summary']), 'qty' => $it['qty'], 'est_price' => $it['est']]);
     if ($free !== '') DB::ins('quote_items', ['quote_id' => $qid, 'product_id' => 0, 'name' => mb_substr($free, 0, 190), 'config' => '{}', 'summary' => '[]', 'qty' => max(1, (int) post('free_qty', 1)), 'est_price' => 0]);
     foreach ($items as $it) foreach ($it['files'] as $fid) DB::q('UPDATE files SET quote_id=?, user_id=? WHERE id=? AND owner_token=?', [$qid, $u['id'] ?? 0, $fid, Cart::token()]);
@@ -212,19 +212,31 @@ route('POST', '/devis', function () {
     if ($list && is_array($list['name'])) for ($i = 0; $i < min(count($list['name']), 5); $i++) { if ($list['error'][$i] === UPLOAD_ERR_NO_FILE) continue; try { Files::save(['name' => $list['name'][$i], 'tmp_name' => $list['tmp_name'][$i], 'size' => $list['size'][$i], 'error' => $list['error'][$i]], 'quote-' . $qid, 'client', ['quote_id' => $qid, 'user_id' => $u['id'] ?? 0]); $nf++; } catch (RuntimeException $e) { flash('error', $list['name'][$i] . ' : ' . $e->getMessage()); } }
     unset($_SESSION['quote_items']);
     $link = abs_url('/devis/' . $ref . '?t=' . $tok);
-    if ($email) Mail::send($email, 'Votre demande de devis ' . $ref, Mail::layout('Demande de devis reçue', '<p>Bonjour ' . e($name) . ', nous avons bien reçu votre demande <b>' . e($ref) . '</b>. Un conseiller vous répond rapidement.</p>' . Mail::button('Suivre ma demande', $link)));
-    Mail::admin('Nouvelle demande de devis ' . $ref, '<p>' . e($name) . ' · ' . e($phone) . ' · ' . e($email) . '</p><p>' . nl2br(e($msg)) . '</p><p><a href="' . e(abs_url('/admin/devis/' . $qid)) . '">Ouvrir dans l\'administration</a></p>');
+    if ($email) notify('quote_received', $email, ['name' => $name, 'ref' => $ref, 'link' => $link], ['quote_id' => (int) $qid, 'user_id' => (int) ($u['id'] ?? 0)]);
+    notify_staff('quote_admin', 'Nouvelle demande de devis ' . $ref, '<p>' . e($name) . ' · ' . e($phone) . ' · ' . e($email) . '</p><p>' . nl2br(e($msg)) . '</p>' . ($details ? '<p>' . implode('<br>', array_map(fn($d) => e($d[0]) . ' : <b>' . e($d[1]) . '</b>', $details)) . '</p>' : '') . '<p><a href="' . e(abs_url('/admin/devis/' . $qid)) . '">Ouvrir dans l\'administration</a></p>');
     flash('ok', 'Demande envoyée ! Référence ' . $ref . '. Nous vous répondons très vite.'); redirect('/devis/' . $ref . '?t=' . $tok . '&merci=1');
 });
 function quote_access(array $q): bool { if (is_staff() && can('quotes')) return true; $u = user(); if ($u && (int) $q['user_id'] === (int) $u['id']) return true; return token_access((string) $q['access_token']); }
 route('GET', '/devis/{ref}', function ($a) {
     $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q)) abort(404);
-    page('shop/quote_view', ['q' => $q, 'items' => DB::all('SELECT * FROM quote_items WHERE quote_id=?', [$q['id']]), 'lines' => quote_final_lines($q)], ['title' => 'Devis ' . $q['ref'], 'noindex' => true]);
+    page('shop/quote_view', ['q' => $q, 'items' => DB::all('SELECT * FROM quote_items WHERE quote_id=?', [$q['id']]), 'lines' => quote_final_lines($q), 'thread' => quote_thread((int) $q['id'])], ['title' => 'Devis ' . $q['ref'], 'noindex' => true]);
 });
 route('GET', '/devis/{ref}/pdf', function ($a) { $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q) || !jd($q['qlines'])) abort(404); send_pdf(quote_pdf($q), 'devis-' . $q['ref'] . '.pdf'); });
 route('POST', '/devis/{ref}/reponse', function ($a) {
     $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$a['ref']]); if (!$q || !quote_access($q) || $q['status'] !== 'sent') abort(404); $ok = post('action') === 'accept';
+    if ($q['valid_until'] && $q['valid_until'] < date('Y-m-d')) { DB::q("UPDATE quotes SET status='expired', updated_at=? WHERE id=?", [now(), $q['id']]); flash('error', 'Ce devis a expiré le ' . fdate($q['valid_until']) . '. Contactez-nous pour obtenir un devis à jour.'); redirect('/devis/' . $q['ref'] . '?t=' . $q['access_token']); }
     DB::upd('quotes', (int) $q['id'], ['status' => $ok ? 'accepted' : 'declined', 'updated_at' => now()]);
-    Mail::admin('Devis ' . $q['ref'] . ($ok ? ' ACCEPTÉ' : ' refusé'), '<p>' . e($q['name']) . ' a ' . ($ok ? 'accepté' : 'refusé') . ' le devis ' . e($q['ref']) . ' (' . money($q['total']) . ').</p><p><a href="' . e(abs_url('/admin/devis/' . $q['id'])) . '">Ouvrir</a></p>');
+    notify_staff('quote_response_admin', 'Devis ' . $q['ref'] . ($ok ? ' ACCEPTÉ' : ' refusé'), '<p>' . e($q['name']) . ' a ' . ($ok ? 'accepté' : 'refusé') . ' le devis ' . e($q['ref']) . ' (' . money($q['total']) . ').</p><p><a href="' . e(abs_url('/admin/devis/' . $q['id'])) . '">Ouvrir</a></p>');
     flash('ok', $ok ? 'Merci ! Votre accord est enregistré : notre équipe vous contacte pour lancer la commande.' : 'Votre réponse est enregistrée.'); redirect('/devis/' . $q['ref'] . '?t=' . $q['access_token']);
+});
+
+// ================================================================ retrouver une commande / un devis (invité ou connecté)
+route('GET', '/suivi', fn() => page('shop/track', [], ['title' => 'Retrouver ma commande ou mon devis', 'desc' => 'Retrouvez le suivi de votre commande ou de votre devis Symo Print avec votre référence et votre adresse e-mail.', 'noindex' => true]));
+route('POST', '/suivi', function () {
+    rate_limit('track', 8, 3600); if (!empty($_POST['website'])) redirect('/suivi');
+    $ref = strtoupper(preg_replace('/[^A-Za-z0-9-]/', '', post('ref'))); $em = strtolower(post('email')); $generic = "Si une commande ou un devis correspond à ces informations, un e-mail contenant votre lien de suivi sécurisé vient d'être envoyé à l'adresse enregistrée. Pensez à vérifier vos courriers indésirables. Sans réponse, contactez-nous sur WhatsApp avec votre référence.";
+    if ($ref === '' || !valid_email($em) || throttle('track-pair:' . sha1($ref . '|' . $em), 3, 3600)) { flash('info', $generic); redirect('/suivi'); }
+    if (str_starts_with($ref, 'DV-')) { $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$ref]); if ($q && strtolower((string) $q['email']) === $em) notify('tracking_link', $q['email'], ['name' => $q['name'], 'ref' => $q['ref'], 'link' => abs_url('/devis/' . $q['ref'] . '?t=' . $q['access_token'])], ['quote_id' => (int) $q['id']]); }
+    else { $o = order_by_ref($ref); if ($o && strtolower((string) $o['email']) === $em) notify('tracking_link', $o['email'], ['name' => $o['name'], 'ref' => $o['ref'], 'link' => abs_url('/commande/' . $o['ref'] . '?t=' . $o['access_token'])], ['order_id' => (int) $o['id']]); }
+    audit('track_requested', '', [], 'info', 0); flash('ok', $generic); redirect('/suivi');
 });

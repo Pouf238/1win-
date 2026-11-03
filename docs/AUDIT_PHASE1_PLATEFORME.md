@@ -32,7 +32,7 @@ Ce qui empêche aujourd'hui d'« accueillir de vrais clients et de vraies comman
 | 1B | Client sans compte | 🟡 | Commande et devis sans inscription ✅ ; suivi par **lien contenant un jeton** ✅. **Manque** : page « Retrouver ma commande » (référence + e-mail/téléphone) si le lien est perdu |
 | 3 | Design | 🟡 | Charte cohérente (#1F7A8C / #F4A62A), mobile soigné, aucune animation lourde. **Faiblesse** : seuls **9 produits sur 52 ont une photo** ; les autres affichent une icône vectorielle |
 | 4 | Catalogue | 🟡 | 5 rubriques, 23 catégories, 52 produits ; création/modification/suppression/ordre en administration ✅ ; options, délais, instructions, SEO par produit ✅. **Manque** : galerie multi-photos (le champ existe en base, aucun écran), variantes/disponibilité fines. **Les 52 tarifs sont marqués « démonstration »** |
-| 5 | Personnalisation | 🟡 | Options **dépendantes** (`show_if`), prix recalculé à chaque changement, devis si prix non défini, aucun faux aperçu ✅. **Manque** : champs dédiés « texte à inscrire / emplacement du logo » pour les gadgets (aujourd'hui : zone « instructions » libre) |
+| 5 | Personnalisation | 🟡 | Options **dépendantes** (`show_if`), prix recalculé à chaque changement, devis si prix non défini, aucun faux aperçu ✅. **Correction (constatée en phase 4)** : un type d'option « texte libre » **existait déjà** (non utilisé dans les produits) ; ce qui manquait : l'ajouter facilement aux gadgets (action groupée ajoutée). Le logo se joint avec les fichiers |
 | 6 | Fichiers | 🟡 | Liste blanche, type réel, signature, contenu actif refusé, ZIP inspecté, stockage hors web, accès contrôlé ✅. **Manque** : remplacer/supprimer un fichier après envoi (aucune action dans la page commande) ; contrôle de résolution/dimensions ; AI/EPS/PSD/CDR acceptés mais **non traités ni prévisualisés** |
 | 7 | Panier et commande | 🟡 | Ajout, quantité, délai, modification de configuration, suppression, code promo, prix recalculés côté serveur, anti-double soumission ✅. **Manque** : frais de livraison estimés avant l'étape 2 ; découpage en étapes explicites sur mobile (page unique : coordonnées → livraison → paiement → récapitulatif) |
 | 8 | Devis | 🟡 | Référence, enregistrement, admin (chiffrage, marge, validité, PDF, envoi), acceptation/refus en ligne, **conversion en commande par l'administrateur** ✅. **Manque** : formulaire **adaptatif** (dimensions, format, matière, finitions, **date souhaitée** : aucun de ces champs n'existe) ; réponse/échanges avec le client ; **expiration automatique** (le statut existe, rien ne le déclenche) ; statut « terminé » ; transformation en commande **par le client** |
@@ -68,7 +68,7 @@ Ce qui empêche aujourd'hui d'« accueillir de vrais clients et de vraies comman
 
 ### P2 — Qualité et conversion
 15. Frais de livraison estimés dès le panier ; commande en étapes sur mobile.
-16. Champs « texte à inscrire / logo » pour les gadgets.
+16. ~~Champs « texte à inscrire / logo » pour les gadgets~~ (le type d'option existait ; action groupée ajoutée).
 17. Cache des pages publiques (aujourd'hui `no-store` partout) ; page d'accueil la plus lourde (≈ 370–420 Ko).
 18. Numérotation des factures conforme (séquentielle, sans trou) et TVA à confirmer.
 19. Page CGU, information sur les cookies (cookies techniques uniquement aujourd'hui), à faire valider.
@@ -153,3 +153,8 @@ Ordre conseillé : **A → B → C → D → E → F** (indépendants de tout co
 
 ## 10. Limites de cet audit
 Je n'ai pas pu lire la base de production (aucune connexion à l'administration) : les chiffres de catalogue et de réglages viennent d'une installation neuve du même code et sont **à confirmer** en production. Les frais et disponibilités de paiement ne sont pas vérifiés auprès des prestataires. Aucun avis juridique n'est donné ici.
+
+
+## Erratum (phase 4)
+- Le type d'option « texte libre » existait déjà dans le moteur de prix et l'administration (voir §3, ligne 5).
+- Les fichiers envoyés avec « Toute la commande » (sans article précis) **n'étaient affichés nulle part côté client** : défaut trouvé par un test et corrigé (bloc « Fichiers de la commande »).

@@ -61,8 +61,9 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
   <div id="b-errors"><?php foreach ($q['errors'] as $er): ?><div class="alert a-warn"><?= e($er) ?></div><?php endforeach; ?></div>
   <div id="b-lines"><?php foreach ($q['lines'] as $l): ?><div class="bl"><span><?= e($l[0]) ?></span><span><?= $l[1] < 0 ? '−' : '' ?><?= money(abs($l[1])) ?></span></div><?php endforeach; ?></div>
   <p class="muted" style="font-size:13.5px;margin:12px 0"><?= ic('clock') ?> Prêt entre <b id="b-from"><?= e($q['delay']['from']) ?></b> et <b id="b-to"><?= e($q['delay']['to']) ?></b> <span style="opacity:.8">(+ livraison)</span></p>
-  <button class="btn btn-a btn-lg btn-block" type="button" id="b-add"><?= ic('cart') ?> Ajouter au panier</button>
-  <button class="btn btn-o btn-block mt" type="button" id="b-quote" style="margin-top:10px"><?= ic('file') ?> Générer un devis</button>
+  <?php $sale = product_sale_mode($p); if ($sale !== 'ok'): ?><div class="hl-box" style="margin-bottom:10px"><?= $sale === 'quote' ? '<b>Produit vendu sur devis.</b> Configurez-le, puis générez votre devis : notre équipe confirme le prix avant toute commande.' : '<b>Momentanément indisponible.</b> Contactez-nous pour connaître les disponibilités.' ?></div><?php endif; ?>
+  <button class="btn btn-a btn-lg btn-block" type="button" id="b-add" <?= $sale === 'ok' ? '' : 'hidden disabled' ?>><?= ic('cart') ?> Ajouter au panier</button>
+  <button class="btn btn-o btn-block mt" type="button" id="b-quote" style="margin-top:10px" <?= $sale === 'unavailable' ? 'hidden disabled' : '' ?>><?= ic('file') ?> Générer un devis</button>
   <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-g btn-sm" type="button" data-fav="<?= (int) $p['id'] ?>" style="flex:1"><?= ic('heart') ?> Favori</button><a class="btn btn-g btn-sm" style="flex:1" href="<?= e(wa_link('Bonjour Symo Print, je souhaite commander : ' . $p['name'])) ?>" rel="noopener"><?= ic('wa') ?> WhatsApp</a></div>
   <p class="muted" style="font-size:12.5px;margin:12px 0 0">Livraison calculée à la commande selon votre zone. Paiement Mobile Money, virement ou à la livraison.</p>
 </div></aside>

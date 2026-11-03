@@ -122,7 +122,7 @@ route('GET', '/admin/commandes/{id}', function ($a) {
 route('POST', '/admin/commandes/{id}/statut', function ($a) {
     require_perm('orders'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); $s = post('status');
     if ($s === 'paid' && !can('payments')) { audit('perm_denied', 'payments', ['order' => $o['ref']], 'warn'); abort(403, "Votre rôle ne permet pas de confirmer un paiement."); }
-    if (isset(ORDER_STATUS[$s])) { set_order_status($o, $s, mb_substr(post('note'), 0, 500), (bool) post('notify')); audit('order_status', $o['ref'], ['from' => $o['status'], 'to' => $s]); flash('ok', 'Statut mis à jour : ' . ORDER_STATUS[$s][0]); } redirect('/admin/commandes/' . $o['id']);
+    if (isset(order_status_map()[$s]) || $s === $o['status']) { $r = set_order_status($o, $s, mb_substr(post('note'), 0, 500), (bool) post('notify')); audit('order_status', $o['ref'], ['from' => $o['status'], 'to' => $s]); flash($r && $r['status'] !== 'sent' ? 'error' : 'ok', 'Statut mis à jour : ' . order_status_all()[$s][0] . '.' . ($r ? ' ' . notify_say($r) : (post('notify') ? ' Aucun e-mail prévu pour ce statut (modifiable dans Statuts de commande).' : ''))); } redirect('/admin/commandes/' . $o['id']);
 });
 route('POST', '/admin/commandes/{id}/paiement', function ($a) {
     $me = require_perm('payments'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); $act = post('action'); $ref = mb_substr(post('payment_ref'), 0, 120);
@@ -171,8 +171,8 @@ route('POST', '/admin/devis/{id}/envoyer', function ($a) {
     if (!jd($q['qlines']) || $q['total'] <= 0) { flash('error', 'Ajoutez au moins une ligne chiffrée avant d\'envoyer.'); redirect('/admin/devis/' . $q['id']); }
     if (!$q['valid_until']) DB::upd('quotes', (int) $q['id'], ['valid_until' => date('Y-m-d', strtotime('+15 days'))]);
     DB::upd('quotes', (int) $q['id'], ['status' => 'sent', 'updated_at' => now()]); $q = DB::find('quotes', (int) $q['id']); $sent = false;
-    if ($q['email']) $sent = Mail::send($q['email'], 'Votre devis ' . $q['ref'] . ' : ' . money($q['total']), Mail::layout('Votre devis est prêt', '<p>Bonjour ' . e($q['name']) . ', veuillez trouver ci-joint votre devis <b>' . e($q['ref']) . '</b> d\'un montant de <b>' . money($q['total']) . '</b>.</p>' . Mail::button('Consulter et accepter le devis', abs_url('/devis/' . $q['ref'] . '?t=' . $q['access_token']))), [['name' => 'devis-' . $q['ref'] . '.pdf', 'data' => quote_pdf($q), 'type' => 'application/pdf']]);
-    flash('ok', $sent ? 'Devis envoyé par e-mail avec le PDF.' : 'Statut « envoyé ». Pas d\'e-mail envoyé : transmettez le lien au client (WhatsApp) : ' . abs_url('/devis/' . $q['ref'] . '?t=' . $q['access_token'])); redirect('/admin/devis/' . $q['id']);
+    $lnk = abs_url('/devis/' . $q['ref'] . '?t=' . $q['access_token']); $r = $q['email'] ? notify('quote_sent', $q['email'], ['name' => $q['name'], 'ref' => $q['ref'], 'total' => money($q['total']), 'valid_until' => fdate($q['valid_until']), 'link' => $lnk], ['quote_id' => (int) $q['id'], 'user_id' => (int) $q['user_id']], [['name' => 'devis-' . $q['ref'] . '.pdf', 'data' => quote_pdf($q), 'type' => 'application/pdf']]) : ['ok' => false, 'status' => 'skipped', 'error' => 'aucune adresse e-mail'];
+    flash($r['ok'] ? 'ok' : 'error', 'Devis passé au statut « envoyé ». ' . notify_say($r) . ($r['ok'] ? ' Le PDF est joint.' : ' Transmettez le lien au client (WhatsApp) : ' . $lnk)); redirect('/admin/devis/' . $q['id']);
 });
 route('POST', '/admin/devis/{id}/statut', function ($a) { require_perm('quotes'); if (isset(QUOTE_STATUS[post('status')])) DB::upd('quotes', (int) $a['id'], ['status' => post('status'), 'updated_at' => now()]); redirect('/admin/devis/' . (int) $a['id']); });
 route('POST', '/admin/devis/{id}/convertir', function ($a) {
@@ -182,8 +182,8 @@ route('POST', '/admin/devis/{id}/convertir', function ($a) {
     foreach ($lines as $l) DB::ins('order_items', ['order_id' => $oid, 'product_id' => 0, 'name' => $l['desc'], 'config' => '{}', 'summary' => je($l['sub'] ? [['Détails', $l['sub']]] : []), 'qty' => $l['qty'], 'unit_price' => $l['unit'], 'total' => $l['qty'] * $l['unit'], 'delay_label' => 'Selon devis', 'est_date' => '']);
     DB::q('UPDATE files SET order_id=?, user_id=? WHERE quote_id=?', [$oid, $q['user_id'], $q['id']]); DB::ins('order_events', ['order_id' => $oid, 'status' => 'pending_payment', 'note' => 'Commande créée depuis le devis ' . $q['ref'], 'user_id' => user()['id']]);
     DB::upd('quotes', (int) $q['id'], ['status' => 'converted', 'order_id' => $oid, 'updated_at' => now()]); $o = DB::find('orders', $oid);
-    if ($q['email']) Mail::send($q['email'], 'Votre commande ' . $ref, Mail::layout('Commande créée à partir de votre devis', '<p>Bonjour ' . e($q['name']) . ', votre commande <b>' . e($ref) . '</b> (' . money($total) . ') est enregistrée.</p>' . Mail::button('Suivre ma commande et payer', order_url($o, true))));
-    flash('ok', 'Commande ' . $ref . ' créée.'); redirect('/admin/commandes/' . $oid);
+    $rn = $q['email'] ? notify('order_from_quote', $q['email'], ['name' => $q['name'], 'ref' => $ref, 'total' => money($total), 'link' => order_url($o, true)], ['order_id' => (int) $oid, 'quote_id' => (int) $q['id'], 'user_id' => (int) $q['user_id']]) : null;
+    flash($rn && $rn['status'] !== 'sent' ? 'error' : 'ok', 'Commande ' . $ref . ' créée.' . ($rn ? ' ' . notify_say($rn) : ' Aucune adresse e-mail pour prévenir le client.')); redirect('/admin/commandes/' . $oid);
 });
 
 // ---------------------------------------------------------------- clients, messages
@@ -200,7 +200,7 @@ route('POST', '/admin/messages/{id}/traite', function ($a) { require_perm('quote
 route('GET', '/admin/reglages', function () { require_perm('settings'); adm('settings', ['methods' => payment_methods(false)], 'Réglages', 'settings'); });
 route('POST', '/admin/reglages', function () {
     require_perm('settings'); require_reauth();
-    foreach (['shop_name', 'tagline', 'phone', 'phone2', 'whatsapp', 'email', 'notify_email', 'address', 'city', 'country', 'hours', 'facebook', 'instagram', 'tiktok', 'rccm', 'ncc', 'legal_form', 'manager_name', 'currency_symbol', 'tax_label', 'pickup_label', 'momo_wave', 'momo_orange', 'momo_mtn', 'momo_moov', 'bank_details', 'invoice_footer', 'upload_ext'] as $k) if (isset($_POST[$k])) Settings::set($k, post($k));
+    foreach (['shop_name', 'tagline', 'phone', 'phone2', 'whatsapp', 'email', 'notify_email', 'address', 'city', 'country', 'hours', 'facebook', 'instagram', 'tiktok', 'rccm', 'ncc', 'legal_form', 'manager_name', 'currency_symbol', 'demo_prices_mode', 'tax_label', 'pickup_label', 'momo_wave', 'momo_orange', 'momo_mtn', 'momo_moov', 'bank_details', 'invoice_footer', 'upload_ext'] as $k) if (isset($_POST[$k])) Settings::set($k, $k === 'demo_prices_mode' && !in_array(post($k), ['allow', 'quote_only'], true) ? 'allow' : post($k));
     foreach (['rounding' => 5, 'min_order' => 0, 'upload_max_mb' => 50] as $k => $d) Settings::set($k, max(0, (int) post($k, $d)) ?: $d);
     Settings::set('tax_rate', (string) max(0, (float) str_replace(',', '.', post('tax_rate', '18')))); Settings::set('eur_xof_rate', (string) max(1, (float) str_replace(',', '.', post('eur_xof_rate', '655.957'))));
     foreach (['tax_enabled', 'prices_include_tax', 'pickup_enabled'] as $k) Settings::set($k, post($k) ? '1' : '0');

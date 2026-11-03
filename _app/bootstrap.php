@@ -10,7 +10,7 @@ if (is_file(APP . '/config.local.php')) { $CFG = array_replace($CFG, (array) req
 if (($__x = getenv('SYMO_CONFIG')) && is_file($__x)) { $CFG = array_replace($CFG, (array) require $__x); }
 ini_set('log_errors', '1'); ini_set('error_log', APP . '/storage/logs/php.log');
 ini_set('display_errors', $CFG['debug'] ? '1' : '0'); error_reporting(E_ALL); ini_set('expose_php', '0');
-foreach (['core', 'security', 'db', 'pricing', 'cart', 'files', 'mail', 'art', 'pdf', 'ui'] as $f) require APP . "/lib/$f.php";
+foreach (['core', 'security', 'db', 'pricing', 'cart', 'files', 'mail', 'notify', 'art', 'pdf', 'ui'] as $f) require APP . "/lib/$f.php";
 send_security_headers();
 
 // ---- session : stockage privé hors web, mode strict, cookie HttpOnly + SameSite, durée de vie maîtrisée
@@ -38,3 +38,6 @@ require APP . '/routes/shop.php';
 require APP . '/routes/account.php';
 require APP . '/routes/admin.php';
 require APP . '/routes/admin_catalog.php';
+require APP . '/routes/admin_platform.php';
+require APP . '/routes/quotes_ext.php';
+require APP . '/routes/files_ext.php';
