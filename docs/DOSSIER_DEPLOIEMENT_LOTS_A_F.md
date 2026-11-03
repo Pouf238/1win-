@@ -1,7 +1,15 @@
 # Dossier de décision — déploiement des lots A à F (3 novembre 2026)
 
-> **Statut : NON DÉPLOYÉ.** Rien de ce dossier n'est en production. Le déploiement attend votre autorisation écrite après examen de ce document.
+> **Statut : Lot A seul déployé (migration v4) ; lots B à F NON déployés.** Le déploiement des lots B à F attend votre autorisation distincte.
 > Rien n'est supprimé, aucune commande n'est touchée, le fonctionnement des paiements n'est pas modifié (voir §5).
+
+## État au 3 novembre 2026, 13:56 UTC — Lot A DÉPLOYÉ en production (migration v4 seule)
+**Autorisé par vous** (sauvegarde + migration du Lot A uniquement). **Les lots B à F ne sont PAS déployés** : le code applicatif en ligne est inchangé (commit 5559a24). Seuls ont été déposés : `_app/sql/migrate.php` et `tools/migrate.php` (Lot A) et trois outils de diagnostic en lecture seule (`_app/cli/mailtest.php`, `inventory.php`, `verify.php`).
+- **Sauvegardes** (13:36 UTC) : base `db-2026-11-03_133601.sql.gz` (24 tables, 308 lignes) et fichiers clients `uploads-2026-11-03_133601.zip` (**2 fichiers**, dont celui de 05:27) ; intégrité vérifiée (gzip et CRC de l'archive) ; **copie indépendante** `backups/independantes/pre-lotA/` (hors rotation, lecture seule, empreintes SHA-256 identiques aux originaux) ; configuration `cfg-avant-smtp-20261103.bak` incluse. Aucune sauvegarde existante supprimée.
+- **Répétition sur le même moteur que la production** : MariaDB **11.8.9**, mode SQL non strict (différent de mon moteur de test habituel) — migration, pages, données : identiques ; retour arrière `down 3` testé.
+- **Migration réelle** (13:53 UTC, déclenchée par la première requête web) : version du schéma **v3 → v4**, **30 tables** (24 + 6). Contrôle par empreintes : **les 24 tables existantes, leurs lignes et leurs colonnes d'origine sont identiques** (52 produits, 2 comptes, 1 devis, 2 fichiers clients vérifiés octet par octet) ; seules différences : colonnes ajoutées (vides) et 6 tables nouvelles (vides). Les paniers de visiteurs (138 → 158) ne sont pas des données métier.
+- **Pages publiques** : 17 pages + 7 contrôles d'accès (fichiers sensibles toujours en 403) **identiques avant/après** (code HTTP, taille, empreinte du contenu, en-têtes de sécurité).
+- **Retour arrière si nécessaire** (non utilisé) : remettre l'ancien `_app/sql/migrate.php` (le site reste fonctionnel sur la base v4, testé), puis éventuellement `down 3` ; sauvegardes disponibles.
 
 ## 0. Ce qui a été vérifié aujourd'hui (nouveau)
 | Vérification | Résultat |

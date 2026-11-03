@@ -32,3 +32,4 @@
 ## 5. Outils (ligne de commande, serveur seulement, jamais accessibles par le web)
 - `php _app/cli/mailtest.php --to=adresse [--alias=adresse] [--once=marqueur]` — envoie un test par le chemin réel et, avec `--alias`, teste l'expéditeur alias. N'affiche jamais le mot de passe. `--once` empêche toute répétition.
 - `php _app/cli/inventory.php` — inventaire **en lecture seule** (comptes par catégorie, aucune donnée personnelle).
+- `php _app/cli/verify.php --baseline | --compare` — empreinte et comparaison des données existantes (lecture seule, aucune donnée dans le fichier d'empreinte), utilisé pour prouver qu'une migration ne modifie rien.
