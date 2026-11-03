@@ -38,4 +38,4 @@ if ((isset($opts['uploads']) || date('w') === '0') && is_dir($up) && class_exist
 // rétention
 foreach (['db-*.sql.gz' => $keep, 'uploads-*.zip' => max(3, intdiv($keep, 3))] as $pat => $k) { $l = glob("$dir/$pat") ?: []; rsort($l); foreach (array_slice($l, $k) as $old) @unlink($old); }
 file_put_contents("$dir/.dernier-succes", date('c') . "\n"); @chmod("$dir/.dernier-succes", 0600);
-audit('backup', basename($out), ['tables' => count($tables), 'rows' => $rowsTotal], 'info', 0);
+if (function_exists('audit')) audit('backup', basename($out), ['tables' => count($tables), 'rows' => $rowsTotal], 'info', 0);
