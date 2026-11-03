@@ -1,6 +1,7 @@
 # Symo Print — plateforme d'impression en ligne
-Options -Indexes
+Options -Indexes -MultiViews
 DirectoryIndex index.php
+ServerSignature Off
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
@@ -10,23 +11,27 @@ RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)
 RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [L,R=301]
 RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
 RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
-# Code, docs, outils et dépôt : jamais accessibles
-RewriteRule ^(_app|tools|docs|\.git|\.hostinger)(/|$) - [F,L]
-RewriteRule ^(composer\.(json|lock)|CNAME|.*\.(sql|md|log|sh|py))$ - [F,L]
+# Code, docs, outils, tests, dépôt et fichiers cachés : jamais accessibles
+RewriteRule ^(_app|tools|docs|tests|\.git|\.github|\.hostinger)(/|$) - [F,L]
+RewriteRule (^|/)\.(?!well-known/) - [F,L]
+RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|CNAME|.*\.(sql|md|log|sh|py|env|bak|sqlite|inc|ini|yml|yaml|lock))$ - [F,L]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 RewriteRule ^ index.php [L,QSA]
 </IfModule>
 
+# Les pages dynamiques (PHP) envoient elles-mêmes leurs en-têtes de sécurité (CSP, HSTS…).
+# Ici : uniquement les fichiers statiques servis directement par le serveur web.
 <IfModule mod_headers.c>
+<FilesMatch "\.(woff2?|css|js|svg|png|webp|jpe?g|gif|ico|txt|xml)$">
 Header always set X-Content-Type-Options "nosniff"
-Header always set X-Frame-Options "SAMEORIGIN"
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
-Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 Header always set Strict-Transport-Security "max-age=31536000"
-Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'"
-<FilesMatch "\.(woff2|css|js|svg|png|webp|jpg|ico)$">
+Header always set Cross-Origin-Resource-Policy "same-origin"
 Header set Cache-Control "public, max-age=2592000"
+</FilesMatch>
+<FilesMatch "\.svg$">
+Header always set Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox"
 </FilesMatch>
 </IfModule>
 

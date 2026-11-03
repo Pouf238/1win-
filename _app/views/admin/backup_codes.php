@@ -1,0 +1,3 @@
+<div class="top"><h1>Codes de secours</h1></div>
+<div class="alert a-warn"><b>Notez ces codes maintenant : ils ne seront plus jamais affichés.</b> Chaque code ne sert qu'une fois et remplace le code de l'application si vous perdez votre téléphone. Rangez-les hors de l'ordinateur (coffre de mots de passe, papier sous clé).</div>
+<div class="card"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;font-family:monospace;font-size:18px"><?php foreach ($codes as $c): ?><div style="background:#f5f5f5;padding:10px;border-radius:8px;text-align:center"><?= e($c) ?></div><?php endforeach; ?></div><p style="margin-top:18px"><a class="btn btn-p" href="/admin">J'ai enregistré mes codes</a></p></div>

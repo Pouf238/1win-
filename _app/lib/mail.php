@@ -15,14 +15,14 @@ class Mail {
         if (!filter_var($to, FILTER_VALIDATE_EMAIL)) return false;
         $text = trim(html_entity_decode(strip_tags(preg_replace('#<(br|/p|/h1|/tr|/li)>#i', "\n", $html)), ENT_QUOTES, 'UTF-8'));
         $b1 = 'sp_' . bin2hex(random_bytes(8)); $b2 = 'sp_' . bin2hex(random_bytes(8)); $enc = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-        $h = ['From: ' . shop('shop_name', 'Symo Print') . ' <' . self::from() . '>', 'MIME-Version: 1.0']; if (shop('email')) $h[] = 'Reply-To: ' . shop('email');
+        $clean = fn($v) => trim(preg_replace('/[\r\n<>",;]+/', ' ', (string) $v)); $h = ['From: ' . $clean(shop('shop_name', 'Symo Print')) . ' <' . self::from() . '>', 'MIME-Version: 1.0']; if (filter_var(shop('email'), FILTER_VALIDATE_EMAIL)) $h[] = 'Reply-To: ' . shop('email');   // en-têtes assainis : pas d'injection de lignes
         $alt = "--$b2\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($text)) . "--$b2\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($html)) . "--$b2--";
         if ($attach) {
             $h[] = "Content-Type: multipart/mixed; boundary=\"$b1\""; $body = "--$b1\r\nContent-Type: multipart/alternative; boundary=\"$b2\"\r\n\r\n$alt\r\n";
             foreach ($attach as $a) $body .= "--$b1\r\nContent-Type: " . ($a['type'] ?? 'application/octet-stream') . "; name=\"{$a['name']}\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"{$a['name']}\"\r\n\r\n" . chunk_split(base64_encode($a['data']));
             $body .= "--$b1--";
         } else { $h[] = "Content-Type: multipart/alternative; boundary=\"$b2\""; $body = $alt; }
-        if (cfg('mail_driver') === 'log') { file_put_contents(APP . '/storage/logs/mail.log', "=== " . now() . " → $to\nSujet : $subject\n$text\n[pièces jointes : " . count($attach) . "]\n\n", FILE_APPEND); return true; }
+        if (cfg('mail_driver') === 'log') { preg_match_all('/href="([^"]+)"/', $html, $lk); file_put_contents(APP . '/storage/logs/mail.log', "=== " . now() . " → $to\nSujet : $subject\n$text\nLiens : " . implode(' ', array_map('htmlspecialchars_decode', $lk[1])) . "\n[pièces jointes : " . count($attach) . "]\n\n", FILE_APPEND); return true; }   // pilote de développement/test : n'est jamais actif en production
         $ok = @mail($to, $enc, $body, implode("\r\n", $h), '-f' . self::from()); if (!$ok) error_log("[symoprint] échec mail() vers $to"); return $ok;
     }
     /** Notification interne (équipe). */

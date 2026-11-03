@@ -80,6 +80,7 @@ route('GET', '/p/{slug}', function ($a) {
 
 // ---------------- API : prix (calcul serveur), fichiers, favoris
 route('POST', '/api/prix', function () {
+    rate_limit('prix-ip', 900, 60); rate_limit('prix', 150, 60, substr(sha1(session_id()), 0, 10));
     $in = body_json(); $p = DB::row('SELECT * FROM products WHERE id=? AND active=1', [(int) ($in['product_id'] ?? 0)]); if (!$p) json_out(['ok' => false, 'error' => 'Produit introuvable'], 404);
     $cfg = Pricing::read_cfg($in); $q = Pricing::quote($p, $cfg);
     $out = ['ok' => true, 'valid' => $q['ok'], 'errors' => $q['errors'], 'qty' => $q['qty'], 'total' => $q['total'], 'unit' => $q['unit_price'], 'lines' => array_map(fn($l) => ['label' => $l[0], 'amount' => $l[1], 'fmt' => money($l[1])], $q['lines']),
@@ -90,13 +91,15 @@ route('POST', '/api/prix', function () {
 
 route('POST', '/api/upload', function () {
     if (throttle('up:' . client_ip(), 60, 3600)) json_out(['ok' => false, 'error' => 'Trop de fichiers envoyés. Réessayez plus tard.'], 429);
-    $f = $_FILES['file'] ?? null; if (!$f) json_out(['ok' => false, 'error' => 'Aucun fichier reçu.'], 400);
-    try { $r = Files::save($f, Cart::token()); } catch (RuntimeException $e) { json_out(['ok' => false, 'error' => $e->getMessage()], 422); }
+    $f = $_FILES['file'] ?? null; if (!$f || !is_array($f) || is_array($f['name'] ?? null)) json_out(['ok' => false, 'error' => 'Aucun fichier reçu.'], 400);
+    $tok = Cart::token(); $pend = DB::row("SELECT COUNT(*) AS n, COALESCE(SUM(size),0) AS b FROM files WHERE owner_token=? AND order_id=0 AND quote_id=0", [$tok]);   // quota de fichiers en attente par panier
+    if ((int) $pend['n'] >= 40 || (int) $pend['b'] >= 300 * 1048576) json_out(['ok' => false, 'error' => 'Limite de fichiers en attente atteinte. Passez commande ou supprimez des fichiers.'], 429);
+    try { $r = Files::save($f, $tok); } catch (RuntimeException $e) { json_out(['ok' => false, 'error' => $e->getMessage()], 422); }
     json_out(['ok' => true, 'file' => ['id' => (int) $r['id'], 'name' => $r['orig_name'], 'size' => Files::human((int) $r['size'])]]);
 });
 route('POST', '/api/upload/supprimer', function () {
     $id = (int) (body_json()['id'] ?? $_POST['id'] ?? 0); $f = DB::find('files', $id);
-    if ($f && $f['owner_token'] === Cart::token() && !$f['order_id']) { @unlink(Files::path($f)); DB::del('files', $id); }
+    if ($f && hash_equals((string) $f['owner_token'], Cart::token()) && !$f['order_id'] && !$f['quote_id']) { @unlink(Files::path($f)); DB::del('files', $id); }
     json_out(['ok' => true]);
 });
 route('POST', '/api/favori', function () {
@@ -107,7 +110,7 @@ route('POST', '/api/favori', function () {
     json_out(['ok' => true, 'on' => !$has]);
 });
 route('POST', '/newsletter', function () {
-    $m = strtolower(post('email')); if (!empty($_POST['website']) || !filter_var($m, FILTER_VALIDATE_EMAIL)) { wants_json() ? json_out(['ok' => false, 'error' => 'Adresse e-mail invalide.']) : (flash('error', 'Adresse e-mail invalide.') ?? redirect($_SERVER['HTTP_REFERER'] ?? '/')); }
+    rate_limit('nl', 20, 3600); $m = strtolower(post('email')); if (!empty($_POST['website']) || !filter_var($m, FILTER_VALIDATE_EMAIL)) { wants_json() ? json_out(['ok' => false, 'error' => 'Adresse e-mail invalide.']) : (flash('error', 'Adresse e-mail invalide.') ?? redirect(back_path('/'))); }
     if (!DB::val('SELECT COUNT(*) FROM subscribers WHERE email=?', [$m])) DB::ins('subscribers', ['email' => $m]);
     if (wants_json()) json_out(['ok' => true]); flash('ok', 'Merci ! Vous êtes inscrit(e) à notre newsletter.'); redirect('/');
 });

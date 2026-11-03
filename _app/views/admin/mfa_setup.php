@@ -1,0 +1,9 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Activer la double authentification</title><link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>"></head>
+<body style="background:var(--p0)"><div class="wrap" style="max-width:520px;padding:40px 0"><div class="panel"><h1 style="font-size:22px">Activer la vérification en deux étapes</h1>
+<p>L'accès à l'administration exige un second facteur. Installez une application d'authentification (Google Authenticator, Microsoft Authenticator, Authy, 2FAS…), puis ajoutez ce compte :</p>
+<?php foreach (flashes() as [$t, $m]): ?><div class="alert a-<?= e($t) ?>"><?= e($m) ?></div><?php endforeach; ?>
+<ol style="padding-left:20px;line-height:1.7"><li>Dans l'application, choisissez « Saisir une clé de configuration » (ou « Entrée manuelle »).</li><li>Compte : <b>Symo Print</b> · Type : <b>basé sur l'heure</b> · Clé :</li></ol>
+<p style="font-family:monospace;font-size:20px;letter-spacing:2px;background:#f5f5f5;padding:12px;border-radius:8px;word-break:break-all;user-select:all"><?= e(trim(chunk_split($secret, 4, ' '))) ?></p>
+<p class="muted" style="font-size:13px">Sur téléphone, ce lien ouvre directement l'application : <a href="<?= e($uri) ?>">ajouter à mon application</a>. Ne partagez jamais cette clé.</p>
+<form method="post" action="/admin/mfa/activer"><?= csrf_field() ?><div class="field"><label for="c">Code à 6 chiffres affiché par l'application</label><input id="c" name="code" inputmode="numeric" autocomplete="one-time-code" required maxlength="8" placeholder="123456"></div><button class="btn btn-a btn-block btn-lg" type="submit">Activer et continuer</button></form>
+<form method="post" action="/admin/deconnexion" style="margin-top:14px"><?= csrf_field() ?><button class="btn btn-sm" type="submit">Annuler</button></form></div></div></body></html>

@@ -10,7 +10,7 @@ function mod_label(array $c): string {
 $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 'max' => (int) $qc['max'], 'step' => (int) $qc['step'], 'files' => Files::allowed(), 'maxmb' => (int) Settings::get('upload_max_mb', 50), 'name' => $p['name'], 'tax' => (bool) Settings::get('tax_enabled', 0)];
 ?>
 <div class="wrap"><?= crumbs($crumbs) ?>
-<script type="application/json" id="pcfg"><?= json_encode($jsCfg, JSON_UNESCAPED_UNICODE) ?></script>
+<script type="application/json" id="pcfg"><?= jsafe($jsCfg) ?></script>
 <div class="pp" data-product="<?= (int) $p['id'] ?>">
 <div class="main-col">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><?php if ($p['promo_label']): ?><span class="tag"><?= e($p['promo_label']) ?></span><?php endif; ?><?php if ($p['is_new']): ?><span class="tag t-p">Nouveau</span><?php endif; ?><?php if ($p['bestseller']): ?><span class="tag t-n">Best-seller</span><?php endif; ?></div>
@@ -51,7 +51,7 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
 
   <div class="tabs" role="tablist"><button type="button" class="on" data-tab="t1">Description</button><button type="button" data-tab="t2">Exigences des fichiers</button><button type="button" data-tab="t3">Livraison et délais</button></div>
   <div class="tabp on" id="t1"><div class="prose"><?= $p['description'] ? $p['description'] : '<p>' . e($p['short_desc']) . '</p>' ?><p>Ce produit est fabriqué sur mesure dans notre atelier d'Abobo (Abidjan), après validation de votre fichier. Besoin d'aide pour choisir ? <a href="<?= e(wa_link('Bonjour, je souhaite des conseils pour : ' . $p['name'])) ?>">Écrivez-nous sur WhatsApp</a>.</p></div></div>
-  <div class="tabp" id="t2"><div class="prose"><?= $p['file_info'] ?><p>Consultez notre <a href="/guide-fichiers">guide des fichiers d'impression</a>. Ajoutez l'option « Vérification des fichiers » pour qu'un expert contrôle votre fichier.</p></div></div>
+  <div class="tabp" id="t2"><div class="prose"><?= html_clean($p['file_info']) ?><p>Consultez notre <a href="/guide-fichiers">guide des fichiers d'impression</a>. Ajoutez l'option « Vérification des fichiers » pour qu'un expert contrôle votre fichier.</p></div></div>
   <div class="tabp" id="t3"><div class="prose"><p>Le délai de fabrication est indiqué ci-dessus. La livraison à Abidjan prend en général 1 à 3 jours ouvrés selon la commune ; vers l'intérieur du pays, comptez 3 à 6 jours. Le retrait à l'atelier est gratuit. Détails : <a href="/livraison">politique de livraison</a>.</p></div></div>
 </div>
 

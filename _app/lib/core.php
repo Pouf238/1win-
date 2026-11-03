@@ -12,7 +12,6 @@ function json_out($data, int $code = 200): void { http_response_code($code); hea
 function jd($s, $d = []) { if (is_array($s)) return $s; $r = json_decode((string) $s, true); return is_array($r) ? $r : $d; }
 function je($a): string { return json_encode($a, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); }
 function now(): string { return date('Y-m-d H:i:s'); }
-function client_ip(): string { return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'; }
 function slugify(string $s): string {
     $s = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s) ?: $s; $s = strtolower(preg_replace('/[^A-Za-z0-9]+/', '-', $s));
     return trim($s, '-') ?: 'x';
@@ -56,6 +55,7 @@ function csrf_field(): string { return '<input type="hidden" name="_csrf" value=
 function csrf_check(): void {
     $t = $_POST['_csrf'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
     if (!is_string($t) || !hash_equals(csrf_token(), $t)) {
+        audit('csrf_denied', parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '', [], 'warn');
         if (wants_json()) json_out(['ok' => false, 'error' => 'Session expirée. Rechargez la page.'], 419);
         abort(419, 'Session expirée. Rechargez la page et réessayez.');
     }
@@ -83,7 +83,7 @@ function dispatch(): void {
         if (!preg_match($re, $path, $mm)) continue;
         $seen = true; if ($rm !== $m) continue;
         $params = array_filter($mm, 'is_string', ARRAY_FILTER_USE_KEY);
-        if ($m === 'POST') csrf_check();
+        if ($m === 'POST') { origin_check(); csrf_check(); }
         try { $fn($params); } catch (Throwable $ex) { fail($ex); }
         return;
     }
@@ -98,7 +98,7 @@ function fail(Throwable $ex): void {
 function abort(int $code, string $msg = ''): void {
     http_response_code($code);
     if (wants_json()) json_out(['ok' => false, 'error' => $msg ?: 'Introuvable'], $code);
-    $titles = [404 => 'Page introuvable', 419 => 'Session expirée', 403 => 'Accès refusé', 405 => 'Méthode non autorisée', 500 => 'Erreur'];
+    $titles = [404 => 'Page introuvable', 419 => 'Session expirée', 403 => 'Accès refusé', 405 => 'Méthode non autorisée', 429 => 'Trop de requêtes', 500 => 'Erreur'];
     page('shop/error', ['code' => $code, 'msg' => $msg ?: ($code === 404 ? "La page que vous cherchez n'existe plus ou a changé d'adresse." : '')], ['title' => $titles[$code] ?? 'Erreur', 'noindex' => true]);
     exit;
 }
@@ -107,26 +107,12 @@ function abort(int $code, string $msg = ''): void {
 function view(string $tpl, array $d = []): string { extract($d, EXTR_SKIP); ob_start(); include APP . '/views/' . $tpl . '.php'; return ob_get_clean(); }
 function page(string $tpl, array $d = [], array $meta = []): void {
     $content = view($tpl, $d); $meta += ['title' => '', 'desc' => '', 'noindex' => false, 'jsonld' => [], 'canon' => null, 'og_image' => null, 'cat' => null];
-    if (in_array($tpl, ['admin/login', 'admin/install'], true)) { echo $content; exit; }   // pages autonomes (sans gabarit)
+    if (in_array($tpl, ['admin/login', 'admin/install', 'admin/mfa', 'admin/mfa_setup'], true)) { echo $content; exit; }   // pages autonomes (sans gabarit)
     echo view(str_starts_with($tpl, 'admin/') ? 'layout/admin' : 'layout/main', ['content' => $content, 'meta' => $meta]); exit;
 }
 function title_case_cat(): array { return DB::all('SELECT * FROM categories WHERE active=1 ORDER BY sort, name'); }
 
-// ---------------------------------------------------------------- authentification
-const PERMS = ['admin' => ['*'], 'manager' => ['catalog', 'orders', 'quotes', 'customers', 'content', 'marketing', 'delivery', 'reports'], 'staff' => ['orders', 'quotes']];
-function user(): ?array {
-    static $u = false; if ($u !== false && ($u === null || ($u['id'] ?? 0) == ($_SESSION['uid'] ?? 0))) return $u;
-    $u = !empty($_SESSION['uid']) ? (DB::row('SELECT * FROM users WHERE id=? AND active=1', [$_SESSION['uid']]) ?: null) : null; return $u;
-}
-function login_user(array $u): void { session_regenerate_id(true); $_SESSION['uid'] = (int) $u['id']; DB::q('UPDATE users SET last_login=? WHERE id=?', [now(), $u['id']]); Cart::adopt((int) $u['id']); }
-function logout_user(): void { unset($_SESSION['uid']); session_regenerate_id(true); }
-function can(string $perm): bool { $u = user(); if (!$u) return false; $p = PERMS[$u['role']] ?? []; return in_array('*', $p, true) || in_array($perm, $p, true); }
-function is_staff(): bool { $u = user(); return $u && isset(PERMS[$u['role']]); }
-function require_login(): array { $u = user(); if (!$u) { $_SESSION['after_login'] = $_SERVER['REQUEST_URI'] ?? '/compte'; flash('info', 'Connectez-vous pour continuer.'); redirect('/compte/connexion'); } return $u; }
-function require_perm(string $perm): array {
-    $u = user(); if (!$u || !is_staff()) { $_SESSION['after_login'] = $_SERVER['REQUEST_URI'] ?? '/admin'; redirect('/admin/connexion'); }
-    if (!can($perm)) abort(403, "Votre rôle ne permet pas d'accéder à cette section."); return $u;
-}
+// L'authentification, les sessions, les rôles et les permissions sont dans lib/security.php.
 
 // ---------------------------------------------------------------- libellés
 const ORDER_STATUS = [

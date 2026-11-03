@@ -38,4 +38,4 @@
   <button class="btn btn-a btn-lg btn-block" style="margin-top:14px" type="submit">Confirmer la commande</button>
   <p class="muted" style="font-size:13px;margin:12px 0 0">En confirmant, vous recevez un numéro de suivi. Vous pourrez envoyer vos fichiers et valider votre BAT depuis la page de suivi.</p></aside>
 </form>
-<script type="application/json" id="zones"><?= json_encode(array_column($zones, 'areas', 'id'), JSON_UNESCAPED_UNICODE) ?></script>
+<script type="application/json" id="zones"><?= jsafe(array_column($zones, 'areas', 'id')) ?></script>

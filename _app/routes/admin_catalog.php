@@ -34,7 +34,8 @@ route('POST', '/admin/produits/bulk', function () {
     if ($act === 'confirm') DB::q("UPDATE products SET pricing_status='confirmed' WHERE id IN ($in)", $ids); elseif ($act === 'demo') DB::q("UPDATE products SET pricing_status='demo' WHERE id IN ($in)", $ids);
     elseif ($act === 'on' || $act === 'off') DB::q("UPDATE products SET active=" . ($act === 'on' ? 1 : 0) . " WHERE id IN ($in)", $ids);
     elseif ($act === 'adjust') {
-        $f = (float) str_replace(',', '.', post('factor', '1')); if ($f <= 0 || $f > 2000) { flash('error', 'Coefficient invalide.'); redirect('/admin/produits'); }
+        $f = (float) str_replace(',', '.', post('factor', '1')); if ($f <= 0 || $f > 5) { flash('error', 'Coefficient invalide (entre 0,01 et 5).'); redirect('/admin/produits'); }
+        require_reauth(); audit('price_bulk_adjust', count($ids) . ' produits', ['factor' => $f], 'warn');
         foreach ($ids as $id) { $pr = DB::find('products', $id); if (!$pr) continue; $c = jd($pr['pricing']);
             if (isset($c['tiers'])) $c['tiers'] = array_map(fn($t) => [$t[0], round_price($t[1] * $f)], $c['tiers']); if (isset($c['price_m2'])) $c['price_m2'] = round_price($c['price_m2'] * $f); if (isset($c['min_total'])) $c['min_total'] = round_price($c['min_total'] * $f);
             $g = jd($pr['groups_json']); foreach ($g as &$gr) foreach ($gr['choices'] as &$ch) if (in_array($ch['price']['mode'] ?? '', ['fixed', 'per_unit', 'per_m2'], true)) $ch['price']['value'] = round_price(($ch['price']['value'] ?? 0) * $f); unset($gr, $ch);
@@ -71,9 +72,9 @@ route('POST', '/admin/produits/{id}', function ($a) {
         'pricing_status' => post('pricing_status') === 'confirmed' ? 'confirmed' : 'demo', 'keywords' => post('keywords'), 'sort' => (int) post('sort'), 'seo_title' => post('seo_title'), 'seo_desc' => post('seo_desc'), 'updated_at' => now()];
     try { if (!empty($_FILES['image']['name'])) $d['image'] = save_product_image($_FILES['image'], $slug); elseif (post('remove_image')) $d['image'] = ''; } catch (RuntimeException $e) { flash('error', $e->getMessage()); }
     if ($id) DB::upd('products', $id, $d); else $id = DB::ins('products', $d);
-    $p = DB::find('products', $id); DB::upd('products', $id, ['price_from' => Pricing::from($p)]); flash('ok', 'Produit enregistré. Prix « à partir de » : ' . money(Pricing::from($p))); redirect('/admin/produits/' . $id);
+    $p = DB::find('products', $id); DB::upd('products', $id, ['price_from' => Pricing::from($p)]); flash('ok', 'Produit enregistré. Prix « à partir de » : ' . money(Pricing::from($p))); audit('product_saved', 'p' . $id, ['new' => !$old]); redirect('/admin/produits/' . $id);
 });
-route('POST', '/admin/produits/{id}/supprimer', function ($a) { require_perm('catalog'); $n = (int) DB::val('SELECT COUNT(*) FROM order_items WHERE product_id=?', [(int) $a['id']]); if ($n) { DB::q('UPDATE products SET active=0 WHERE id=?', [(int) $a['id']]); flash('info', 'Ce produit figure dans des commandes : il a été masqué plutôt que supprimé.'); } else { DB::del('products', (int) $a['id']); flash('ok', 'Produit supprimé.'); } redirect('/admin/produits'); });
+route('POST', '/admin/produits/{id}/supprimer', function ($a) { require_perm('catalog'); audit('product_delete', 'p' . (int) $a['id'], [], 'warn'); $n = (int) DB::val('SELECT COUNT(*) FROM order_items WHERE product_id=?', [(int) $a['id']]); if ($n) { DB::q('UPDATE products SET active=0 WHERE id=?', [(int) $a['id']]); flash('info', 'Ce produit figure dans des commandes : il a été masqué plutôt que supprimé.'); } else { DB::del('products', (int) $a['id']); flash('ok', 'Produit supprimé.'); } redirect('/admin/produits'); });
 route('POST', '/admin/produits/{id}/dupliquer', function ($a) { require_perm('catalog'); $p = DB::find('products', (int) $a['id']); if (!$p) abort(404); unset($p['id']); $p['name'] .= ' (copie)'; $p['slug'] = unique_slug('products', $p['slug'] . '-copie'); $p['active'] = 0; $p['views'] = 0; $p['created_at'] = now(); $id = DB::ins('products', $p); flash('ok', 'Produit dupliqué (masqué).'); redirect('/admin/produits/' . $id); });
 
 // ================================================================ CRUD générique (contenu simple)
@@ -126,6 +127,6 @@ foreach (array_keys(entities()) as $path) {
 // ================================================================ newsletter
 route('GET', '/admin/newsletter', function () { require_perm('marketing'); adm('newsletter', ['rows' => DB::all('SELECT * FROM subscribers ORDER BY id DESC')], 'Newsletter', 'newsletter'); });
 route('GET', '/admin/newsletter/export', function () {
-    require_perm('marketing'); header('Content-Type: text/csv; charset=utf-8'); header('Content-Disposition: attachment; filename="abonnes-newsletter.csv"'); echo "\xEF\xBB\xBFemail;date\n"; foreach (DB::all('SELECT email, created_at FROM subscribers ORDER BY id') as $r) echo $r['email'] . ';' . $r['created_at'] . "\n"; exit;
+    require_perm('marketing'); require_reauth(); audit('export_newsletter', '', [], 'warn'); header('Content-Type: text/csv; charset=utf-8'); header('Content-Disposition: attachment; filename="abonnes-newsletter.csv"'); echo "\xEF\xBB\xBFemail;date\n"; foreach (DB::all('SELECT email, created_at FROM subscribers ORDER BY id') as $r) echo csv_cell($r['email']) . ';' . csv_cell($r['created_at']) . "\n"; exit;
 });
 route('POST', '/admin/newsletter/{id}/supprimer', function ($a) { require_perm('marketing'); DB::del('subscribers', (int) $a['id']); redirect('/admin/newsletter'); });

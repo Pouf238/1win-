@@ -21,7 +21,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <link rel="preload" href="<?= e(asset('fonts/montserrat-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="<?= e(asset('fonts/inter-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
-<?php foreach ($meta['jsonld'] as $j): ?><script type="application/ld+json"><?= json_encode($j, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<?php foreach ($meta['jsonld'] as $j): ?><script type="application/ld+json"><?= jsafe($j) ?></script>
 <?php endforeach; ?>
 </head>
 <body class="<?= e($meta['body'] ?? '') ?>" data-csrf="<?= e(csrf_token()) ?>">

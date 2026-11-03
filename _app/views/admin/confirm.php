@@ -1,0 +1,3 @@
+<div class="top"><h1>Confirmer votre identité</h1></div>
+<div class="card" style="max-width:480px"><p>Cette opération est sensible. Saisissez de nouveau votre mot de passe pour continuer (valable 10 minutes).</p>
+<form method="post" action="/admin/confirmer"><?= csrf_field() ?><input type="hidden" name="next" value="<?= e($next) ?>"><div class="field"><label for="pw">Mot de passe</label><input id="pw" type="password" name="password" required autofocus autocomplete="current-password"></div><button class="btn btn-p" type="submit">Confirmer</button> <a class="btn" href="<?= e($next) ?>">Annuler</a></form></div>

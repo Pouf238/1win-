@@ -43,7 +43,7 @@
   // onglets
   $$('[data-tab]').forEach(function (b) { b.addEventListener('click', function () { $$('[data-tab]').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tabp').forEach(function (p) { p.classList.toggle('on', p.id === b.getAttribute('data-tab')); }); }); });
   // galerie
-  $$('.thumbs button').forEach(function (b) { b.addEventListener('click', function () { var m = $('#gmain'); m.innerHTML = '<img src="' + b.getAttribute('data-img') + '" alt="">'; $$('.thumbs button').forEach(function (x) { x.classList.toggle('on', x === b); }); }); });
+  $$('.thumbs button').forEach(function (b) { b.addEventListener('click', function () { var m = $('#gmain'); var im = d.createElement('img'); im.src = b.getAttribute('data-img'); im.alt = ''; m.textContent = ''; m.appendChild(im); $$('.thumbs button').forEach(function (x) { x.classList.toggle('on', x === b); }); }); });
   // confirmation avant suppression
   d.addEventListener('submit', function (e) { var m = e.target.getAttribute('data-confirm'); if (m && !confirm(m)) e.preventDefault(); });
   // compteur panier

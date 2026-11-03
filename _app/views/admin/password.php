@@ -1,0 +1,3 @@
+<div class="top"><h1>Changer mon mot de passe</h1></div>
+<div class="card" style="max-width:520px"><p class="muted">Au moins 12 caractères, avec majuscules, minuscules, chiffres et symboles (ou une phrase de passe de 16 caractères ou plus). Vos autres sessions seront fermées.</p>
+<form method="post" action="/admin/mot-de-passe"><?= csrf_field() ?><div class="field"><label for="cp">Mot de passe actuel</label><input id="cp" type="password" name="current_password" required autocomplete="current-password"></div><div class="field"><label for="np">Nouveau mot de passe</label><input id="np" type="password" name="new_password" required minlength="12" autocomplete="new-password"></div><button class="btn btn-p" type="submit">Enregistrer</button></form></div>

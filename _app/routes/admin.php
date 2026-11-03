@@ -13,39 +13,97 @@ function fld(string $type, string $name, string $label, $val = '', array $o = []
     return '<div class="field">' . $lab . $in . $hlp . '</div>';
 }
 
+// ---------------------------------------------------------------- authentification de l'équipe : mot de passe + TOTP obligatoire
+function pending_user(): ?array { $id = (int) ($_SESSION['pending_uid'] ?? 0); return $id ? (DB::row('SELECT * FROM users WHERE id=? AND active=1', [$id]) ?: null) : null; }
+function mfa_complete(array $u, string $how): never {
+    $next = safe_next(); session_init($u, true); DB::q('UPDATE users SET last_login=? WHERE id=?', [now(), $u['id']]);
+    audit('login_ok', mask_email($u['email']), ['mfa' => $how], 'info', (int) $u['id']); redirect(str_starts_with($next, '/admin') ? $next : '/admin');
+}
 route('GET', '/admin/connexion', function () { if (is_staff()) redirect('/admin'); page('admin/login', [], ['title' => 'Administration', 'noindex' => true]); });
 route('POST', '/admin/connexion', function () {
-    $em = strtolower(post('email')); $tk = 'alogin:' . client_ip() . ':' . $em; if (throttle($tk, 6, 900, true)) { flash('error', 'Trop de tentatives. Réessayez dans 15 minutes.'); redirect('/admin/connexion'); }
-    $u = DB::row('SELECT * FROM users WHERE email=? AND active=1', [$em]);
-    if (!$u || !isset(PERMS[$u['role']]) || !password_verify(post('password'), $u['password_hash'])) { throttle($tk, 6, 900); flash('error', 'Identifiants incorrects ou accès non autorisé.'); redirect('/admin/connexion'); }
-    login_user($u); $n = safe_next(); redirect(str_starts_with($n, '/admin') ? $n : '/admin');
+    $r = auth_attempt(post('email'), (string) ($_POST['password'] ?? ''));
+    if ($r['ok'] && empty($r['staff'])) { logout_user(); $r = ['ok' => false, 'error' => 'E-mail ou mot de passe incorrect, ou compte non confirmé.']; }   // un compte client ne peut pas entrer ici
+    if (!$r['ok']) { flash('error', $r['error']); redirect('/admin/connexion'); }
+    redirect($r['next']);
 });
-// Création du premier administrateur (uniquement tant qu'aucun admin n'existe, protégé par un jeton d'installation)
-route('GET', '/admin/installation', function () { if (DB::val("SELECT COUNT(*) FROM users WHERE role='admin'")) redirect('/admin/connexion'); page('admin/install', [], ['title' => 'Installation', 'noindex' => true]); });
+route('GET', '/admin/mfa', function () {
+    $u = pending_user(); if (!$u) redirect('/admin/connexion'); if (!$u['mfa_enabled']) redirect('/admin/mfa/activer');
+    page('admin/mfa', ['email' => mask_email($u['email'])], ['title' => 'Vérification en deux étapes', 'noindex' => true]);
+});
+route('POST', '/admin/mfa', function () {
+    $u = pending_user(); if (!$u) redirect('/admin/connexion'); if (!$u['mfa_enabled']) redirect('/admin/mfa/activer');
+    $k = 'mfa:' . $u['id']; $code = trim((string) ($_POST['code'] ?? ''));
+    if (throttle($k, 5, 900, true)) { audit('mfa_blocked', mask_email($u['email']), [], 'warn', (int) $u['id']); $_SESSION = ['flash' => [['error', 'Trop de codes erronés. Compte verrouillé 15 minutes.']]]; session_regenerate_id(true); redirect('/admin/connexion'); }
+    $ok = preg_match('/^\d{6}$/', preg_replace('/\s+/', '', $code)) ? totp_check($u, $code) : backup_consume($u, $code);
+    if (!$ok) { $locked = throttle($k, 5, 900); audit('mfa_fail', mask_email($u['email']), [], 'warn', (int) $u['id']); if ($locked) security_alert('Verrouillage MFA sur un compte de l\'équipe', mask_email($u['email'])); flash('error', 'Code incorrect ou expiré.'); redirect('/admin/mfa'); }
+    DB::q('DELETE FROM ratelimits WHERE k=?', [substr(sha1($k), 0, 40)]);
+    mfa_complete($u, preg_match('/^\d{6}$/', preg_replace('/\s+/', '', $code)) ? 'totp' : 'backup');
+});
+route('GET', '/admin/mfa/activer', function () {
+    $u = pending_user(); if (!$u) redirect('/admin/connexion'); if ($u['mfa_enabled']) redirect('/admin/mfa');
+    if (empty($_SESSION['mfa_setup'])) $_SESSION['mfa_setup'] = mfa_new_secret(); $sec = $_SESSION['mfa_setup'];
+    page('admin/mfa_setup', ['secret' => $sec, 'uri' => 'otpauth://totp/' . rawurlencode('Symo Print:' . $u['email']) . '?secret=' . $sec . '&issuer=' . rawurlencode('Symo Print') . '&algorithm=SHA1&digits=6&period=30'], ['title' => 'Activer la vérification en deux étapes', 'noindex' => true]);
+});
+route('POST', '/admin/mfa/activer', function () {
+    $u = pending_user(); if (!$u) redirect('/admin/connexion'); if ($u['mfa_enabled'] || empty($_SESSION['mfa_setup'])) redirect('/admin/mfa');
+    $k = 'mfa-enrol:' . $u['id']; if (throttle($k, 8, 900, true)) { flash('error', 'Trop d\'essais. Réessayez dans 15 minutes.'); redirect('/admin/mfa/activer'); }
+    $code = preg_replace('/\s+/', '', (string) ($_POST['code'] ?? '')); $sec = $_SESSION['mfa_setup']; $good = false; $now = intdiv(time(), 30);
+    if (preg_match('/^\d{6}$/', $code)) for ($d = -1; $d <= 1; $d++) if (hash_equals(totp_at($sec, $now + $d), $code)) { $good = true; $used = $now + $d; }
+    if (!$good) { throttle($k, 8, 900); flash('error', 'Code incorrect. Vérifiez l\'heure de votre téléphone et réessayez.'); redirect('/admin/mfa/activer'); }
+    $backup = mfa_enable_for((int) $u['id'], $sec); DB::q('UPDATE users SET mfa_used=? WHERE id=?', [je([$used]), $u['id']]); unset($_SESSION['mfa_setup']);
+    audit('mfa_enrolled', mask_email($u['email']), [], 'warn', (int) $u['id']); security_alert('Double authentification activée', mask_email($u['email']));
+    $u = DB::find('users', (int) $u['id']); session_init($u, true); $_SESSION['backup_codes'] = $backup; DB::q('UPDATE users SET last_login=? WHERE id=?', [now(), $u['id']]);
+    audit('login_ok', mask_email($u['email']), ['mfa' => 'enrol'], 'info', (int) $u['id']); redirect('/admin/mfa/codes');
+});
+route('GET', '/admin/mfa/codes', function () {
+    $u = require_perm('dashboard'); $codes = $_SESSION['backup_codes'] ?? []; unset($_SESSION['backup_codes']); if (!$codes) redirect('/admin');
+    adm('backup_codes', ['codes' => $codes], 'Codes de secours', '');
+});
+route('GET', '/admin/confirmer', function () { require_perm('dashboard'); adm('confirm', ['next' => safe_path(get('next'), '/admin')], 'Confirmer votre identité', ''); });
+route('POST', '/admin/confirmer', function () {
+    $u = require_perm('dashboard'); $k = 'reauth:' . $u['id']; $next = safe_path(post('next'), '/admin');
+    if (throttle($k, 5, 900, true)) { flash('error', 'Trop d\'essais. Réessayez dans 15 minutes.'); redirect('/admin/confirmer?next=' . rawurlencode($next)); }
+    if (!pw_verify($u, (string) ($_POST['password'] ?? ''))) { throttle($k, 5, 900); audit('reauth_fail', '', [], 'warn'); flash('error', 'Mot de passe incorrect.'); redirect('/admin/confirmer?next=' . rawurlencode($next)); }
+    $_SESSION['reauth_at'] = time(); audit('reauth', '', [], 'info'); redirect($next);
+});
+route('GET', '/admin/mot-de-passe', function () { require_perm('dashboard'); adm('password', [], 'Changer mon mot de passe', ''); });
+route('POST', '/admin/mot-de-passe', function () {
+    $u = require_perm('dashboard'); rate_limit('pwchg', 10, 900, (string) $u['id']); $np = (string) ($_POST['new_password'] ?? '');
+    if (!pw_verify($u, (string) ($_POST['current_password'] ?? ''))) { audit('password_change_fail', '', [], 'warn'); flash('error', 'Mot de passe actuel incorrect.'); redirect('/admin/mot-de-passe'); }
+    if ($m = pw_policy($np, $u['email'], true)) { flash('error', $m); redirect('/admin/mot-de-passe'); }
+    if (pw_verify($u, $np)) { flash('error', 'Choisissez un mot de passe différent de l\'actuel.'); redirect('/admin/mot-de-passe'); }
+    DB::upd('users', (int) $u['id'], ['password_hash' => pw_hash($np), 'must_change_pw' => 0, 'pw_changed_at' => now()]); revoke_sessions((int) $u['id']); $_SESSION['ep'] = (int) $u['session_epoch'] + 1; session_regenerate_id(true); $GLOBALS['_user'] = null;
+    audit('password_change', '', [], 'warn'); flash('ok', 'Mot de passe modifié. Vos autres sessions ont été fermées.'); redirect('/admin');
+});
+// Création du premier super administrateur (uniquement tant qu'aucun n'existe, protégé par un jeton d'installation, limité en débit)
+route('GET', '/admin/installation', function () { if (DB::val("SELECT COUNT(*) FROM users WHERE role='superadmin'")) redirect('/admin/connexion'); page('admin/install', [], ['title' => 'Installation', 'noindex' => true]); });
 route('POST', '/admin/installation', function () {
-    if (DB::val("SELECT COUNT(*) FROM users WHERE role='admin'")) redirect('/admin/connexion');
-    $tok = cfg('install_token'); if ($tok === '' || !hash_equals((string) $tok, post('token'))) { flash('error', 'Jeton d\'installation incorrect.'); redirect('/admin/installation'); }
-    $em = strtolower(post('email')); if (!filter_var($em, FILTER_VALIDATE_EMAIL) || strlen(post('password')) < 10) { flash('error', 'E-mail valide et mot de passe de 10 caractères minimum requis.'); redirect('/admin/installation'); }
-    $id = DB::ins('users', ['email' => $em, 'password_hash' => password_hash(post('password'), PASSWORD_DEFAULT), 'name' => post('name') ?: 'Administrateur', 'role' => 'admin']); login_user(DB::find('users', $id)); flash('ok', 'Compte administrateur créé. Complétez les réglages de la boutique.'); redirect('/admin/reglages');
+    if (DB::val("SELECT COUNT(*) FROM users WHERE role='superadmin'")) redirect('/admin/connexion'); rate_limit('install', 5, 900);
+    $tok = cfg('install_token'); if ($tok === '' || !hash_equals((string) $tok, post('token'))) { audit('install_denied', '', [], 'warn', 0); flash('error', 'Jeton d\'installation incorrect.'); redirect('/admin/installation'); }
+    $em = strtolower(post('email')); $pw = (string) ($_POST['password'] ?? ''); $m = !valid_email($em) ? 'E-mail invalide.' : pw_policy($pw, $em, true); if ($m) { flash('error', $m); redirect('/admin/installation'); }
+    $id = DB::ins('users', ['email' => $em, 'password_hash' => pw_hash($pw), 'name' => mb_substr(post('name') ?: 'Administrateur', 0, 150), 'role' => 'superadmin', 'email_verified' => 1, 'pw_changed_at' => now()]);
+    audit('install_superadmin', mask_email($em), [], 'warn', $id); session_init(DB::find('users', $id), false); redirect('/admin/mfa/activer');
 });
 
 // ---------------------------------------------------------------- tableau de bord
 route('GET', '/admin', function () {
-    require_perm('orders');
+    require_perm('dashboard'); $fin = can('reports'); $ord = can('orders');
     $since = date('Y-m-d 00:00:00', strtotime('-29 days')); $month = date('Y-m-01 00:00:00');
     $rows = DB::all("SELECT total, status, payment_status, created_at FROM orders WHERE created_at>=? AND status<>'cancelled'", [$since]); $days = []; for ($i = 29; $i >= 0; $i--) $days[date('Y-m-d', strtotime("-$i days"))] = 0;
     foreach ($rows as $r) $days[substr($r['created_at'], 0, 10)] += (int) $r['total'];
-    $stats = [
+    $stats = !$ord ? [] : [
         'Commandes (ce mois)' => (int) DB::val("SELECT COUNT(*) FROM orders WHERE created_at>=? AND status<>'cancelled'", [$month]),
-        "Chiffre d'affaires encaissé" => money((int) DB::val("SELECT COALESCE(SUM(total),0) FROM orders WHERE payment_status='paid' AND created_at>=?", [$month])),
+        
         'Commandes en cours' => (int) DB::val("SELECT COUNT(*) FROM orders WHERE status NOT IN ('delivered','cancelled')"), 'Paiements à vérifier' => (int) DB::val("SELECT COUNT(*) FROM orders WHERE payment_status='declared'"),
         'Nouveaux clients (30 j)' => (int) DB::val("SELECT COUNT(*) FROM users WHERE role='customer' AND created_at>=?", [$since]), 'Demandes de devis à traiter' => (int) DB::val("SELECT COUNT(*) FROM quotes WHERE status IN ('new','in_progress','accepted')"),
-        'Messages non lus' => (int) DB::val("SELECT COUNT(*) FROM messages WHERE status='new'"), 'Chiffre d\'affaires total encaissé' => money((int) DB::val("SELECT COALESCE(SUM(total),0) FROM orders WHERE payment_status='paid'")),
+        'Messages non lus' => (int) DB::val("SELECT COUNT(*) FROM messages WHERE status='new'"),
     ];
-    $top = DB::all("SELECT i.name, SUM(i.qty) AS q, SUM(i.total) AS t FROM order_items i JOIN orders o ON o.id=i.order_id WHERE o.status<>'cancelled' GROUP BY i.name ORDER BY t DESC LIMIT 6");
-    $recent = DB::all('SELECT * FROM orders ORDER BY id DESC LIMIT 8'); $demo = (int) DB::val("SELECT COUNT(*) FROM products WHERE pricing_status='demo' AND active=1");
-    $todo = []; if (!shop('email') && !shop('notify_email')) $todo[] = 'Aucune adresse e-mail de notification : renseignez-la dans Réglages pour recevoir les commandes par e-mail.'; if (!shop('rccm') || !shop('ncc')) $todo[] = 'Complétez RCCM, NCC et forme juridique (Réglages) pour les factures et mentions légales.';
-    adm('dashboard', compact('stats', 'days', 'top', 'recent', 'demo', 'todo'), 'Tableau de bord', 'dash');
+    if ($fin) { $stats["Chiffre d'affaires encaissé"] = money((int) DB::val("SELECT COALESCE(SUM(total),0) FROM orders WHERE payment_status='paid' AND created_at>=?", [$month])); $stats['Chiffre d\'affaires total encaissé'] = money((int) DB::val("SELECT COALESCE(SUM(total),0) FROM orders WHERE payment_status='paid'")); }
+    $top = $fin ? DB::all("SELECT i.name, SUM(i.qty) AS q, SUM(i.total) AS t FROM order_items i JOIN orders o ON o.id=i.order_id WHERE o.status<>'cancelled' GROUP BY i.name ORDER BY t DESC LIMIT 6") : [];
+    if (!$fin) $days = array_map(fn() => 0, $days);
+    $recent = $ord ? DB::all('SELECT * FROM orders ORDER BY id DESC LIMIT 8') : []; $demo = can('catalog') ? (int) DB::val("SELECT COUNT(*) FROM products WHERE pricing_status='demo' AND active=1") : 0;
+    $todo = []; if (!can('settings')) { } elseif (!shop('email') && !shop('notify_email')) $todo[] = 'Aucune adresse e-mail de notification : renseignez-la dans Réglages pour recevoir les commandes par e-mail.'; if (!shop('rccm') || !shop('ncc')) $todo[] = 'Complétez RCCM, NCC et forme juridique (Réglages) pour les factures et mentions légales.';
+    adm('dashboard', compact('stats', 'days', 'top', 'recent', 'demo', 'todo', 'fin', 'ord'), 'Tableau de bord', 'dash');
 });
 
 // ---------------------------------------------------------------- commandes
@@ -61,22 +119,32 @@ route('GET', '/admin/commandes/{id}', function ($a) {
     adm('order', ['o' => $o, 'items' => order_items((int) $o['id']), 'files' => DB::all('SELECT * FROM files WHERE order_id=? ORDER BY id', [$o['id']]), 'events' => DB::all('SELECT e.*, u.name AS uname FROM order_events e LEFT JOIN users u ON u.id=e.user_id WHERE order_id=? ORDER BY e.id DESC', [$o['id']])], 'Commande ' . $o['ref'], 'orders');
 });
 route('POST', '/admin/commandes/{id}/statut', function ($a) {
-    require_perm('orders'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); $s = post('status'); if (isset(ORDER_STATUS[$s])) { set_order_status($o, $s, post('note'), (bool) post('notify')); flash('ok', 'Statut mis à jour : ' . ORDER_STATUS[$s][0]); } redirect('/admin/commandes/' . $o['id']);
+    require_perm('orders'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); $s = post('status');
+    if ($s === 'paid' && !can('payments')) { audit('perm_denied', 'payments', ['order' => $o['ref']], 'warn'); abort(403, "Votre rôle ne permet pas de confirmer un paiement."); }
+    if (isset(ORDER_STATUS[$s])) { set_order_status($o, $s, mb_substr(post('note'), 0, 500), (bool) post('notify')); audit('order_status', $o['ref'], ['from' => $o['status'], 'to' => $s]); flash('ok', 'Statut mis à jour : ' . ORDER_STATUS[$s][0]); } redirect('/admin/commandes/' . $o['id']);
 });
 route('POST', '/admin/commandes/{id}/paiement', function ($a) {
-    require_perm('orders'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); $act = post('action');
-    if ($act === 'paid') { DB::upd('orders', (int) $o['id'], ['payment_status' => 'paid', 'payment_ref' => post('payment_ref') ?: $o['payment_ref'], 'updated_at' => now()]); if ($o['status'] === 'pending_payment') set_order_status($o, 'paid', 'Paiement confirmé', true); else DB::ins('order_events', ['order_id' => $o['id'], 'status' => $o['status'], 'note' => 'Paiement confirmé', 'user_id' => user()['id']]); flash('ok', 'Paiement confirmé.'); }
-    elseif ($act === 'refunded') { DB::upd('orders', (int) $o['id'], ['payment_status' => 'refunded', 'updated_at' => now()]); DB::ins('order_events', ['order_id' => $o['id'], 'status' => $o['status'], 'note' => 'Paiement remboursé', 'user_id' => user()['id']]); flash('ok', 'Marqué remboursé.'); }
-    elseif ($act === 'pending') { DB::upd('orders', (int) $o['id'], ['payment_status' => 'pending', 'updated_at' => now()]); flash('ok', 'Paiement remis en attente.'); }
+    $me = require_perm('payments'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); $act = post('action'); $ref = mb_substr(post('payment_ref'), 0, 120);
+    if ($act === 'paid') {
+        if ($o['payment_status'] === 'paid') { flash('info', 'Ce paiement est déjà confirmé.'); redirect('/admin/commandes/' . $o['id']); }
+        if ($o['payment_method'] !== 'cod' && $ref === '' && trim((string) $o['payment_ref']) === '') { flash('error', 'Indiquez la référence de la transaction avant de confirmer le paiement.'); redirect('/admin/commandes/' . $o['id']); }
+        DB::upd('orders', (int) $o['id'], ['payment_status' => 'paid', 'payment_ref' => $ref ?: $o['payment_ref'], 'updated_at' => now()]); if ($o['status'] === 'pending_payment') set_order_status($o, 'paid', 'Paiement confirmé', true); else DB::ins('order_events', ['order_id' => $o['id'], 'status' => $o['status'], 'note' => 'Paiement confirmé', 'user_id' => $me['id']]);
+        audit('payment_confirmed', $o['ref'], ['amount' => (int) $o['total'], 'method' => $o['payment_method'], 'ref' => $ref ?: $o['payment_ref']], 'warn'); flash('ok', 'Paiement confirmé.');
+    } elseif ($act === 'refunded') {
+        require_reauth(); DB::upd('orders', (int) $o['id'], ['payment_status' => 'refunded', 'updated_at' => now()]); DB::ins('order_events', ['order_id' => $o['id'], 'status' => $o['status'], 'note' => 'Paiement remboursé', 'user_id' => $me['id']]);
+        audit('payment_refunded', $o['ref'], ['amount' => (int) $o['total']], 'warn'); flash('ok', 'Marqué remboursé.');
+    } elseif ($act === 'pending') {
+        if ($o['payment_status'] === 'paid') require_reauth(); DB::upd('orders', (int) $o['id'], ['payment_status' => 'pending', 'updated_at' => now()]); audit('payment_reset', $o['ref'], ['from' => $o['payment_status']], 'warn'); flash('ok', 'Paiement remis en attente.');
+    }
     redirect('/admin/commandes/' . $o['id']);
 });
-route('POST', '/admin/commandes/{id}/note', function ($a) { require_perm('orders'); DB::upd('orders', (int) $a['id'], ['admin_notes' => post('admin_notes'), 'updated_at' => now()]); flash('ok', 'Note enregistrée.'); redirect('/admin/commandes/' . (int) $a['id']); });
+route('POST', '/admin/commandes/{id}/note', function ($a) { require_perm('orders'); DB::upd('orders', (int) $a['id'], ['admin_notes' => mb_substr(post('admin_notes'), 0, 5000), 'updated_at' => now()]); flash('ok', 'Note enregistrée.'); redirect('/admin/commandes/' . (int) $a['id']); });
 route('POST', '/admin/commandes/{id}/bat', function ($a) {
     require_perm('orders'); $o = DB::find('orders', (int) $a['id']); $it = DB::row('SELECT * FROM order_items WHERE id=? AND order_id=?', [(int) post('item'), (int) $a['id']]); if (!$o || !$it || empty($_FILES['bat']['name'])) { flash('error', 'Sélectionnez un fichier BAT.'); redirect('/admin/commandes/' . (int) $a['id']); }
     try { Files::save($_FILES['bat'], 'order-' . $o['id'], 'bat', ['order_id' => $o['id'], 'item_id' => $it['id'], 'user_id' => $o['user_id'], 'status' => 'ok']); } catch (RuntimeException $e) { flash('error', $e->getMessage()); redirect('/admin/commandes/' . $o['id']); }
     DB::upd('order_items', (int) $it['id'], ['bat_status' => 'pending', 'bat_comment' => '']); set_order_status($o, 'bat_pending', 'BAT envoyé pour « ' . $it['name'] . ' »', true); flash('ok', 'BAT envoyé au client.'); redirect('/admin/commandes/' . $o['id']);
 });
-route('POST', '/admin/fichiers/{id}/statut', function ($a) { require_perm('orders'); $f = DB::find('files', (int) $a['id']); if ($f && isset(Files::STATUS[post('status')])) { DB::upd('files', (int) $f['id'], ['status' => post('status'), 'note' => post('note')]); } redirect($_SERVER['HTTP_REFERER'] ?? '/admin/commandes'); });
+route('POST', '/admin/fichiers/{id}/statut', function ($a) { require_perm('orders'); $f = DB::find('files', (int) $a['id']); if ($f && isset(Files::STATUS[post('status')])) { DB::upd('files', (int) $f['id'], ['status' => post('status'), 'note' => post('note')]); } audit('file_status', 'f' . (int) $a['id'], ['status' => post('status')]); redirect(back_path('/admin/commandes')); });
 
 // ---------------------------------------------------------------- devis
 function quote_final_lines(array $q): array { $m = (int) $q['margin_pct']; return array_map(function ($l) use ($m) { $l['unit'] = round_price($l['unit'] * (100 + $m) / 100); return $l; }, jd($q['qlines'])); }
@@ -123,49 +191,71 @@ route('GET', '/admin/clients', function () {
     adm('customers', ['rows' => DB::all("SELECT u.*, (SELECT COUNT(*) FROM orders o WHERE o.user_id=u.id) AS n_orders, (SELECT COALESCE(SUM(total),0) FROM orders o WHERE o.user_id=u.id AND o.payment_status='paid') AS spent FROM users u WHERE $w ORDER BY id DESC LIMIT 300", $p)], 'Clients', 'customers');
 });
 route('GET', '/admin/clients/{id}', function ($a) { require_perm('customers'); $u = DB::find('users', (int) $a['id']); if (!$u) abort(404); adm('customer', ['u' => $u, 'orders' => DB::all('SELECT * FROM orders WHERE user_id=? ORDER BY id DESC', [$u['id']]), 'quotes' => DB::all('SELECT * FROM quotes WHERE user_id=? ORDER BY id DESC', [$u['id']]), 'addr' => DB::all('SELECT * FROM addresses WHERE user_id=?', [$u['id']])], $u['name'] ?: $u['email'], 'customers'); });
-route('POST', '/admin/clients/{id}/actif', function ($a) { require_perm('customers'); $u = DB::find('users', (int) $a['id']); if ($u && $u['role'] === 'customer') DB::upd('users', (int) $u['id'], ['active' => $u['active'] ? 0 : 1]); redirect('/admin/clients/' . (int) $a['id']); });
+route('POST', '/admin/clients/{id}/actif', function ($a) { require_perm('customers'); $u = DB::find('users', (int) $a['id']); if ($u && $u['role'] === 'customer') { DB::upd('users', (int) $u['id'], ['active' => $u['active'] ? 0 : 1]); revoke_sessions((int) $u['id']); audit('customer_toggle', mask_email($u['email']), ['active' => $u['active'] ? 0 : 1], 'warn'); } redirect('/admin/clients/' . (int) $a['id']); });
 route('GET', '/admin/messages', function () { require_perm('quotes'); adm('messages', ['rows' => DB::all('SELECT * FROM messages ORDER BY id DESC LIMIT 200')], 'Messages', 'messages'); });
 route('POST', '/admin/messages/{id}/traite', function ($a) { require_perm('quotes'); DB::upd('messages', (int) $a['id'], ['status' => 'done']); redirect('/admin/messages'); });
 
 // ---------------------------------------------------------------- réglages (administrateur uniquement)
 route('GET', '/admin/reglages', function () { require_perm('settings'); adm('settings', ['methods' => payment_methods(false)], 'Réglages', 'settings'); });
 route('POST', '/admin/reglages', function () {
-    require_perm('settings');
+    require_perm('settings'); require_reauth();
     foreach (['shop_name', 'tagline', 'phone', 'phone2', 'whatsapp', 'email', 'notify_email', 'address', 'city', 'country', 'hours', 'facebook', 'instagram', 'tiktok', 'rccm', 'ncc', 'legal_form', 'manager_name', 'currency_symbol', 'tax_label', 'pickup_label', 'momo_wave', 'momo_orange', 'momo_mtn', 'momo_moov', 'bank_details', 'invoice_footer', 'upload_ext'] as $k) if (isset($_POST[$k])) Settings::set($k, post($k));
     foreach (['rounding' => 5, 'min_order' => 0, 'upload_max_mb' => 50] as $k => $d) Settings::set($k, max(0, (int) post($k, $d)) ?: $d);
     Settings::set('tax_rate', (string) max(0, (float) str_replace(',', '.', post('tax_rate', '18')))); Settings::set('eur_xof_rate', (string) max(1, (float) str_replace(',', '.', post('eur_xof_rate', '655.957'))));
     foreach (['tax_enabled', 'prices_include_tax', 'pickup_enabled'] as $k) Settings::set($k, post($k) ? '1' : '0');
     $wa = preg_replace('/\D+/', '', post('whatsapp')); if ($wa) Settings::set('whatsapp', $wa);
     $m = []; foreach (payment_methods(false) as $pm) { $k = $pm['key']; $pm['enabled'] = !empty($_POST['pm_on'][$k]) ? 1 : 0; $pm['label'] = trim($_POST['pm_label'][$k] ?? $pm['label']) ?: $pm['label']; $pm['instructions'] = trim($_POST['pm_ins'][$k] ?? $pm['instructions']); if ($pm['type'] === 'gateway') $pm['enabled'] = 0; $m[] = $pm; }
-    Settings::set('payment_methods', $m); flash('ok', 'Réglages enregistrés.'); redirect('/admin/reglages');
+    Settings::set('payment_methods', $m); audit('settings_saved', '', ['keys' => count($_POST)], 'warn'); flash('ok', 'Réglages enregistrés.'); redirect('/admin/reglages');
 });
-route('GET', '/admin/utilisateurs', function () { require_perm('settings'); adm('users', ['rows' => DB::all("SELECT * FROM users WHERE role<>'customer' ORDER BY id")], 'Équipe et rôles', 'users'); });
+route('GET', '/admin/utilisateurs', function () { require_perm('users'); adm('users', ['rows' => DB::all("SELECT * FROM users WHERE role<>'customer' ORDER BY id")], 'Équipe et rôles', 'users'); });
 route('POST', '/admin/utilisateurs', function () {
-    require_perm('settings'); $em = strtolower(post('email')); $role = post('role');
-    if (!filter_var($em, FILTER_VALIDATE_EMAIL) || !isset(PERMS[$role]) || strlen(post('password')) < 10) { flash('error', 'E-mail valide, rôle et mot de passe de 10 caractères minimum requis.'); redirect('/admin/utilisateurs'); }
+    $me = require_perm('users'); require_reauth(); $em = strtolower(post('email')); $role = post('role'); $pw = (string) ($_POST['password'] ?? '');
+    if (!valid_email($em) || !is_staff_role($role) || ($m = pw_policy($pw, $em, true))) { flash('error', $m ?? 'E-mail valide, rôle valide et mot de passe fort (12 caractères minimum) requis.'); redirect('/admin/utilisateurs'); }
     if (DB::val('SELECT COUNT(*) FROM users WHERE email=?', [$em])) { flash('error', 'Cet e-mail existe déjà.'); redirect('/admin/utilisateurs'); }
-    DB::ins('users', ['email' => $em, 'password_hash' => password_hash(post('password'), PASSWORD_DEFAULT), 'name' => post('name'), 'role' => $role]); flash('ok', 'Membre ajouté.'); redirect('/admin/utilisateurs');
+    $id = DB::ins('users', ['email' => $em, 'password_hash' => pw_hash($pw), 'name' => mb_substr(post('name'), 0, 150), 'role' => $role, 'email_verified' => 1, 'must_change_pw' => 1]);
+    audit('user_created', mask_email($em), ['role' => $role, 'id' => $id], 'warn'); flash('ok', 'Membre ajouté : il devra changer son mot de passe et activer la double authentification à sa première connexion.'); redirect('/admin/utilisateurs');
 });
 route('POST', '/admin/utilisateurs/{id}', function ($a) {
-    $me = require_perm('settings'); $u = DB::find('users', (int) $a['id']); if (!$u || (int) $u['id'] === (int) $me['id']) { flash('error', 'Vous ne pouvez pas modifier votre propre rôle ici.'); redirect('/admin/utilisateurs'); }
-    $d = []; if (isset(PERMS[post('role')])) $d['role'] = post('role'); $d['active'] = post('active') ? 1 : 0; if (post('password') !== '') { if (strlen(post('password')) < 10) { flash('error', '10 caractères minimum.'); redirect('/admin/utilisateurs'); } $d['password_hash'] = password_hash(post('password'), PASSWORD_DEFAULT); }
-    DB::upd('users', (int) $u['id'], $d); flash('ok', 'Membre mis à jour.'); redirect('/admin/utilisateurs');
+    $me = require_perm('users'); $u = DB::find('users', (int) $a['id']);
+    if (!$u || (int) $u['id'] === (int) $me['id']) { flash('error', 'Vous ne pouvez pas modifier votre propre compte ici.'); redirect('/admin/utilisateurs'); }
+    require_reauth(); $d = []; $log = [];
+    if (post('role') !== '' && post('role') !== $u['role']) {
+        if (!is_staff_role(post('role'))) { flash('error', 'Rôle invalide.'); redirect('/admin/utilisateurs'); }
+        $d['role'] = post('role'); $log['role'] = $u['role'] . '→' . post('role');
+    }
+    $active = post('active') ? 1 : 0; if ($active !== (int) $u['active']) { $d['active'] = $active; $log['active'] = $active; }
+    if (($u['role'] === 'superadmin') && ((isset($d['role']) && $d['role'] !== 'superadmin') || (isset($d['active']) && !$d['active'])) && (int) DB::val("SELECT COUNT(*) FROM users WHERE role='superadmin' AND active=1 AND id<>?", [$u['id']]) < 1) { flash('error', 'Impossible : il doit rester au moins un super administrateur actif.'); redirect('/admin/utilisateurs'); }
+    if (post('password') !== '') { if ($m = pw_policy((string) $_POST['password'], $u['email'], true)) { flash('error', $m); redirect('/admin/utilisateurs'); } $d['password_hash'] = pw_hash((string) $_POST['password']); $d['must_change_pw'] = 1; $log['password'] = 'réinitialisé'; }
+    if (post('mfa_reset')) { $d['mfa_enabled'] = 0; $d['mfa_secret'] = null; $d['mfa_backup'] = null; $d['mfa_used'] = null; $log['mfa'] = 'réinitialisée'; }
+    if ($d) { DB::upd('users', (int) $u['id'], $d); revoke_sessions((int) $u['id']); audit('user_updated', mask_email($u['email']), $log, 'warn'); }
+    flash('ok', 'Membre mis à jour (ses sessions ont été fermées).'); redirect('/admin/utilisateurs');
+});
+route('GET', '/admin/securite', function () {
+    require_perm('security'); $lvl = in_array(get('level'), ['info', 'warn', 'alert'], true) ? get('level') : ''; $q = get('q');
+    $w = ['1=1']; $p = []; if ($lvl) { $w[] = 'level=?'; $p[] = $lvl; } if ($q !== '') { $w[] = '(action LIKE ? OR target LIKE ? OR ip LIKE ?)'; $l = '%' . $q . '%'; array_push($p, $l, $l, $l); }
+    adm('security', ['rows' => DB::all('SELECT * FROM audit_log WHERE ' . implode(' AND ', $w) . ' ORDER BY id DESC LIMIT 300', $p), 'integrity' => audit_verify(), 'staff' => DB::all("SELECT id,email,name,role,active,mfa_enabled,last_login,must_change_pw FROM users WHERE role<>'customer' ORDER BY id"),
+        'fails' => (int) DB::val("SELECT COUNT(*) FROM audit_log WHERE action IN ('login_fail','mfa_fail') AND ts>?", [date('Y-m-d H:i:s', time() - 86400)]), 'alerts' => (int) DB::val("SELECT COUNT(*) FROM audit_log WHERE level='alert' AND ts>?", [date('Y-m-d H:i:s', time() - 7 * 86400)])], 'Sécurité et journal', 'security');
+});
+route('GET', '/admin/securite/export', function () {
+    require_perm('security'); require_reauth(); audit('audit_export', '', [], 'warn'); header('Content-Type: text/csv; charset=utf-8'); header('Content-Disposition: attachment; filename="journal-securite.csv"'); echo "\xEF\xBB\xBFdate;niveau;action;cible;utilisateur;ip;details\n";
+    foreach (DB::all('SELECT * FROM audit_log ORDER BY id DESC LIMIT 5000') as $r) echo implode(';', array_map('csv_cell', [$r['ts'], $r['level'], $r['action'], $r['target'], $r['user_id'], $r['ip'], $r['details']])) . "\n"; exit;
 });
 route('POST', '/admin/deconnexion', function () { logout_user(); redirect('/admin/connexion'); });
+function csv_cell($v): string { $v = str_replace(["\r", "\n", ';'], ' ', (string) $v); return preg_match('/^[=+\-@\t]/', $v) ? "'" . $v : $v; }   // anti injection de formules (tableur)
 
 // ---------------------------------------------------------------- suppression (administrateur uniquement : commandes/devis de test, spam)
 function purge_files(string $where, array $params): void { foreach (DB::all("SELECT * FROM files WHERE $where", $params) as $f) { @unlink(Files::path($f)); DB::del('files', (int) $f['id']); } }
 route('POST', '/admin/commandes/{id}/supprimer', function ($a) {
-    require_perm('settings'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404);
+    require_perm('destroy'); $o = DB::find('orders', (int) $a['id']); if (!$o) abort(404); require_reauth(); audit('order_delete', $o['ref'], ['total' => (int) $o['total'], 'payment' => $o['payment_status']], 'alert');
     purge_files('order_id=?', [$o['id']]); DB::q('DELETE FROM order_items WHERE order_id=?', [$o['id']]); DB::q('DELETE FROM order_events WHERE order_id=?', [$o['id']]); DB::q('UPDATE quotes SET order_id=0 WHERE order_id=?', [$o['id']]); DB::del('orders', (int) $o['id']);
     flash('ok', 'Commande ' . $o['ref'] . ' supprimée définitivement.'); redirect('/admin/commandes');
 });
 route('POST', '/admin/devis/{id}/supprimer', function ($a) {
-    require_perm('settings'); $q = DB::find('quotes', (int) $a['id']); if (!$q) abort(404);
+    require_perm('destroy'); $q = DB::find('quotes', (int) $a['id']); if (!$q) abort(404); require_reauth(); audit('quote_delete', $q['ref'], [], 'alert');
     purge_files('quote_id=?', [$q['id']]); DB::q('DELETE FROM quote_items WHERE quote_id=?', [$q['id']]); DB::del('quotes', (int) $q['id']); flash('ok', 'Devis ' . $q['ref'] . ' supprimé.'); redirect('/admin/devis');
 });
 route('POST', '/admin/clients/{id}/supprimer', function ($a) {
-    require_perm('settings'); $u = DB::find('users', (int) $a['id']); if (!$u || $u['role'] !== 'customer') abort(404);
+    require_perm('destroy'); $u = DB::find('users', (int) $a['id']); if (!$u || $u['role'] !== 'customer') abort(404); require_reauth(); audit('customer_delete', mask_email($u['email']), [], 'alert');
     if (DB::val('SELECT COUNT(*) FROM orders WHERE user_id=?', [$u['id']])) { flash('error', 'Ce client a des commandes : désactivez son compte plutôt que de le supprimer.'); redirect('/admin/clients/' . $u['id']); }
     DB::q('DELETE FROM addresses WHERE user_id=?', [$u['id']]); DB::q('DELETE FROM favorites WHERE user_id=?', [$u['id']]); DB::q('DELETE FROM carts WHERE user_id=?', [$u['id']]); DB::q('UPDATE quotes SET user_id=0 WHERE user_id=?', [$u['id']]); DB::del('users', (int) $u['id']);
     flash('ok', 'Compte client supprimé.'); redirect('/admin/clients');
