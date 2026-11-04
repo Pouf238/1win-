@@ -1,0 +1,40 @@
+# Refonte graphique du site public (4 novembre 2026)
+
+> **État : développée et testée en local. NON déployée en production** (déploiement sur autorisation explicite, mêmes précautions que le déploiement du 3 novembre : sauvegarde, envoi dans un dossier de préparation, contrôle, remplacement atomique, retour arrière). Aperçus : `docs/refonte-apercus/`.
+
+## Ce qui est conservé (charte strictement inchangée)
+Couleurs `#1F7A8C` (bleu pétrole), `#F4A62A` (orange), blanc, gris clair ; polices Montserrat (titres) et Inter (texte) ; logo Symo Print (même dessin). Seules des **teintes dérivées** de ces couleurs sont utilisées (fond crème = teinte claire de l'orange). Aucune route, aucun formulaire, aucune fonction n'a été supprimé ou modifié ; l'administration n'est pas touchée (elle garde `app.css` seul).
+
+## Direction artistique : « atelier d'imprimerie premium »
+Repères de coupe (angles orange sur les cadres), trame d'impression (demi-teintes) en fond des bandeaux, grandes cartes arrondies, ombres douces teintées de bleu pétrole, mouvements discrets (révélation au défilement, survol des cartes, bandeau défilant). Respect de `prefers-reduced-motion` ; sans JavaScript, tout le contenu reste visible.
+
+| Zone | Nouveauté |
+|---|---|
+| En-tête | barre d'infos, en-tête collant compact au défilement, recherche mise en valeur, **méga-menu à vignettes** de maquettes |
+| Accueil | **hero en mosaïque** (grande carte de marque + cartes photo + arguments), bande de réassurance, bandeau défilant des produits, **univers en mosaïque**, parcours « du fichier à la livraison » (4 étapes illustrées), vitrine animée, meilleures ventes, **studio de création**, **galerie des procédés** (photos), produits populaires, engagements, newsletter |
+| Catalogue / catégories | bannière à visuel, tuiles de rubriques illustrées, cartes produits refaites |
+| Fiche produit | cadre de visuel agrandi, bloc d'achat, rangée de confiance |
+| Pages de contenu (services, à propos, livraison, guides, juridique) | bannière illustrée, colonne d'aide (WhatsApp, devis), tuiles de formats sur le guide des fichiers, puces de marque |
+| FAQ, contact, devis, suivi, connexion, inscription, erreurs, « fonction fermée » | bannières à visuel, connexion/inscription en deux volets, accordéon animé |
+| Pied de page | bandeau d'appel orange, colonnes sur fond bleu profond à trame, lien « Crédits photos » |
+
+## Visuels : d'où viennent-ils ?
+- **Maquettes produits (27, SVG)** : créées pour Symo Print par `tools/make-mockups.py` (cartes de visite, flyers, brochure, affiche, bâche, roll-up, stand, t-shirt, mug, gourde, sac, casquette…), aux couleurs de la marque, avec **votre vrai logo** (vectorisé par `tools/vectorize-logo.py` à partir de `logo.png`, sans changer son dessin). Chaque produit sans photo reçoit la maquette de son type : **plus aucune carte sans image**.
+- **Vos photos produits existantes** (14) : inchangées, réutilisées.
+- **11 photos d'illustration de procédés** (presse offset, grand format, sérigraphie, transfert textile, reliure, dorure…) : Wikimedia Commons, licences libres (CC0, CC BY, CC BY-SA), recadrées et converties en WebP à 2 tailles (≈ 1 Mo au total) par `tools/build-photos.py`. Auteurs et licences : `assets/img/photos/credits.json` et page publique `/credits-photos`. Ces photos **illustrent des techniques** ; elles ne prétendent pas montrer l'atelier de Symo Print.
+- **Aucun visuel, texte ni logo d'Onlineprinters n'a été copié ni réutilisé.** Le site a servi uniquement de référence d'observation (structure : mosaïque d'accueil, vignettes de méga-menu, une même identité sur tous les produits, cartes de services, formats, accordéons). Les mentions légales d'Onlineprinters indiquent qu'il est exploité par Onlineprinters GmbH (Fürth) et Onlineprinters France SAS : ses contenus ne peuvent pas être repris sans l'accord de cette société.
+
+## Honnêteté des contenus
+Aucun avis, chiffre ni référence client inventé (la section témoignages n'apparaît que s'il y en a). « Paiement Mobile Money » (accueil, pied de page) n'est affiché que si les paiements sont ouverts. Les photos de personnes n'ont pas été recherchées (cadrages sur machines et mains) ; **remplacez-les par vos propres photos d'équipe et d'atelier dès que vous en avez** : déposez-les sous le même nom dans `assets/img/photos/` (voir `tools/build-photos.py`).
+
+## Fichiers
+Nouveaux : `assets/css/site.css`, `assets/js/site.js`, `assets/img/mock/*.svg` (27), `assets/img/photos/*` (11 × 2 tailles + crédits), `assets/img/brand/logo.svg` et `logo-light.svg`, `_app/views/shop/credits.php`, `tools/{make-mockups,vectorize-logo,build-photos}.py`. Modifiés : `_app/lib/art.php` (aides `mock()`, `photo()`), `_app/views/layout/main.php`, vues `shop/*` et `account/{login,register}`, `_app/routes/public.php` (+ route `/credits-photos`), `_app/lib/features.php` (route classée « toujours disponible »).
+
+## Performance et sécurité
+CSS 76 Ko + JS 12 Ko (hors cache : une fois), photos WebP en `srcset` (600/1200 px, chargement différé), maquettes SVG légères. CSP respectée : aucun script, style ni gestionnaire en ligne. Un défaut ancien est corrigé : un bouton « Ajouter au panier » marqué caché restait visible (règle `[hidden]`).
+
+## Tests (4 nov. 2026, local)
+Interrupteurs **69/69** (63 + 6 nouveaux D-01 à D-06 : structure de l'accueil, aucune image cassée sur 12 pages, 27 maquettes valides avec logo, crédits complets, cohérence commerciale, accessibilité de base), sécurité **119/119**, plateforme **17/17**. Audit visuel de 19 pages × 3 formats (ordinateur, tablette, mobile) : aucun débordement horizontal, aucune image cassée, aucune erreur de console (hors 503/404 volontaires).
+
+## Retour arrière
+Le style public est une couche séparée : retirer `site.css`/`site.js` du gabarit rend l'ancien aspect ; sinon `git revert` du commit de la refonte. Rien en base de données.

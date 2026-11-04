@@ -85,7 +85,7 @@ const FEATURE_ROUTES = [
 ];
 /** Routes toujours disponibles (aucun interrupteur) : listées explicitement ; un test échoue si une route n'est classée dans aucune des deux listes. */
 const FEATURE_ALWAYS = [
-    '/', '/a-propos', '/cgv', '/confidentialite', '/mentions-legales', '/remboursement', '/faq', '/livraison', '/nos-services', '/guide-fichiers', '/guide-papiers',
+    '/', '/credits-photos', '/a-propos', '/cgv', '/confidentialite', '/mentions-legales', '/remboursement', '/faq', '/livraison', '/nos-services', '/guide-fichiers', '/guide-papiers',
     '/catalogue', '/c/{slug}', '/p/{slug}', '/recherche', '/robots.txt', '/sitemap.xml', '/contact', '/newsletter', '/api/suggest', '/api/favori', '/fichier/{id}',
     '/commande/{ref}', '/commande/{ref}/facture.pdf', '/devis/{ref}', '/devis/{ref}/pdf',
     '/compte', '/compte/commandes', '/compte/devis', '/compte/favoris', '/compte/fichiers', '/compte/adresses', '/compte/adresses/{id}/supprimer', '/compte/profil',

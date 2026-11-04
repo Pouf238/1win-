@@ -129,5 +129,42 @@ module.exports = async function (X) {
     const n = x => (x.body.match(/class="vt-item/g) || []).length;
     return { pass: a.status === 200 && b.status === 200 && n(a) === n(b) && n(a) >= 3, note: n(a) + '/' + n(b) };
   });
+
+  sect('8. Refonte graphique : visuels, pages, liens d\'images, licences, accessibilité de base');
+  const PAGES = ['/', '/catalogue', '/c/affiches', '/nos-services', '/a-propos', '/livraison', '/guide-fichiers', '/faq', '/contact', '/credits-photos', '/compte/connexion', '/devis'];
+  await t('D-01', 'accueil : mosaïque du hero, 5 univers en maquettes de marque, parcours en 4 étapes, feuille de style et script d\'habillage chargés (aucun script ni style en ligne)', async () => {
+    fh('setfeatures', '{}'); const h = await new Client().r('GET', '/'); const b = h.body;
+    const inline = (b.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/g) || []).length;
+    return { pass: h.status === 200 && /class="hb-main/.test(b) && (b.match(/class="cb-t /g) || []).length >= 5 && (b.match(/class="pst /g) || []).length === 4 && /css\/site\.css/.test(b) && /js\/site\.js/.test(b) && inline === 0 && !/<style[\s>]/i.test(b), note: 'inline=' + inline };
+  });
+  await t('D-02', 'aucune image cassée : toutes les images (maquettes, photos, produits) des 12 pages principales répondent 200', async () => {
+    const bad = []; const seen = new Set(); let n = 0;
+    for (const p of PAGES) { const r = await new Client().r('GET', p); if (r.status !== 200) { bad.push(p + ' ' + r.status); continue; }
+      for (const m of r.body.matchAll(/<img[^>]+\bsrc="([^"]+)"/g)) { const u = m[1].replace(/&amp;/g, '&'); if (/^https?:|^data:/.test(u) || seen.has(u)) continue; seen.add(u); n++; const x = await fetch((X.BASE || process.env.BASE) + u); if (x.status !== 200) bad.push(u + ' ' + x.status); } }
+    return { pass: bad.length === 0 && n > 20, note: n + ' images vérifiées ; ' + bad.slice(0, 3).join(' | ') };
+  });
+  await t('D-03', 'chaque type de produit et de rubrique a sa maquette de marque (27 pictogrammes → 27 SVG valides, logo inclus pour les articles personnalisés)', async () => {
+    const art = fs.readFileSync(path.join(ROOT, '_app/lib/art.php'), 'utf8'); const keys = [...art.matchAll(/^\s+'([a-z]+)' => "/gm)].map(m => m[1]);
+    const miss = keys.filter(k => !fs.existsSync(path.join(ROOT, 'assets/img/mock', k + '.svg'))); const logo = ['card', 'mug', 'shirt', 'bag', 'banner', 'rollup'].filter(k => !/#lg/.test(fs.readFileSync(path.join(ROOT, 'assets/img/mock', k + '.svg'), 'utf8')));
+    const bad = keys.filter(k => { const x = fs.readFileSync(path.join(ROOT, 'assets/img/mock', k + '.svg'), 'utf8'); return !/^<svg [^>]*viewBox/.test(x) || !/<\/svg>$/.test(x); });
+    return { pass: keys.length === 27 && !miss.length && !logo.length && !bad.length, note: keys.length + ' clés ; manquantes: ' + miss.join(',') + ' ; sans logo: ' + logo.join(',') + ' ; invalides: ' + bad.join(',') };
+  });
+  await t('D-04', 'crédits photos : chaque photo livrée est créditée (auteur, licence, source) et affichée sur /credits-photos ; aucune photo orpheline', async () => {
+    const dir = path.join(ROOT, 'assets/img/photos'), cr = JSON.parse(fs.readFileSync(path.join(dir, 'credits.json'), 'utf8')); const slots = Object.keys(cr);
+    const files = fs.readdirSync(dir).filter(f => f.endsWith('.webp')); const orphan = files.filter(f => !slots.includes(f.replace(/-\d+\.webp$/, '')));
+    const pg = await new Client().r('GET', '/credits-photos'); const listed = (pg.body.match(/class="credit"/g) || []).length;
+    const ok = slots.every(k => cr[k].auteur && /^CC/.test(cr[k].licence) && /^https:\/\/commons\.wikimedia\.org\//.test(cr[k].page));
+    return { pass: pg.status === 200 && listed === slots.length && !orphan.length && ok, note: listed + '/' + slots.length + ' crédits ; orphelines: ' + orphan.length };
+  });
+  await t('D-05', 'cohérence commerciale : « Paiement Mobile Money » n\'est affiché que si les paiements sont ouverts ; aucun bouton d\'ajout au panier visible sur une fiche vendue sur devis', async () => {
+    fh('setfeatures', '{}'); const a = await new Client().r('GET', '/'), slug = sh('getcol', 'products', 'id=7', 'slug'), pa = await new Client().r('GET', '/p/' + slug); fh('allon'); const b = await new Client().r('GET', '/'); fh('setfeatures', '{}');
+    const vis = x => (x.body.match(/<button[^>]*id="b-add"[^>]*>/) || [''])[0];
+    return { pass: !/Paiement Mobile Money/.test(a.body) && /Paiement Mobile Money/.test(b.body) && /\bhidden\b/.test(vis(pa)), note: vis(pa) };
+  });
+  await t('D-06', 'accessibilité de base : un seul h1 par page, images avec attribut alt, liens d\'évitement, textes de repli sans JavaScript (révélations actives seulement avec le script)', async () => {
+    const bad = []; for (const p of PAGES) { const r = await new Client().r('GET', p); const h1 = (r.body.match(/<h1[\s>]/g) || []).length; const noAlt = (r.body.match(/<img(?![^>]*\balt=)[^>]*>/g) || []).length; if (h1 !== 1) bad.push(p + ' h1=' + h1); if (noAlt) bad.push(p + ' sans alt=' + noAlt); if (!/class="skip"/.test(r.body)) bad.push(p + ' sans lien d\'évitement'); }
+    const css = fs.readFileSync(path.join(ROOT, 'assets/css/site.css'), 'utf8'); const guard = /\.rv-on \.rv:not\(\.in\)\{opacity:0/.test(css) && !/^\.rv\{[^}]*opacity:0/m.test(css) && /\[hidden\]\{display:none!important\}/.test(css);
+    return { pass: !bad.length && guard, note: bad.slice(0, 4).join(' | ') + (guard ? '' : ' garde CSS absente') };
+  });
   fh('setfeatures', '{}');
 };

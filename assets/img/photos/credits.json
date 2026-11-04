@@ -1,0 +1,90 @@
+{
+ "grand": {
+  "alt": "Imprimante grand format en train d'imprimer une affiche",
+  "titre": "Canon imagePROGRAF TX-5310 LARGE FORMAT PRINTER.jpg",
+  "auteur": "Dinkun Chen",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Canon_imagePROGRAF_TX-5310_LARGE_FORMAT_PRINTER.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "textile": {
+  "alt": "Impression sérigraphique : racle passée sur un écran d'encre rouge",
+  "titre": "Screen printing demonstration at TEDxUTM.jpg",
+  "auteur": "Ahmad Ali Karim",
+  "licence": "CC0",
+  "page": "https://commons.wikimedia.org/wiki/File:Screen_printing_demonstration_at_TEDxUTM.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "offset": {
+  "alt": "Presse offset quatre couleurs",
+  "titre": "Offset press.jpg",
+  "auteur": "Romain Salomon",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Offset_press.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "flatbed": {
+  "alt": "Impression à plat sur panneau rigide",
+  "titre": "Large Format Printing of Black Numbers on a Brushed Aluminum Sheet.jpg",
+  "auteur": "Signage.Professional",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Large_Format_Printing_of_Black_Numbers_on_a_Brushed_Aluminum_Sheet.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "digital": {
+  "alt": "Machine d'impression numérique grand format",
+  "titre": "Digital Printing Press.JPG",
+  "auteur": "Coylegenec",
+  "licence": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Digital_Printing_Press.JPG",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "heatpress": {
+  "alt": "Personnalisation d'un textile à la presse à chaud",
+  "titre": "A graphic designer transferring an impression on to a shirt with heat press.jpg",
+  "auteur": "Tahiru Rajab",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:A_graphic_designer_transferring_an_impression_on_to_a_shirt_with_heat_press.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "binding": {
+  "alt": "Reliure à la main d'un livre",
+  "titre": "Heften-Buchblock-Handarbeit-St-Albans-Psalter-Faksimile-Buchbinderei.jpg",
+  "auteur": "Charlotte Kramer",
+  "licence": "CC BY 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Heften-Buchblock-Handarbeit-St-Albans-Psalter-Faksimile-Buchbinderei.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "gold": {
+  "alt": "Dorure à la main sur une couverture",
+  "titre": "St-Albans-Psalter-Faksimile-Bucheinband-Schliessen-Handarbeit.jpg",
+  "auteur": "Charlotte Kramer",
+  "licence": "CC BY 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:St-Albans-Psalter-Faksimile-Bucheinband-Schliessen-Handarbeit.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "hall": {
+  "alt": "Atelier d'impression avec rouleaux de papier",
+  "titre": "Offset printers in Sambad Press in Bhubaneswar, Odisha, India.jpg",
+  "auteur": "Subhashish Panigrahi",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Offset_printers_in_Sambad_Press_in_Bhubaneswar,_Odisha,_India.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "pressdetail": {
+  "alt": "Réglage d'une presse offset",
+  "titre": "Offset printing press 2.jpg",
+  "auteur": "Aatu Dorochenko",
+  "licence": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Offset_printing_press_2.jpg",
+  "modifications": "recadrage 3:2, redimensionnement et compression (WebP)"
+ },
+ "proof": {
+  "alt": "Épreuves et bon à tirer contrôlés à côté de la presse",
+  "titre": "Offset printing at Watermark Press, San Francisco, California.jpg",
+  "auteur": "David Peters",
+  "licence": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Offset_printing_at_Watermark_Press,_San_Francisco,_California.jpg",
+  "modifications": "recadrage 4:3, redimensionnement et compression (WebP)"
+ }
+}

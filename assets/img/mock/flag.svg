@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="flag"><defs>
+<linearGradient id="gp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#E4ECEE"/></linearGradient>
+<linearGradient id="gt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2C98AC"/><stop offset="1" stop-color="#145763"/></linearGradient>
+<linearGradient id="gd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#145763"/><stop offset="1" stop-color="#0E3D47"/></linearGradient>
+<linearGradient id="go" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFC766"/><stop offset="1" stop-color="#E8920F"/></linearGradient>
+<linearGradient id="gk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2E7D3"/><stop offset="1" stop-color="#D6C3A0"/></linearGradient>
+<linearGradient id="gs" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>
+<linearGradient id="gv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".0"/><stop offset="1" stop-color="#0E3D47" stop-opacity=".22"/></linearGradient>
+<filter id="b6" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="6"/></filter>
+<filter id="b2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
+</defs><ellipse cx="240" cy="334" rx="96" ry="10" fill="#0E3D47" opacity="0.28" filter="url(#b6)"/><path d="M180 328h120" stroke="#0E3D47" stroke-width="10" stroke-linecap="round"/><path d="M210 340l60-24M270 340l-60-24" stroke="#0E3D47" stroke-width="7" stroke-linecap="round" opacity="0"/><path d="M240 326V34" stroke="#145763" stroke-width="7" stroke-linecap="round"/><circle cx="240" cy="30" r="8" fill="url(#go)"/><path d="M246 44c78-22 118 16 96 74-12 36-8 74 18 108-44-18-84-8-114 22z" fill="url(#gt)"/><path d="M246 118c40-8 78-4 100 4-8 30-6 62 8 94-30-14-74-14-108 8z" fill="url(#go)" opacity=".95"/><path d="M262 74c28-10 52-6 66 6" stroke="#fff" stroke-opacity=".5" stroke-width="5" fill="none" stroke-linecap="round"/></svg>

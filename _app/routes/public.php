@@ -123,6 +123,10 @@ foreach (['a-propos', 'nos-services', 'guide-fichiers', 'guide-papiers', 'cgv', 
         page('shop/page', ['pg' => $pg], ['title' => $pg['title'], 'desc' => $pg['seo_desc'], 'jsonld' => []]);
     });
 }
+route('GET', '/credits-photos', function () {
+    page('shop/credits', ['credits' => photo_meta()], ['title' => 'Crédits photos', 'desc' => "Crédits et licences des photographies d'illustration utilisées sur le site.", 'body' => 'credits']);
+});
+
 route('GET', '/faq', function () {
     $faqs = DB::all('SELECT * FROM faqs WHERE active=1 ORDER BY sort, id');
     $ld = [['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => array_map(fn($f) => ['@type' => 'Question', 'name' => $f['question'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => strip_tags($f['answer'])]], $faqs)]];

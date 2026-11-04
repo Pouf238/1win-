@@ -1,4 +1,4 @@
-<section class="phead"><div class="wrap"><?= crumbs([['Demande de devis', '']]) ?><h1>Demande de devis gratuit</h1><p>Décrivez votre projet, joignez vos fichiers : notre équipe vous répond rapidement avec un prix précis. Sans engagement.</p></div></section>
+<section class="phead"><div class="wrap"><?= crumbs([['Demande de devis', '']]) ?><div class="ph-in"><div><h1>Demande de devis gratuit</h1><p>Décrivez votre projet, joignez vos fichiers : notre équipe vous répond rapidement avec un prix précis. Sans engagement.</p></div><div class="ph-vis" aria-hidden="true"><?= mock('card', '', '', true) ?></div></div></div></section>
 <form method="post" action="/devis" enctype="multipart/form-data" class="wrap two"><?= csrf_field() ?><input type="hidden" name="ts" value="<?= (int) (microtime(true) * 1000) ?>"><div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>
 <div>
   <?php if ($items): ?><div class="panel"><h2>Produits configurés</h2><?php foreach ($items as $i => $it): ?>

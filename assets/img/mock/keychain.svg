@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="keychain"><defs>
+<linearGradient id="gp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#E4ECEE"/></linearGradient>
+<linearGradient id="gt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2C98AC"/><stop offset="1" stop-color="#145763"/></linearGradient>
+<linearGradient id="gd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#145763"/><stop offset="1" stop-color="#0E3D47"/></linearGradient>
+<linearGradient id="go" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFC766"/><stop offset="1" stop-color="#E8920F"/></linearGradient>
+<linearGradient id="gk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2E7D3"/><stop offset="1" stop-color="#D6C3A0"/></linearGradient>
+<linearGradient id="gs" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>
+<linearGradient id="gv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".0"/><stop offset="1" stop-color="#0E3D47" stop-opacity=".22"/></linearGradient>
+<filter id="b6" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="6"/></filter>
+<filter id="b2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
+</defs><ellipse cx="240" cy="326" rx="120" ry="11" fill="#0E3D47" opacity="0.26" filter="url(#b6)"/><circle cx="204" cy="82" r="46" fill="none" stroke="#B7C4C9" stroke-width="9"/><circle cx="204" cy="82" r="46" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2.5"/><g transform="rotate(16 250 210)"><rect x="196" y="120" width="104" height="190" rx="16" fill="url(#gt)"/><rect x="196" y="120" width="104" height="190" rx="16" fill="url(#gs)"/><circle cx="248" cy="160" r="15" fill="#fff" opacity=".9"/><circle cx="248" cy="160" r="7" fill="#0E3D47"/><rect x="222" y="206" width="52" height="8" rx="2" fill="#fff"/><rect x="222" y="224" width="36" height="8" rx="2" fill="#fff"/><rect x="236" y="268" width="24" height="26" rx="12" fill="#0E3D47" opacity=".5"/><circle cx="248" cy="226" r="0" fill="#fff"/></g></svg>

@@ -1,4 +1,4 @@
-<section class="phead"><div class="wrap"><?= crumbs([['Contact', '']]) ?><h1>Contactez-nous</h1><p>Une question, un projet, un suivi de commande ? Écrivez-nous : WhatsApp est le canal le plus rapide.</p></div></section>
+<section class="phead"><div class="wrap"><?= crumbs([['Contact', '']]) ?><div class="ph-in"><div><h1>Contactez-nous</h1><p>Une question, un projet, un suivi de commande ? Écrivez-nous : WhatsApp est le canal le plus rapide.</p></div><div class="ph-vis" aria-hidden="true"><?= mock('envelope', '', '', true) ?></div></div></div></section>
 <div class="wrap two">
   <div class="panel"><h2>Envoyer un message</h2>
     <form method="post" action="/contact"><?= csrf_field() ?><input type="hidden" name="ts" value="<?= (int) (microtime(true) * 1000) ?>"><div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>

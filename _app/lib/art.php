@@ -34,10 +34,27 @@ function art(string $icon, string $cls = ''): string {
     $inner = $S[$icon] ?? $S['flyer'];
     return '<svg class="art ' . e($cls) . '" viewBox="0 0 120 120" role="img" aria-hidden="true" focusable="false">' . $inner . '</svg>';
 }
-/** Visuel d'un produit : photo si disponible, sinon pictogramme de marque. */
+/** Maquette de marque (SVG autonome, logo Symo Print inclus) pour un type de produit ; repli : pictogramme plat. */
+function mock(string $icon, string $alt = '', string $cls = '', bool $eager = false): string {
+    $k = basename($icon);
+    if (!is_file(ROOT . '/assets/img/mock/' . $k . '.svg')) return '<div class="art-wrap ' . e($cls) . '">' . art($icon ?: 'flyer') . '</div>';
+    return '<img class="mock ' . e($cls) . '" src="' . e(asset('img/mock/' . $k . '.svg')) . '" alt="' . e($alt) . '" width="480" height="360"' . ($eager ? '' : ' loading="lazy"') . ' decoding="async">';
+}
+/** Métadonnées des photos d'illustration (assets/img/photos/credits.json). */
+function photo_meta(): array { static $m = null; if ($m === null) { $f = ROOT . '/assets/img/photos/credits.json'; $m = is_file($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : []; } return $m; }
+/** Photo d'illustration optimisée (WebP, srcset 2 tailles) ; chaîne vide si absente. $o : alt, cls, sizes, eager, w (largeurs). */
+function photo(string $slot, array $o = []): string {
+    static $dims = []; $k = basename($slot); [$w1, $w2] = $o['w'] ?? [600, 1200];
+    $f1 = ROOT . "/assets/img/photos/$k-$w1.webp"; $f2 = ROOT . "/assets/img/photos/$k-$w2.webp"; if (!is_file($f1) || !is_file($f2)) return '';
+    $d = $dims[$k . $w2] ??= (@getimagesize($f2) ?: [$w2, (int) ($w2 * 2 / 3)]); $alt = $o['alt'] ?? (photo_meta()[$k]['alt'] ?? '');
+    $u1 = e(asset("img/photos/$k-$w1.webp")); $u2 = e(asset("img/photos/$k-$w2.webp"));
+    return sprintf('<img class="photo %s" src="%s" srcset="%s %dw, %s %dw" sizes="%s" alt="%s" width="%d" height="%d"%s decoding="async">',
+        e($o['cls'] ?? ''), $u1, $u1, $w1, $u2, $w2, e($o['sizes'] ?? '(min-width:900px) 34vw, 92vw'), e($alt), $d[0], $d[1], !empty($o['eager']) ? ' fetchpriority="high"' : ' loading="lazy"');
+}
+/** Visuel d'un produit : photo si disponible, sinon maquette de marque du type de produit. */
 function product_img(array $p, string $cls = ''): string {
-    if (!empty($p['image'])) { $f = ROOT . '/assets/img/produits/' . basename($p['image']) . '.webp'; if (is_file($f)) return '<img src="' . e(asset('img/produits/' . basename($p['image']) . '.webp')) . '" alt="' . e($p['name']) . '" loading="lazy" class="' . e($cls) . '">'; }
-    return '<div class="art-wrap ' . e($cls) . '">' . art($p['icon'] ?? 'flyer') . '</div>';
+    if (!empty($p['image'])) { $f = ROOT . '/assets/img/produits/' . basename($p['image']) . '.webp'; if (is_file($f)) return '<img src="' . e(asset('img/produits/' . basename($p['image']) . '.webp')) . '" alt="' . e($p['name']) . '" loading="lazy" decoding="async" class="' . e($cls) . '">'; }
+    return mock((string) ($p['icon'] ?? 'flyer'), (string) $p['name'], $cls);
 }
 /** Produits à photo pour la vitrine animée de l'accueil : 3 à 5 produits actifs dont le fichier image existe (sinon la section est masquée). */
 function vitrine_products(int $max = 5): array {

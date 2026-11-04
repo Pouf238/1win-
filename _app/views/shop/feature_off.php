@@ -1,4 +1,4 @@
-<div class="wrap section center" style="max-width:640px" data-feature-off="<?= e($key) ?>">
+<div class="wrap section center" style="max-width:680px" data-feature-off="<?= e($key) ?>"><?= mock('folder', '', '', true) ?>
   <p class="muted" style="font-weight:700;letter-spacing:.1em">INDISPONIBLE POUR LE MOMENT</p>
   <h1 style="font-size:34px"><?= e($label) ?></h1>
   <p class="muted"><?= e($msg) ?></p>
