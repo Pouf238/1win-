@@ -2,6 +2,8 @@
 
 > **Statut : lots A à F + vitrine animée DÉPLOYÉS en production le 3 novembre 2026 à 23:08 UTC, avec le préréglage « Vitrine + devis » (votre choix).** Rien n'a été supprimé, aucune donnée n'a changé (empreintes identiques). Voir ci-dessous « Déploiement des lots B à F ».
 
+> **Suite : refonte graphique déployée le 5 novembre 2026 à 03:26 UTC** (voir `docs/REFONTE_DESIGN.md`) ; aucune migration, mêmes précautions.
+
 ## Déploiement des lots B à F + vitrine animée — 3 novembre 2026, 23:08 UTC (autorisé par vous)
 **Méthode** (script `ops.sh`, répété d'abord sur une réplique locale : sauvegarde, contrôle, application, retour arrière) :
 1. **Avant tout changement** : état réel du serveur comparé à ce qui était attendu (35 fichiers identiques à l'ancienne version, 6 déjà à jour, 17 nouveaux). Sauvegarde fraîche de 23:02 UTC : base `db-2026-11-03_230202.sql.gz` (30 tables, 404 lignes), fichiers clients `uploads-2026-11-03_230202.zip` (2 fichiers, intégrité vérifiée), **copie du code actuel** `code-avant-lots-BF.tgz` et empreintes de tous ses fichiers, `.htaccess` — dossier `backups/independantes/pre-lotsBF/` (hors rotation, 0600, `SHA256SUMS` en lecture seule). Empreintes de référence des données enregistrées.

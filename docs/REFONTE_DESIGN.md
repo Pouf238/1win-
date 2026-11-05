@@ -1,6 +1,6 @@
-# Refonte graphique du site public (4 novembre 2026)
+# Refonte graphique du site public (4–5 novembre 2026)
 
-> **État : développée et testée en local. NON déployée en production** (déploiement sur autorisation explicite, mêmes précautions que le déploiement du 3 novembre : sauvegarde, envoi dans un dossier de préparation, contrôle, remplacement atomique, retour arrière). Aperçus : `docs/refonte-apercus/`.
+> **État : DÉPLOYÉE en production le 5 novembre 2026 à 03:26 UTC (autorisée par vous).** Procédé : sauvegarde fraîche (03:18) + copie du code d'avant, envoi dans le dossier de préparation protégé, contrôle (71 fichiers conformes, syntaxe PHP 8.3 valide), remplacement atomique en ≈ 1 s, aucune migration, aucune configuration touchée. Résultats : 480 mesures de disponibilité sur 480 en HTTP 200 pendant toute l'opération ; données **identiques** (52 produits, 1 devis, 2 comptes, 2 fichiers clients) ; 0 erreur fatale ; 59 ressources (maquettes, photos, logos, styles, scripts) servies en 200 ; accès protégés inchangés ; fonctions fermées toujours en 503. Retour arrière (code seulement, < 1 min) : `sh ~/domains/symoprint.com/public_html/_app/storage/deploy-stage/ops2.sh rollback`. Aperçus : `docs/refonte-apercus/`.
 
 ## Ce qui est conservé (charte strictement inchangée)
 Couleurs `#1F7A8C` (bleu pétrole), `#F4A62A` (orange), blanc, gris clair ; polices Montserrat (titres) et Inter (texte) ; logo Symo Print (même dessin). Seules des **teintes dérivées** de ces couleurs sont utilisées (fond crème = teinte claire de l'orange). Aucune route, aucun formulaire, aucune fonction n'a été supprimé ou modifié ; l'administration n'est pas touchée (elle garde `app.css` seul).

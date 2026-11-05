@@ -59,6 +59,15 @@ Dossier `backups/independantes/pre-lotsBF/` (0600, hors rotation, `SHA256SUMS` e
 | `htaccess-avant` | `.htaccess` d'avant | `8b6865ffa084c1b2` |
 Pas de copie chiffrée hors compte pour cette étape : elle suppose la nouvelle phrase secrète que vous choisirez (voir §3).
 
+## 4 quater. Copie indépendante avant le déploiement de la refonte graphique (5 nov. 2026, 03:18 UTC)
+Dossier `backups/independantes/pre-refonte/` (0600, hors rotation, `SHA256SUMS` en lecture seule) ; la copie précédente (`pre-lotsBF/`) est conservée. SHA-256 (début) :
+| Fichier | Contenu | SHA-256 (début) |
+|---|---|---|
+| `db-2026-11-05_031801.sql.gz` | base de données (30 tables, 717 lignes) | `5d51f1e5011a0589` |
+| `uploads-2026-11-05_031801.zip` | fichiers clients (2 fichiers, même empreinte qu'avant) | `060793a23cc6fd01` |
+| `code-avant-refonte.tgz` | **code du site avant la refonte** — retour arrière niveau 1 | `d448000ee5827ee6` |
+| `code-sha256-avant.txt` | empreintes de chaque fichier de code d'avant | `98e473b29ba6e08e` |
+
 ## 5. Bonnes pratiques à garder
 - Avant toute opération sensible : sauvegarde fraîche **nommée à part** (hors rotation) + contrôle d'intégrité + copie des empreintes.
 - Ne jamais supprimer une sauvegarde sans l'accord du propriétaire.
