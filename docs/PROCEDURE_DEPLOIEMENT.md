@@ -28,5 +28,13 @@ Procédure utilisée pour les déploiements du 3 et du 5 novembre 2026 (lots B �
 - Ne jamais déployer sans autorisation explicite ; s'arrêter et rendre compte à la moindre anomalie (écart d'empreinte, erreur de syntaxe, données différentes).
 - Aucune donnée n'est supprimée ; la base n'est pas modifiée par un déploiement de code (une mise à jour de données, comme l'ajout du groupe d'options « Orientation » du produit Dépliants, se décide séparément avec l'utilisateur).
 
-## Déploiement en attente (au 7 nov. 2026)
-Version `fa5fd1b` (29 fichiers, différence `a54094f..fa5fd1b`) : accueil restructuré, menu mobile en tiroir, correctifs tablettes/iPhone, icône du site, fiche Dépliants. Paquet répété en local sans écart. **Autorisation de l'utilisateur donnée** (« Oui », puis « déploie la version fa5fd1b »). Non déployée à ce jour : le connecteur Hostinger n'était pas chargé dans la session. Archive manuelle de secours et guide : voir l'historique de la conversation (`symoprint-mise-a-jour-fa5fd1b.zip`, regénérable par l'étape 2).
+## Retours d'expérience (déploiement du 7 nov. 2026)
+- Les tâches planifiées de l'hébergeur lancent la commande via `timeout` : **pas de `VAR=valeur` en préfixe** (« failed to run command »). Le nom de la version se passe en argument : `ops.sh backup <version>`, `ops.sh rollback <version>`.
+- La sortie de la dernière exécution se lit avec l'opération `hosting_cron-jobs_output` du connecteur (uid renvoyé à la création) ; compter ~1 minute entre l'heure planifiée et la sortie. Supprimer chaque tâche (`hosting_cron-jobs_delete`) dès qu'elle a servi ; il ne doit rester que la sauvegarde quotidienne `23 3 * * *`.
+- Contrôle de l'état de départ plus fiable qu'une lecture à l'œil : envoyer une liste d'empreintes attendue (`expected.txt`, triée) et un petit script de comparaison dans le dossier d'attente, et lire le `diff` (seul écart normal : `_app/config.local.php`, propre à la production).
+- Une seule session doit déployer à la fois (une session fille avait été ouverte pour reprendre le déploiement : lui demander de s'arrêter dès que la session parente dispose du connecteur).
+- Si les identifiants d'envoi sont saisis dans `tools/deploy/tus.env`, supprimer le fichier en fin de déploiement.
+
+## Historique
+- 5 nov. 2026 03:26 UTC : refonte graphique (71 fichiers, base `a54094f`).
+- 7 nov. 2026 14:20 UTC : accueil restructuré, menu mobile, correctifs appareils, icône, fiche Dépliants (29 fichiers, `a54094f` → `fa5fd1b`) ; sauvegarde `pre-structure` ; contrôles : état de départ identique à `a54094f`, 29/29 empreintes et syntaxes, 276 sondes « 200 », 18/18 vérifications dans un vrai navigateur (ordinateur, téléphone, tablette), données identiques. Version de référence en production : `fa5fd1b`.

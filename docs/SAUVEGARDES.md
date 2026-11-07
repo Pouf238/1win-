@@ -68,6 +68,9 @@ Dossier `backups/independantes/pre-refonte/` (0600, hors rotation, `SHA256SUMS` 
 | `code-avant-refonte.tgz` | **code du site avant la refonte** — retour arrière niveau 1 | `d448000ee5827ee6` |
 | `code-sha256-avant.txt` | empreintes de chaque fichier de code d'avant | `98e473b29ba6e08e` |
 
+## 4 quinquies. Copie indépendante avant le déploiement de la structure d'accueil / menu mobile / icône / dépliants (7 nov. 2026, 14:11 UTC)
+Dossier `~/domains/symoprint.com/backups/independantes/pre-structure/` (droits 700/600, `SHA256SUMS` en lecture seule) : base `db-2026-11-07_141101.sql.gz` (30 tables, 1 030 lignes, gzip vérifié), fichiers clients `uploads-2026-11-07_141101.zip` (2 fichiers, zip vérifié), copie du code d'avant `code-avant.tgz` (221 entrées), empreintes `code-sha256-avant.txt`, `htaccess-avant`. Restauration du code : `ops.sh rollback pre-structure` (voir `docs/PROCEDURE_DEPLOIEMENT.md`) ; de la base : § 4. Déploiement appliqué à 14:20:04 UTC.
+
 ## 5. Bonnes pratiques à garder
 - Avant toute opération sensible : sauvegarde fraîche **nommée à part** (hors rotation) + contrôle d'intégrité + copie des empreintes.
 - Ne jamais supprimer une sauvegarde sans l'accord du propriétaire.
