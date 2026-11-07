@@ -19,3 +19,8 @@ $lic = function (string $l): string {
   <?php endforeach; ?>
   </div>
 </div></section>
+<section class="section soft"><div class="wrap" style="max-width:78ch">
+  <h2>Araignée animée de l'accueil</h2>
+  <p>L'araignée 3D qui suit le curseur sur ordinateur utilise le modèle <b>« Prismatic Jumping Spider 3D Model Free »</b> de <b>iRahulRajput</b> (<a href="https://sketchfab.com/rt699448" rel="noopener">sketchfab.com/rt699448</a>), publié sous licence <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener license">CC BY 4.0</a>. <span class="muted">Modifications : modèle simplifié (≈ 7 000 triangles), couleurs intégrées au modèle et deux projections photographiques pour la peau, adaptés à l'affichage sur le Web.</span></p>
+  <p class="muted">L'animation est propulsée par <a href="https://threejs.org" rel="noopener">three.js</a> (licence MIT). Elle est facultative : un bouton en bas à gauche de l'accueil permet de l'arrêter, et elle ne se lance jamais avec l'option « réduire les animations » de l'appareil.</p>
+</div></section>

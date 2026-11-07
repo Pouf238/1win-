@@ -12,3 +12,6 @@ _app/storage/.notify-tick
 
 # identifiants d'envoi temporaires (jamais dans le dépôt)
 tools/deploy/tus.env
+
+# dépendances de l'outil de compilation de l'araignée (reconstruites par tools/spider/build.sh)
+tools/spider/node_modules/

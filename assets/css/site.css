@@ -346,3 +346,11 @@ html.lb-lock,html.lb-lock body{overflow:hidden}
 .buybox .total.bump{animation:bump .5s var(--ease)}@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.07);color:var(--p7)}100%{transform:scale(1)}}
 @media (max-width:620px){.lb{align-items:end;padding:0}.lb-p{width:100%;border-radius:24px 24px 0 0}.lb-s{padding:6px 8px 56px}.lb-n{top:auto;bottom:8px;margin-top:0;width:42px;height:42px}.lb-prev{left:calc(50% - 56px)}.lb-next{right:calc(50% - 56px)}.opts.c3{gap:8px}.opts.c3 .opt .box{padding:10px 6px}}
 @media (prefers-reduced-motion:reduce){.gallery .main img,.lb,.lb-p,.og-b,.og-c::before,.og-v,.thumbs button,.gzi{transition:none!important}.buybox .total.bump{animation:none}}
+/* Araignée 3D de l'accueil : interrupteur (ordinateur seulement, créé par js/spider.js) */
+.spider-toggle{position:fixed;left:18px;bottom:18px;z-index:90;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--p);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 24px -10px rgba(14,61,71,.45);transition:transform .25s var(--ease),background .2s,color .2s,border-color .2s}
+.spider-toggle[hidden]{display:none}
+.spider-toggle:hover{transform:translateY(-2px);border-color:var(--p);background:var(--p);color:#fff}
+.spider-toggle:focus-visible{outline:3px solid var(--a);outline-offset:3px}
+.spider-toggle.off{color:#7b8b90;background:#f4f6f7}.spider-toggle.off::after{content:"";position:absolute;width:26px;height:2px;border-radius:2px;background:currentColor;transform:rotate(-40deg)}
+@media (prefers-reduced-motion:reduce){.spider-toggle{transition:none}.spider-toggle:hover{transform:none}}
+@media print{.spider-toggle,.spider-layer{display:none!important}}

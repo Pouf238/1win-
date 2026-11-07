@@ -1,0 +1,12 @@
+import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { MeshoptDecoder } from 'meshoptimizer';
+import fs from 'node:fs';
+await MeshoptDecoder.ready;
+const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+const doc = await io.read('source/spider-meshopt.glb');
+for (const ext of doc.getRoot().listExtensionsUsed()) if (ext.extensionName === 'EXT_meshopt_compression') ext.dispose();
+await io.write('../../assets/3d/spider.glb', doc);
+const b = fs.readFileSync('../../assets/3d/spider.glb');
+const cl = b.readUInt32LE(12); const j = JSON.parse(b.subarray(20, 20 + cl).toString());
+console.log('taille', b.length, 'extensionsUsed', j.extensionsUsed, 'required', j.extensionsRequired);

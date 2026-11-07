@@ -117,7 +117,7 @@ module.exports = async function (X) {
   await t('V-02', 'compatible avec la CSP : script externe uniquement (aucun script ni gestionnaire en ligne, aucun <style>), le fichier est servi', async () => {
     const c = new Client(), h = await c.r('GET', '/'); const csp = h.h.get('content-security-policy') || '';
     const js = await c.r('GET', (h.body.match(/<script src="(\/assets\/js\/vitrine\.js[^"]*)"/) || [])[1] || '/assets/js/vitrine.js');
-    const inline = (h.body.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/g) || []).length;
+    const inline = (h.body.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/(?:ld\+)?json)[^>]*>/g) || []).length;
     return { pass: js.status === 200 && /Vitrine animée/.test(js.body) && inline === 0 && !/<style[\s>]/i.test(h.body) && !/\son(click|load|pointerenter|focus)=/i.test(h.body) && /script-src 'self'/.test(csp) && !/script-src[^;]*unsafe-inline/.test(csp), note: 'inline=' + inline + ' csp=' + csp.slice(0, 60) };
   });
   await t('V-03', 'le script n\'est chargé que sur l\'accueil (pas sur le catalogue ni les fiches) et la section n\'existe que là', async () => {
@@ -134,7 +134,7 @@ module.exports = async function (X) {
   const PAGES = ['/', '/catalogue', '/c/affiches', '/p/depliants', '/nos-services', '/a-propos', '/livraison', '/guide-fichiers', '/faq', '/contact', '/credits-photos', '/compte/connexion', '/devis'];
   await t('D-01', 'accueil (structure) : barre d\'avantages, bandeau d\'en-tête, hero en mosaïque, meilleures ventes en 5 tuiles, carrousel de catégories, 3 cartes de services, grille « Trouvez le produit », parcours en 4 étapes, newsletter au pied de page, feuille de style et script chargés (aucun script ni style en ligne)', async () => {
     fh('setfeatures', '{}'); const h = await new Client().r('GET', '/'); const b = h.body;
-    const inline = (b.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/g) || []).length;
+    const inline = (b.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/(?:ld\+)?json)[^>]*>/g) || []).length;
     return { pass: h.status === 200 && /class="hb-main/.test(b) && /class="usps"/.test(b) && /class="hband"/.test(b) && (b.match(/class="cv-t"/g) || []).length >= 5 && (b.match(/class="sv rv"/g) || []).length === 3 && /data-car/.test(b) && /class="fp"/.test(b) && /class="fnews"/.test(b) && (b.match(/id="nl"/g) || []).length === 1 && (b.match(/class="bs"/g) || []).length === 1 && (b.match(/class="pst /g) || []).length === 4 && /css\/site\.css/.test(b) && /js\/site\.js/.test(b) && inline === 0 && !/<style[\s>]/i.test(b) && ['hb-main', 'class="bs"', 'data-car', 'class="sv3"', 'class="fp"', 'class="proc"'].map(k => b.indexOf(k)).every((v, i, a) => v > 0 && (i === 0 || v > a[i - 1])), note: 'inline=' + inline };
   });
   await t('D-02', 'aucune image cassée : toutes les images (maquettes, photos, produits) des 12 pages principales répondent 200', async () => {
@@ -217,6 +217,23 @@ module.exports = async function (X) {
     let noOr = ''; try { noOr = require('child_process').execFileSync('php', ['-r', php], { encoding: 'utf8' }); } catch (e) { noOr = 'erreur'; }
     const guard = noOr === 'depliant-2v-portrait,depliant-3v-roule,depliant-3v-accordeon|depliant-2v-portrait';
     return { pass: svgOk && thumbs === 5 && mapOk && orient && page && untouched && jsOk && guard, note: `svg=${svgOk} miniatures=${thumbs}/5 table=${mapOk} orientation=${orient} page=${page} autres=${untouched} js=${jsOk} sans-orientation=${guard ? 'ok' : noOr}` };
+  });
+  await t('D-11', 'araignée 3D de l\'accueil : fichiers servis, modèle sans compression WebAssembly, script sans eval, CSP inchangée, chargeur discret (ordinateur, mouvement réduit, mémoire du choix), seulement sur l\'accueil, crédits CC BY, serveur réglé pour .glb', async () => {
+    fh('setfeatures', '{}'); const home = await new Client().r('GET', '/'); const b = home.body;
+    const cfgRaw = (b.match(/<script type="application\/json" id="spider-cfg">([^<]*)<\/script>/) || [])[1]; let cfg = {}; try { cfg = JSON.parse(cfgRaw); } catch (e) {}
+    const urls = ['script', 'model', 'top', 'face'].map(k => cfg[k]); const cfgOk = urls.every(u => typeof u === 'string' && /^\/assets\/(js|3d)\/[a-z-]+\.(js|glb|webp)\?v=\d+$/.test(u)) && /pcard/.test(cfg.anchors || '') && /data-silk-anchor/.test(cfg.anchors || '');
+    const st = []; for (const u of urls) st.push((await new Client().r('GET', u || '/x')).status);
+    const glb = fs.readFileSync(path.join(ROOT, 'assets/3d/spider.glb')); const jl = glb.readUInt32LE(12); let gj = {}; try { gj = JSON.parse(glb.subarray(20, 20 + jl).toString()); } catch (e) {}
+    const glbOk = glb.subarray(0, 4).toString() === 'glTF' && glb.readUInt32LE(4) === 2 && !(gj.extensionsRequired || []).concat(gj.extensionsUsed || []).includes('EXT_meshopt_compression') && (gj.extensionsRequired || []).every(x => x === 'KHR_mesh_quantization');
+    const big = fs.readFileSync(path.join(ROOT, 'assets/js/silk-spider.js'), 'utf8'); const noEval = !/new Function\(|[^a-zA-Z.]eval\(|WebAssembly|importScripts|new Worker\(/.test(big);
+    const csp = String(home.h.get('content-security-policy') || ''); const cspOk = /script-src 'self'(;|$)/.test(csp) && !/unsafe-eval|wasm-unsafe-eval/.test(csp) && /connect-src 'self'/.test(csp);
+    const ld = fs.readFileSync(path.join(ROOT, 'assets/js/spider.js'), 'utf8'); const loader = /prefers-reduced-motion: reduce/.test(ld) && /hover: hover\) and \(pointer: fine/.test(ld) && /innerWidth >= 1025/.test(ld) && /saveData/.test(ld) && /requestIdleCallback/.test(ld) && /localStorage/.test(ld) && /aria-pressed/.test(ld) && !/eval\(|new Function\(|document\.write/.test(ld);
+    const onHome = /js\/spider\.js/.test(b) && /id="spider-cfg"/.test(b); const others = []; for (const u of ['/catalogue', '/devis', '/contact', '/p/flyers', '/credits-photos']) { const x = (await new Client().r('GET', u)).body; others.push(!/spider-cfg|js\/spider\.js|js\/silk-spider/.test(x)); }
+    const cr = (await new Client().r('GET', '/credits-photos')).body; const credit = /iRahulRajput/.test(cr) && /creativecommons\.org\/licenses\/by\/4\.0/.test(cr) && /sketchfab\.com\/rt699448/.test(cr) && /Modifications/.test(cr) && /three\.js/.test(cr);
+    const ht = fs.readFileSync(path.join(ROOT, '.htaccess'), 'utf8'); const htOk = /AddType model\/gltf-binary \.glb/.test(ht) && /FilesMatch "\\\.\([^"]*\|glb\)\$"/.test(ht) && /DEFLATE[^\n]*model\/gltf-binary/.test(ht);
+    const css = fs.readFileSync(path.join(ROOT, 'assets/css/site.css'), 'utf8'); const cssOk = /\.spider-toggle\{position:fixed;left:18px/.test(css) && /@media \(prefers-reduced-motion:reduce\)\{\.spider-toggle/.test(css);
+    const src = ['tools/spider/spider-src.ts', 'tools/spider/build.sh', 'tools/spider/README.md', 'tools/spider/source/spider-meshopt.glb'].every(f => fs.existsSync(path.join(ROOT, f)));
+    return { pass: cfgOk && st.every(x => x === 200) && glbOk && noEval && cspOk && loader && onHome && others.every(Boolean) && credit && htOk && cssOk && src, note: `config=${cfgOk} http=${st.join(',')} glb=${glbOk} sans-eval=${noEval} csp=${cspOk} chargeur=${loader} accueil=${onHome} autres-pages-intactes=${others.every(Boolean)} credits=${credit} htaccess=${htOk} css=${cssOk} sources=${src}` };
   });
   fh('setfeatures', '{}');
 };
