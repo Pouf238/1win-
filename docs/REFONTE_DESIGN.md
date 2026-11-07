@@ -36,5 +36,24 @@ CSS 76 Ko + JS 12 Ko (hors cache : une fois), photos WebP en `srcset` (600/1200 
 ## Tests (4 nov. 2026, local)
 Interrupteurs **69/69** (63 + 6 nouveaux D-01 à D-06 : structure de l'accueil, aucune image cassée sur 12 pages, 27 maquettes valides avec logo, crédits complets, cohérence commerciale, accessibilité de base), sécurité **119/119**, plateforme **17/17**. Audit visuel de 19 pages × 3 formats (ordinateur, tablette, mobile) : aucun débordement horizontal, aucune image cassée, aucune erreur de console (hors 503/404 volontaires).
 
+## Structure de l'accueil alignée sur un grand imprimeur en ligne (7 nov. 2026 — local, NON déployé)
+Demande : « que mon site soit comme Onlineprinters dans la structure ». Seule l'**organisation** des sections est reprise ; aucun texte, image, logo ni pictogramme de ce site n'est utilisé (visuels = maquettes SVG Symo Print, photos libres créditées, logo Symo Print ; textes existants).
+
+| Ordre | Section | Détail |
+|---|---|---|
+| 1 | Barre d'avantages | Trois avantages avec coche (devis rapide, fichier vérifié + BAT, livraison en Côte d'Ivoire) ; « Paiement Mobile Money » seulement si les paiements sont ouverts ; WhatsApp et téléphone à droite |
+| 2 | En-tête | Bandeau sombre (teal de la charte) : logo clair, recherche centrée, compte / favoris / panier ; menu clair en dessous avec méga-menu à vignettes |
+| 3 | Mosaïque d'accueil | Grande carte promo + cartes photo + carte d'arguments (inchangé) |
+| 4 | Meilleures ventes | 5 tuiles produits (complétées par les produits populaires si besoin) ; défilement horizontal sur tablette/mobile |
+| 5 | Grande variété de produits | Carrousel des catégories principales, flèches (si ça déborde), défilement tactile, flèches du clavier |
+| 6 | Nos services | 3 cartes avec visuel : création graphique, vérification & BAT, livraison & retrait |
+| 7 | Trouvez le produit qu'il vous faut | Grille d'icônes de toutes les sous-catégories + bandeau « tout type de support » |
+| 8 | Suite propre à Symo Print | Parcours en 4 étapes, vitrine animée, studio, procédés, promotions, populaires, nouveautés, témoignages (si présents) |
+| 9 | Pied de page | Bandeau « Restez informé » (newsletter) sur toutes les pages, puis colonnes Catalogue / Informations / Contact |
+
+Retirés de l'accueil : le bandeau d'arguments `.assure` (repris dans la barre d'avantages) et le bandeau défilant. Le formulaire newsletter a quitté l'accueil pour le pied de page (même route `/newsletter`, mêmes protections : jeton, piège anti-robot, limite de débit). Aucun avis chiffré n'est affiché (rien d'inventé : la section témoignages n'apparaît que s'il y en a en base).
+Fichiers : `_app/views/layout/main.php`, `_app/views/shop/home.php`, `assets/css/site.css`, `assets/js/site.js` (carrousel), test D-01 renforcé (ordre des sections, présence de chaque bloc, un seul `id="nl"`). Aperçus : `docs/refonte-apercus/structure-accueil-bureau.jpg` et `structure-accueil-mobile.jpg`.
+Tests locaux : interrupteurs 69/69, sécurité 119/119, plateforme 17/17, unitaires 21/21. Pas de débordement horizontal à 390 px. Mise en production : en attente de votre autorisation explicite.
+
 ## Retour arrière
 Le style public est une couche séparée : retirer `site.css`/`site.js` du gabarit rend l'ancien aspect ; sinon `git revert` du commit de la refonte. Rien en base de données.

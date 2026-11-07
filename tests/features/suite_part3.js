@@ -132,10 +132,10 @@ module.exports = async function (X) {
 
   sect('8. Refonte graphique : visuels, pages, liens d\'images, licences, accessibilité de base');
   const PAGES = ['/', '/catalogue', '/c/affiches', '/nos-services', '/a-propos', '/livraison', '/guide-fichiers', '/faq', '/contact', '/credits-photos', '/compte/connexion', '/devis'];
-  await t('D-01', 'accueil : mosaïque du hero, 5 univers en maquettes de marque, parcours en 4 étapes, feuille de style et script d\'habillage chargés (aucun script ni style en ligne)', async () => {
+  await t('D-01', 'accueil (structure) : barre d\'avantages, bandeau d\'en-tête, hero en mosaïque, meilleures ventes en 5 tuiles, carrousel de catégories, 3 cartes de services, grille « Trouvez le produit », parcours en 4 étapes, newsletter au pied de page, feuille de style et script chargés (aucun script ni style en ligne)', async () => {
     fh('setfeatures', '{}'); const h = await new Client().r('GET', '/'); const b = h.body;
     const inline = (b.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/g) || []).length;
-    return { pass: h.status === 200 && /class="hb-main/.test(b) && (b.match(/class="cb-t /g) || []).length >= 5 && (b.match(/class="pst /g) || []).length === 4 && /css\/site\.css/.test(b) && /js\/site\.js/.test(b) && inline === 0 && !/<style[\s>]/i.test(b), note: 'inline=' + inline };
+    return { pass: h.status === 200 && /class="hb-main/.test(b) && /class="usps"/.test(b) && /class="hband"/.test(b) && (b.match(/class="cv-t"/g) || []).length >= 5 && (b.match(/class="sv rv"/g) || []).length === 3 && /data-car/.test(b) && /class="fp"/.test(b) && /class="fnews"/.test(b) && (b.match(/id="nl"/g) || []).length === 1 && (b.match(/class="bs"/g) || []).length === 1 && (b.match(/class="pst /g) || []).length === 4 && /css\/site\.css/.test(b) && /js\/site\.js/.test(b) && inline === 0 && !/<style[\s>]/i.test(b) && ['hb-main', 'class="bs"', 'data-car', 'class="sv3"', 'class="fp"', 'class="proc"'].map(k => b.indexOf(k)).every((v, i, a) => v > 0 && (i === 0 || v > a[i - 1])), note: 'inline=' + inline };
   });
   await t('D-02', 'aucune image cassée : toutes les images (maquettes, photos, produits) des 12 pages principales répondent 200', async () => {
     const bad = []; const seen = new Set(); let n = 0;

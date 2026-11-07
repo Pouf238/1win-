@@ -28,11 +28,11 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <body class="<?= e($meta['body'] ?? '') ?>" data-csrf="<?= e(csrf_token()) ?>">
 <a class="skip" href="#main">Aller au contenu</a>
 <div class="topbar"><div class="wrap">
-  <div class="l"><a href="<?= e(wa_link('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp <?= e(shop('phone2')) ?></a><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>
-  <div class="r"><span><?= ic('truck') ?> Livraison à Abidjan et dans toute la Côte d'Ivoire</span><span><?= ic('pin') ?> <?= e(shop('address')) ?></span></div>
+  <ul class="usps"><li><?= ic('check') ?>Devis rapide, WhatsApp ou e-mail</li><li><?= ic('check') ?>Fichier vérifié, BAT validé</li><li><?= ic('check') ?>Livraison en Côte d'Ivoire</li><?php if (feature('payments')): ?><li><?= ic('check') ?>Paiement Mobile Money</li><?php endif; ?></ul>
+  <div class="r"><a href="<?= e(wa_link('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp <?= e(shop('phone2')) ?></a><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>
 </div></div>
-<header class="header"><div class="wrap main">
-  <a class="logo" href="/" aria-label="<?= e($name) ?>, accueil"><img src="<?= e(asset('img/brand/logo.svg')) ?>" alt="<?= e($name) ?>" width="150" height="46"></a>
+<header class="header"><div class="hband"><div class="wrap main">
+  <a class="logo" href="/" aria-label="<?= e($name) ?>, accueil"><img src="<?= e(asset('img/brand/logo-light.svg')) ?>" alt="<?= e($name) ?>" width="150" height="46"></a>
   <form class="search" action="/recherche" method="get" role="search" autocomplete="off">
     <label class="sr" for="q">Rechercher un produit</label><input id="q" name="q" type="search" placeholder="Rechercher : flyers, cartes de visite, bâche, t-shirt…" value="<?= e(get('q')) ?>" data-suggest>
     <button type="submit" aria-label="Rechercher"><?= ic('search') ?></button><div class="suggest" id="suggest" role="listbox"></div>
@@ -43,7 +43,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
     <?php if (feature('orders')): ?><a href="/panier" aria-label="Panier, <?= $cartN ?> article(s)"><?= ic('cart') ?><span>Panier</span><i class="cnt" data-cart-count data-n="<?= $cartN ?>"><?= $cartN ?: '' ?></i></a><?php endif; ?>
     <button class="burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false" data-burger><?= ic('menu') ?></button>
   </div>
-</div>
+</div></div>
 <nav class="navbar" id="navbar" aria-label="Catalogue"><div class="wrap">
   <?php foreach ($tree as $c): ?>
   <div class="nl"><a href="/c/<?= e($c['slug']) ?>"><?= e($c['name']) ?></a>
@@ -63,6 +63,8 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <?php if (empty($meta['no_prefoot'])): ?><section class="prefoot" aria-label="Contact"><div class="wrap"><div class="pf-in"><div><span class="eyebrow">Un projet d'impression ?</span><h2>Parlons de votre prochain support.</h2><p>Décrivez votre besoin : notre équipe vous répond rapidement sur WhatsApp ou par e-mail, avec un conseil et un prix clair.</p></div>
   <div class="pf-act"><?php if (feature('quotes')): ?><a class="btn btn-a btn-lg" href="/devis">Demander un devis <?= ic('arrow') ?></a><?php endif; ?><a class="btn btn-lg btn-ghost" href="<?= e(wa_link('Bonjour Symo Print, j\'ai un projet d\'impression.')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp</a></div></div></div></section><?php endif; ?>
 <footer class="footer">
+<div class="fnews"><div class="wrap"><div><h2>Restez informé</h2><p>Nouveautés, promotions et conseils d'impression, directement dans votre boîte mail.</p></div>
+  <form action="/newsletter" method="post"><?= csrf_field() ?><div class="hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div><label class="sr" for="nl">Votre e-mail</label><input id="nl" type="email" name="email" placeholder="Votre adresse e-mail" required><button class="btn btn-a" type="submit">S'inscrire</button></form></div></div>
 <div class="wrap">
   <div><img src="<?= e(asset('img/brand/logo-light.svg')) ?>" alt="<?= e($name) ?>" width="140" height="43" loading="lazy"><p><?= e(shop('tagline')) ?>. Impression et personnalisation sur tout type de support, à Abidjan et dans toute la Côte d'Ivoire.</p>
     <?php if (feature('payments')): ?><div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Moov Money</span><span>Wave</span></div><?php endif; ?></div>
