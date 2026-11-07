@@ -80,7 +80,10 @@ const PRODUCT_VISUALS = [
         'titles' => ['depliant-2v-portrait' => 'Dépliant 2 volets, format portrait', 'depliant-2v-paysage' => 'Dépliant 2 volets, format paysage', 'depliant-2v-carre' => 'Dépliant 2 volets, format carré', 'depliant-3v-roule' => 'Dépliant 3 volets roulés', 'depliant-3v-accordeon' => 'Dépliant 3 volets accordéon'],
     ],
 ];
-/** Visuels d'un produit selon ses options (null si le produit n'en a pas). Retourne : courant, liste des images (miniatures), table clé → image pour le navigateur. */
+/**
+ * Visuels d'un produit selon ses options (null si le produit n'en a pas). Retourne : courant, liste des images (miniatures), table clé → image pour le navigateur.
+ * Seuls les visuels ACCESSIBLES avec les options réelles du produit sont proposés (pas de miniature « paysage » si le produit n'a pas d'option Orientation).
+ */
 function product_visuals(array $p, array $opts = []): ?array {
     $v = PRODUCT_VISUALS[(string) ($p['slug'] ?? '')] ?? null; if (!$v) return null;
     $pick = function (array $o) use ($v): ?string {
@@ -88,11 +91,15 @@ function product_visuals(array $p, array $opts = []): ?array {
         while ($vals) { $k = implode('|', $vals); if (isset($v['images'][$k])) return $v['images'][$k]; array_pop($vals); }
         return null;
     };
-    $cur = $pick($opts) ?? reset($v['images']);
-    $imgs = []; foreach (array_unique(array_values($v['images'])) as $n) {            // une photo déposée sous le même nom (assets/img/produits/<nom>.webp) remplace la maquette
+    $have = []; foreach (jd($p['groups_json'] ?? '') as $g) if (in_array($g['key'] ?? '', $v['groups'], true)) $have[$g['key']] = array_map(fn($c) => (string) ($c['key'] ?? ''), $g['choices'] ?? []);
+    if (!$have) return null;
+    $combos = [[]]; foreach ($v['groups'] as $g) { if (!isset($have[$g])) continue; $n = []; foreach ($combos as $c) foreach ($have[$g] as $k) $n[] = $c + [$g => $k]; $combos = $n; }
+    $reach = []; foreach ($combos as $c) { $n = $pick($c); if ($n) $reach[$n] = true; }
+    $names = array_values(array_filter(array_unique(array_values($v['images'])), fn($n) => isset($reach[$n]))); if (!$names) return null;
+    $cur = $pick($opts); if (!$cur || !isset($reach[$cur])) $cur = $names[0];
+    $imgs = []; foreach ($names as $n) {                 // une photo déposée sous le même nom (assets/img/produits/<nom>.webp) remplace la maquette
         $own = is_file(ROOT . '/assets/img/produits/' . $n . '.webp');
         $imgs[] = ['name' => $n, 'title' => $v['titles'][$n] ?? $n, 'mock' => !$own, 'src' => $own ? asset('img/produits/' . $n . '.webp') : asset('img/mock/' . $n . '.svg')];
     }
-    $map = []; foreach ($v['images'] as $k => $n) $map[$k] = $n;
-    return ['groups' => $v['groups'], 'current' => $cur, 'images' => $imgs, 'map' => $map];
+    return ['groups' => $v['groups'], 'current' => $cur, 'images' => $imgs, 'map' => $v['images']];
 }

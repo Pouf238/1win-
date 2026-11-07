@@ -211,7 +211,12 @@ module.exports = async function (X) {
     const page = r.status === 200 && /data-zoom/.test(b) && /js\/product\.js/.test(b) && /class="opts c3"/.test(og.replace('data-group="orientation"', '') + b.slice(b.indexOf('data-group="orientation"'), b.indexOf('data-group="orientation"') + 900));
     const other = (await new Client().r('GET', '/p/flyers')).body; const untouched = !/id="pvis"/.test(other) && /js\/product\.js/.test(other);
     const js = fs.readFileSync(path.join(ROOT, 'assets/js/product.js'), 'utf8'); const jsOk = /Escape/.test(js) && /aria-expanded/.test(js) && /lb-lock/.test(js);
-    return { pass: svgOk && thumbs === 5 && mapOk && orient && page && untouched && jsOk, note: `svg=${svgOk} miniatures=${thumbs}/5 table=${mapOk} orientation=${orient} page=${page} autres=${untouched} js=${jsOk}` };
+    // garde-fou commercial : sans option « Orientation » dans les données (cas de la production actuelle), pas de miniature « paysage » ni « carré »
+    const php = "define('ROOT', '" + ROOT.replace(/\\/g, '/') + "'); require ROOT . '/_app/lib/core.php'; require ROOT . '/_app/lib/art.php'; " +
+      "$v = product_visuals(['slug' => 'depliants', 'groups_json' => json_encode([['key' => 'pliage', 'choices' => [['key' => '2v'], ['key' => '3v'], ['key' => 'acc']]]])], ['pliage' => '2v', 'orientation' => 'carre']); echo $v ? implode(',', array_column($v['images'], 'name')) . '|' . $v['current'] : 'none';";
+    let noOr = ''; try { noOr = require('child_process').execFileSync('php', ['-r', php], { encoding: 'utf8' }); } catch (e) { noOr = 'erreur'; }
+    const guard = noOr === 'depliant-2v-portrait,depliant-3v-roule,depliant-3v-accordeon|depliant-2v-portrait';
+    return { pass: svgOk && thumbs === 5 && mapOk && orient && page && untouched && jsOk && guard, note: `svg=${svgOk} miniatures=${thumbs}/5 table=${mapOk} orientation=${orient} page=${page} autres=${untouched} js=${jsOk} sans-orientation=${guard ? 'ok' : noOr}` };
   });
   fh('setfeatures', '{}');
 };
