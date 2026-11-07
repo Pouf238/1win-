@@ -26,7 +26,7 @@
   function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
   function render(r) {
     last = r; if (!r.ok) return;
-    $('#b-total').textContent = r.total_fmt; $('#m-total').textContent = r.total_fmt; $('#b-unit').textContent = r.unit_fmt;
+    var tt = $('#b-total'); if (tt.textContent !== r.total_fmt) { tt.textContent = r.total_fmt; tt.classList.remove('bump'); void tt.offsetWidth; tt.classList.add('bump'); } $('#m-total').textContent = r.total_fmt; $('#b-unit').textContent = r.unit_fmt;
     $('#b-lines').innerHTML = r.lines.map(function (l) { return '<div class="bl"><span>' + esc(l.label) + '</span><span>' + (l.amount < 0 ? '−' : '') + esc(l.fmt.replace('-', '')) + '</span></div>'; }).join('');
     $('#b-errors').innerHTML = (r.errors || []).map(function (e) { return '<div class="alert a-warn">' + esc(e) + '</div>'; }).join('');
     $('#b-from').textContent = r.delay.from; $('#b-to').textContent = r.delay.to;

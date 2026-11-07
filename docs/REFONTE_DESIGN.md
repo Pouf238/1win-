@@ -53,7 +53,7 @@ Demande : « que mon site soit comme Onlineprinters dans la structure ». Seule 
 
 Retirés de l'accueil : le bandeau d'arguments `.assure` (repris dans la barre d'avantages) et le bandeau défilant. Le formulaire newsletter a quitté l'accueil pour le pied de page (même route `/newsletter`, mêmes protections : jeton, piège anti-robot, limite de débit). Aucun avis chiffré n'est affiché (rien d'inventé : la section témoignages n'apparaît que s'il y en a en base).
 Fichiers : `_app/views/layout/main.php`, `_app/views/shop/home.php`, `assets/css/site.css`, `assets/js/site.js` (carrousel), test D-01 renforcé (ordre des sections, présence de chaque bloc, un seul `id="nl"`). Aperçus : `docs/refonte-apercus/structure-accueil-bureau.jpg` et `structure-accueil-mobile.jpg`.
-Tests locaux : interrupteurs 72/72 (avec D-07 à D-09), sécurité 119/119, plateforme 17/17, unitaires 21/21. Pas de débordement horizontal à 390 px. Mise en production : en attente de votre autorisation explicite.
+Tests locaux : interrupteurs 73/73 (avec D-07 à D-10), sécurité 119/119, plateforme 17/17, unitaires 21/21. Pas de débordement horizontal à 390 px. Mise en production : en attente de votre autorisation explicite.
 
 ## Menu mobile : tiroir plein écran (7 nov. 2026 — local, NON déployé)
 Défaut constaté en production sur téléphone (vidéo de l'utilisateur) : le menu s'ouvrait dans une petite fenêtre de la hauteur de l'en-tête, avec défilement interne. Cause : l'en-tête avait un flou d'arrière-plan (`backdrop-filter`), qui devient le « parent » des éléments à position fixe ; le tiroir y restait enfermé. Correctif : pas de flou en mobile (≤ 860 px).
@@ -83,6 +83,21 @@ Le « S » de la marque (fourni par le propriétaire : `docs/identite-visuelle/`
 Dessin et couleurs d'origine (#0F7291, #F2912A, blanc) inchangés ; seuls les angles gris de l'image sont rendus transparents. Le logo de l'en-tête (SYMO PRINT) ne change pas.
 Mise en œuvre : fonction `site_icons()` (`_app/lib/core.php`) utilisée par le gabarit public et celui de l'administration ; fichiers versionnés par `?v=` (les navigateurs gardent les icônes très longtemps). Régénération : `python3 tools/build-icons.py` puis `node tools/render-icons.js`. `.htaccess` : type MIME du manifeste + en-têtes de sécurité des fichiers statiques. Test D-09.
 **À inclure au prochain déploiement** : `favicon.ico`, `site.webmanifest` (racine), les 8 fichiers d'icônes de `assets/img/brand/`, `.htaccess`, `_app/lib/core.php`, les deux gabarits.
+
+## Fiche dépliants : visuels par forme, galerie, options repliables (7 nov. 2026 — local, NON déployé)
+Demande : placer sur la fiche des dépliants les images de dépliants envoyées par l'utilisateur (carré, paysage, portrait, pliages) et s'inspirer d'une fiche de référence pour la disposition et les animations.
+**Images envoyées : non utilisées.** Ce sont des photos de produits d'Onlineprinters (l'une affiche leur raison sociale « Onlineprinters GbmH », d'autres sont des captures de leur interface). Les mentions légales de ce site désignent Onlineprinters GmbH / Onlineprinters France SAS, aucune autorisation n'a été présentée, et la consigne initiale du projet est de ne pas republier leurs images protégées. Elles n'ont pas été copiées dans le dépôt.
+**Ce qui a été fait à la place :** cinq maquettes **originales** (couleurs, logo et formes de Symo Print, aucun texte ni image de tiers) — `depliant-2v-portrait`, `depliant-2v-paysage`, `depliant-2v-carre`, `depliant-3v-roule`, `depliant-3v-accordeon` (`assets/img/mock/`, générées par `tools/make-depliants.py`). Chaque forme est affichée là où l'option correspondante est choisie.
+| Élément | Comportement |
+|---|---|
+| Galerie | Image principale + 5 miniatures ; l'image **suit les choix** (pliage, orientation) avec un fondu ; clic sur une miniature |
+| Agrandissement | Clic sur l'image : visionneuse avec titre, croix, flèches, compteur ; Échap, flèches du clavier, clic extérieur ; feuille du bas sur téléphone ; focus rendu à la fermeture |
+| Option « Orientation » | Cartes Portrait / Paysage / Carré (3 colonnes), affichée seulement pour le pliage 2 volets, **sans supplément** (rien d'inventé : les prix restent indicatifs) |
+| Options repliables | Chaque groupe d'options devient une ligne « libellé · valeur choisie · flèche » avec animation d'ouverture ; le premier groupe est ouvert ; sans JavaScript tout reste ouvert ; s'applique à tous les produits (testé sur les 52 : 428 lignes, 426 choix modifiés, aucune erreur) |
+| Prix | Le total « réagit » quand il change |
+Remplacer une maquette par une vraie photo : déposer un fichier WebP **du même nom** dans `assets/img/produits/` (ex. `depliant-2v-carre.webp`) : il remplace automatiquement la maquette correspondante (photos dont le client détient les droits).
+Données : le groupe « Orientation » est dans les données de démonstration (`_app/sql/seed.php`). **En production il n'existe pas encore** : à ajouter dans l'administration (Produits → Dépliants → Options : clé `orientation`, choix `portrait`, `paysage`, `carre`, affichage conditionnel « pliage = 2v ») ou par une mise à jour de données au prochain déploiement, après confirmation que les formats paysage et carré sont bien proposés et à quel prix. La galerie fonctionne dès maintenant pour le pliage (2 volets, roulé, accordéon) sans modifier les données.
+Fichiers : `_app/lib/art.php` (`PRODUCT_VISUALS`, `product_visuals()`), `_app/views/shop/product.php`, `_app/routes/public.php`, `assets/js/product.js` (nouveau), `assets/js/app.js` (ancien gestionnaire de miniatures retiré), `assets/js/configurator.js`, `assets/css/site.css`, `tools/make-depliants.py`. Test D-10.
 
 ## Retour arrière
 Le style public est une couche séparée : retirer `site.css`/`site.js` du gabarit rend l'ancien aspect ; sinon `git revert` du commit de la refonte. Rien en base de données.

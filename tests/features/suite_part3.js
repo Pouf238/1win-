@@ -131,7 +131,7 @@ module.exports = async function (X) {
   });
 
   sect('8. Refonte graphique : visuels, pages, liens d\'images, licences, accessibilité de base');
-  const PAGES = ['/', '/catalogue', '/c/affiches', '/nos-services', '/a-propos', '/livraison', '/guide-fichiers', '/faq', '/contact', '/credits-photos', '/compte/connexion', '/devis'];
+  const PAGES = ['/', '/catalogue', '/c/affiches', '/p/depliants', '/nos-services', '/a-propos', '/livraison', '/guide-fichiers', '/faq', '/contact', '/credits-photos', '/compte/connexion', '/devis'];
   await t('D-01', 'accueil (structure) : barre d\'avantages, bandeau d\'en-tête, hero en mosaïque, meilleures ventes en 5 tuiles, carrousel de catégories, 3 cartes de services, grille « Trouvez le produit », parcours en 4 étapes, newsletter au pied de page, feuille de style et script chargés (aucun script ni style en ligne)', async () => {
     fh('setfeatures', '{}'); const h = await new Client().r('GET', '/'); const b = h.body;
     const inline = (b.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/g) || []).length;
@@ -199,6 +199,19 @@ module.exports = async function (X) {
     const svg = fs.readFileSync(path.join(ROOT, 'assets/img/brand/favicon.svg'), 'utf8'); const svgOk = /^<svg [^>]*viewBox="0 0 1024 1024"/.test(svg) && /#0F7291/.test(svg) && /#F2912A/.test(svg) && !/<script|onload=/i.test(svg);
     const st = []; for (const u of ['/favicon.ico', '/site.webmanifest', '/assets/img/brand/favicon.svg', '/assets/img/brand/apple-touch-icon.png', '/assets/img/brand/icon-512.png']) st.push((await new Client().r('GET', u)).status);
     return { pass: head && !badDim.length && icoOk && manOk && svgOk && st.every(x => x === 200), note: `balises=${head} dimensions=${badDim.join(',') || 'ok'} ico=${sizes.join('/')} manifeste=${manOk} svg=${svgOk} http=${st.join(',')}` };
+  });
+  await t('D-10', 'fiche dépliants : 5 maquettes originales (portrait, paysage, carré, roulé, accordéon), galerie qui suit les options, agrandissement, option « Orientation » (2 volets, sans supplément), script servi ; un produit sans visuels par option reste inchangé', async () => {
+    fh('setfeatures', '{}'); const names = ['depliant-2v-portrait', 'depliant-2v-paysage', 'depliant-2v-carre', 'depliant-3v-roule', 'depliant-3v-accordeon'];
+    const svgOk = names.every(n => { const f = path.join(ROOT, 'assets/img/mock', n + '.svg'); if (!fs.existsSync(f)) return false; const x = fs.readFileSync(f, 'utf8'); return /^<svg [^>]*viewBox/.test(x) && /<\/svg>$/.test(x) && !/<script|onload=|<image/i.test(x) && (!/roule|accordeon/.test(n) || /#lg/.test(x)); });
+    const r = await new Client().r('GET', '/p/depliants'), b = r.body;
+    const thumbs = names.filter(n => b.includes('data-key="' + n + '"')).length;
+    const pv = (b.match(/<script type="application\/json" id="pvis">([^<]*)<\/script>/) || [])[1]; let map = {}; try { map = JSON.parse(pv).map; } catch (e) {}
+    const mapOk = map['2v|carre'] === 'depliant-2v-carre' && map['2v|paysage'] === 'depliant-2v-paysage' && map['3v'] === 'depliant-3v-roule' && map.acc === 'depliant-3v-accordeon';
+    const og = b.slice(b.indexOf('data-group="orientation"'), b.indexOf('data-group="papier"')); const orient = /data-showif="\{&quot;pliage&quot;:\[&quot;2v&quot;\]\}"/.test(og) && ['portrait', 'paysage', 'carre'].every(k => og.includes('value="' + k + '"')) && !/class="pm"/.test(og);
+    const page = r.status === 200 && /data-zoom/.test(b) && /js\/product\.js/.test(b) && /class="opts c3"/.test(og.replace('data-group="orientation"', '') + b.slice(b.indexOf('data-group="orientation"'), b.indexOf('data-group="orientation"') + 900));
+    const other = (await new Client().r('GET', '/p/flyers')).body; const untouched = !/id="pvis"/.test(other) && /js\/product\.js/.test(other);
+    const js = fs.readFileSync(path.join(ROOT, 'assets/js/product.js'), 'utf8'); const jsOk = /Escape/.test(js) && /aria-expanded/.test(js) && /lb-lock/.test(js);
+    return { pass: svgOk && thumbs === 5 && mapOk && orient && page && untouched && jsOk, note: `svg=${svgOk} miniatures=${thumbs}/5 table=${mapOk} orientation=${orient} page=${page} autres=${untouched} js=${jsOk}` };
   });
   fh('setfeatures', '{}');
 };

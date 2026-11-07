@@ -67,3 +67,32 @@ function vitrine_products(int $max = 5): array {
     }
     return count($out) >= 3 ? $out : [];
 }
+
+/**
+ * Visuels de fiche qui suivent les choix du client (pliage, orientation…) : produit (slug) → groupes d'options → maquette de marque.
+ * La clé est la suite des valeurs choisies, séparées par « | » ; à défaut de correspondance exacte on retire la dernière valeur (ex. « acc|portrait » → « acc »).
+ * Maquettes originales de tools/make-depliants.py ; aucune image de tiers.
+ */
+const PRODUCT_VISUALS = [
+    'depliants' => [
+        'groups' => ['pliage', 'orientation'],
+        'images' => ['2v' => 'depliant-2v-portrait', '2v|portrait' => 'depliant-2v-portrait', '2v|paysage' => 'depliant-2v-paysage', '2v|carre' => 'depliant-2v-carre', '3v' => 'depliant-3v-roule', 'acc' => 'depliant-3v-accordeon'],
+        'titles' => ['depliant-2v-portrait' => 'Dépliant 2 volets, format portrait', 'depliant-2v-paysage' => 'Dépliant 2 volets, format paysage', 'depliant-2v-carre' => 'Dépliant 2 volets, format carré', 'depliant-3v-roule' => 'Dépliant 3 volets roulés', 'depliant-3v-accordeon' => 'Dépliant 3 volets accordéon'],
+    ],
+];
+/** Visuels d'un produit selon ses options (null si le produit n'en a pas). Retourne : courant, liste des images (miniatures), table clé → image pour le navigateur. */
+function product_visuals(array $p, array $opts = []): ?array {
+    $v = PRODUCT_VISUALS[(string) ($p['slug'] ?? '')] ?? null; if (!$v) return null;
+    $pick = function (array $o) use ($v): ?string {
+        $vals = []; foreach ($v['groups'] as $g) { $x = $o[$g] ?? null; if (is_array($x)) $x = $x[0] ?? null; if ($x === null || $x === '') break; $vals[] = (string) $x; }
+        while ($vals) { $k = implode('|', $vals); if (isset($v['images'][$k])) return $v['images'][$k]; array_pop($vals); }
+        return null;
+    };
+    $cur = $pick($opts) ?? reset($v['images']);
+    $imgs = []; foreach (array_unique(array_values($v['images'])) as $n) {            // une photo déposée sous le même nom (assets/img/produits/<nom>.webp) remplace la maquette
+        $own = is_file(ROOT . '/assets/img/produits/' . $n . '.webp');
+        $imgs[] = ['name' => $n, 'title' => $v['titles'][$n] ?? $n, 'mock' => !$own, 'src' => $own ? asset('img/produits/' . $n . '.webp') : asset('img/mock/' . $n . '.svg')];
+    }
+    $map = []; foreach ($v['images'] as $k => $n) $map[$k] = $n;
+    return ['groups' => $v['groups'], 'current' => $cur, 'images' => $imgs, 'map' => $map];
+}
