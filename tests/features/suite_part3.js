@@ -235,5 +235,15 @@ module.exports = async function (X) {
     const src = ['tools/spider/spider-src.ts', 'tools/spider/build.sh', 'tools/spider/README.md', 'tools/spider/source/spider-meshopt.glb'].every(f => fs.existsSync(path.join(ROOT, f)));
     return { pass: cfgOk && st.every(x => x === 200) && glbOk && noEval && cspOk && loader && onHome && others.every(Boolean) && credit && htOk && cssOk && src, note: `config=${cfgOk} http=${st.join(',')} glb=${glbOk} sans-eval=${noEval} csp=${cspOk} chargeur=${loader} accueil=${onHome} autres-pages-intactes=${others.every(Boolean)} credits=${credit} htaccess=${htOk} css=${cssOk} sources=${src}` };
   });
+  await t('D-12', 'e-mails clients : l\'en-tête porte l\'icône « S » de la marque (PNG, adresse absolue, 56 px, décorative) à côté du nom et du slogan ; fichier valide ; couleurs et pied de page inchangés', async () => {
+    const php = "define('ROOT', '" + ROOT.replace(/\\/g, '/') + "'); require ROOT . '/_app/bootstrap.php'; echo Mail::layout('Votre devis est prêt', '<p>Bonjour</p>');";
+    let h = ''; try { h = require('child_process').execFileSync('php', ['-r', php], { encoding: 'utf8', env: { ...process.env, SYMO_CONFIG: '' } }); } catch (e) { h = 'erreur ' + e.message.slice(0, 80); }
+    const img = (h.match(/<img [^>]*>/) || [''])[0]; const src = (img.match(/src="([^"]+)"/) || [])[1] || '';
+    const imgOk = /^https?:\/\/[^/]+\/assets\/img\/brand\/icon-192\.png$/.test(src) && /width="56"/.test(img) && /height="56"/.test(img) && /alt=""/.test(img) && !/\.svg/.test(src);
+    const png = fs.readFileSync(path.join(ROOT, 'assets/img/brand/icon-192.png')); const pngOk = png.subarray(1, 4).toString() === 'PNG' && png.readUInt32BE(16) === 192 && png.readUInt32BE(20) === 192;
+    const keep = /#1F7A8C/.test(h) && /Symo Print/.test(h.replace(/<[^>]+>/g, ' ')) && /WhatsApp :/.test(h) && /<h1[^>]*>Votre devis est prêt<\/h1>/.test(h) && !/<script|<link|@import/i.test(h);
+    const before = h.indexOf('<img') < h.indexOf('Symo Print') && h.indexOf('<img') > 0;
+    return { pass: imgOk && pngOk && keep && before, note: `img=${imgOk} png=${pngOk} gabarit=${keep} ordre=${before} src=${src}` };
+  });
   fh('setfeatures', '{}');
 };

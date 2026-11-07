@@ -33,3 +33,10 @@
 - `php _app/cli/mailtest.php --to=adresse [--alias=adresse] [--once=marqueur]` — envoie un test par le chemin réel et, avec `--alias`, teste l'expéditeur alias. N'affiche jamais le mot de passe. `--once` empêche toute répétition.
 - `php _app/cli/inventory.php` — inventaire **en lecture seule** (comptes par catégorie, aucune donnée personnelle).
 - `php _app/cli/verify.php --baseline | --compare` — empreinte et comparaison des données existantes (lecture seule, aucune donnée dans le fichier d'empreinte), utilisé pour prouver qu'une migration ne modifie rien.
+
+## Icône de la marque dans les e-mails clients (7 nov. 2026 — local, NON déployé)
+L'en-tête commun de tous les e-mails (`Mail::layout`, `_app/lib/mail.php` : confirmation de compte, mot de passe oublié, devis, statuts de commande, notifications, test) affiche désormais l'icône « S » de la marque (56 px, coins arrondis) à gauche du nom et du slogan, sur la bande verte habituelle.
+- Image : `assets/img/brand/icon-192.png` (PNG, déjà en ligne ; 192 px pour les écrans nets), appelée par **adresse absolue** (`app_url` + chemin) : les e-mails n'acceptent ni adresse relative ni SVG.
+- Décorative (`alt=""`) : le nom reste écrit à côté, donc rien ne manque si le logiciel de messagerie bloque les images distantes (cas fréquent à la première lecture).
+- La version texte brut des messages est inchangée. Test D-12.
+- Prise en compte : au prochain déploiement du code (`_app/lib/mail.php`). Aucun réglage chez l'hébergeur.

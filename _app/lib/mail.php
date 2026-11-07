@@ -5,7 +5,10 @@ class Mail {
     static function layout(string $title, string $html): string {
         $c = '#1F7A8C'; $o = '#F4A62A';
         return '<!doctype html><html lang="fr"><body style="margin:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;color:#1d2b30"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">'
-            . '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:' . $c . ';padding:20px 28px;color:#fff;font-size:22px;font-weight:bold">' . e(shop('shop_name', 'Symo Print')) . '<span style="display:block;font-size:12px;font-weight:normal;opacity:.85">' . e(shop('tagline')) . '</span></td></tr>'
+            // en-tête : icône « S » de la marque (PNG absolu : les e-mails ne lisent ni le SVG ni les adresses relatives ; décorative, le nom reste écrit à côté) + nom + slogan
+            . '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:' . $c . ';padding:18px 28px"><table cellpadding="0" cellspacing="0" role="presentation"><tr>'
+            . '<td style="padding-right:14px;vertical-align:middle"><img src="' . e(abs_url('assets/img/brand/icon-192.png')) . '" width="56" height="56" alt="" style="display:block;border:0;width:56px;height:56px;border-radius:12px"></td>'
+            . '<td style="vertical-align:middle;color:#fff;font-size:22px;font-weight:bold">' . e(shop('shop_name', 'Symo Print')) . '<span style="display:block;font-size:12px;font-weight:normal;opacity:.85">' . e(shop('tagline')) . '</span></td></tr></table></td></tr>'
             . '<tr><td style="padding:28px"><h1 style="font-size:20px;margin:0 0 16px;color:' . $c . '">' . e($title) . '</h1>' . $html . '</td></tr>'
             . '<tr><td style="padding:18px 28px;background:#f5f5f5;font-size:12px;color:#5a6b70">' . e(shop('shop_name')) . ' · ' . e(shop('address')) . ', ' . e(shop('city')) . '<br>WhatsApp : ' . e(shop('phone2')) . ' · Tél. : ' . e(shop('phone')) . '</td></tr></table></td></tr></table></body></html>';
     }
