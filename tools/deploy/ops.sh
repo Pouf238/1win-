@@ -1,18 +1,19 @@
 #!/bin/sh
 # Opérations de déploiement côté serveur (Symo Print). Aucune donnée n'est jamais supprimée.
-# Usage : ops.sh manifest | backup | check | apply | post | rollback
+# Usage : ops.sh manifest | backup <version> | check | apply | post | rollback <version>
 SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 SITE="${SITE:-$HOME/domains/symoprint.com/public_html}"
 BK="${BK:-$HOME/domains/symoprint.com/backups}"
 PHP="${PHP:-/opt/alt/php83/usr/bin/php}"
 ST="$SITE/_app/storage/deploy-stage"
-REL="${REL:?donner REL=<nom-de-la-version>, ex. REL=pre-structure}"; IND="$BK/independantes/$REL"
+# nom de la version : en 2e argument (les tâches planifiées de l'hébergeur n'acceptent pas « VAR=valeur » devant la commande) ou variable REL
+REL="${2:-${REL:-}}"; IND="$BK/independantes/${REL:-sans-nom}"; need_rel() { [ -n "$REL" ] || { echo "REL manquant : ops.sh $1 <nom-de-la-version>"; exit 2; }; }
 cd "$SITE" || exit 1
 case "$1" in
 manifest)   # empreintes (12 premiers caractères SHA-256) des fichiers du site, hors stockage
   find _app assets tools index.php .htaccess -type f -not -path '_app/storage/*' | sort | xargs sha256sum | cut -c1-12,65- ;;
 backup)
-  umask 077; mkdir -p "$IND"; chmod 700 "$BK" "$BK/independantes" "$IND" 2>/dev/null
+  need_rel backup; umask 077; mkdir -p "$IND"; chmod 700 "$BK" "$BK/independantes" "$IND" 2>/dev/null
   $PHP _app/cli/backup.php --uploads || { echo "ECHEC sauvegarde"; exit 1; }
   D=$(ls -t "$BK"/db-*.sql.gz | head -1); U=$(ls -t "$BK"/uploads-*.zip | head -1)
   cp -p "$D" "$IND/"; cp -p "$U" "$IND/"
@@ -44,6 +45,7 @@ post)
   echo "erreurs fatales/avertissements récents : $(grep -c -E 'Fatal|Parse error|Uncaught' _app/storage/logs/php.log 2>/dev/null)"
   $PHP _app/cli/verify.php --compare 2>&1 | tail -14 ;;
 rollback)   # retour arrière du CODE seulement : réécrit les anciens fichiers depuis la copie ; la base n'est pas touchée
+  need_rel rollback
   [ -f "$IND/code-avant.tgz" ] || { echo "copie introuvable"; exit 1; }
   tar xzf "$IND/code-avant.tgz" -C "$SITE" && echo "code restauré à $(date -u +%H:%M:%S) UTC (copie du $(stat -c %y "$IND/code-avant.tgz" | cut -c1-16))" ;;
 *) echo "usage : manifest|backup|check|apply|post|rollback"; exit 2 ;;
