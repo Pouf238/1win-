@@ -32,6 +32,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
   <div class="r"><a href="<?= e(wa_link('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp <?= e(shop('phone2')) ?></a><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>
 </div></div>
 <header class="header"><div class="hband"><div class="wrap main">
+  <button class="burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navbar" data-burger><?= ic('menu') ?></button>
   <a class="logo" href="/" aria-label="<?= e($name) ?>, accueil"><img src="<?= e(asset('img/brand/logo-light.svg')) ?>" alt="<?= e($name) ?>" width="150" height="46"></a>
   <form class="search" action="/recherche" method="get" role="search" autocomplete="off">
     <label class="sr" for="q">Rechercher un produit</label><input id="q" name="q" type="search" placeholder="Rechercher : flyers, cartes de visite, bâche, t-shirt…" value="<?= e(get('q')) ?>" data-suggest>
@@ -41,20 +42,29 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
     <a href="<?= $u ? '/compte' : '/compte/connexion' ?>"><?= ic('user') ?><span><?= $u ? e(explode(' ', trim($u['name'] ?: 'Compte'))[0]) : 'Connexion' ?></span></a>
     <a href="/compte/favoris"><?= ic('heart') ?><span>Favoris</span></a>
     <?php if (feature('orders')): ?><a href="/panier" aria-label="Panier, <?= $cartN ?> article(s)"><?= ic('cart') ?><span>Panier</span><i class="cnt" data-cart-count data-n="<?= $cartN ?>"><?= $cartN ?: '' ?></i></a><?php endif; ?>
-    <button class="burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false" data-burger><?= ic('menu') ?></button>
   </div>
 </div></div>
-<nav class="navbar" id="navbar" aria-label="Catalogue"><div class="wrap">
+<nav class="navbar" id="navbar" aria-label="Catalogue"><div class="dr-top"><a class="dr-logo" href="/" aria-label="<?= e($name) ?>, accueil"><img src="<?= e(asset('img/brand/logo.svg')) ?>" alt="" width="112" height="34"></a><button class="dr-close" type="button" data-nav-close aria-label="Fermer le menu"><?= ic('close') ?></button></div><div class="wrap">
+  <div class="nl mob-only"><a class="all-p" href="/catalogue">Tous nos produits</a></div>
   <?php foreach ($tree as $c): ?>
   <div class="nl"><a href="/c/<?= e($c['slug']) ?>"><?= e($c['name']) ?></a>
-    <?php if ($c['children']): ?><div class="mega"><h4><?= e($c['name']) ?></h4>
+    <?php if ($c['children']): ?><button class="tg" type="button" aria-expanded="false" aria-label="Sous-catégories de <?= e($c['name']) ?>" data-sub><?= ic('arrow') ?></button>
+      <ul class="sub"><?php foreach ($c['children'] as $s): ?><li><a href="/c/<?= e($s['slug']) ?>"><?= e($s['name']) ?></a></li><?php endforeach; ?><li><a class="sub-all" href="/c/<?= e($c['slug']) ?>">Voir tout : <?= e($c['name']) ?></a></li></ul>
+      <div class="mega"><h4><?= e($c['name']) ?></h4>
       <div class="mg-cards"><?php foreach (array_slice($c['children'], 0, 4) as $s): ?><a class="mc" href="/c/<?= e($s['slug']) ?>"><span class="mi"><?= mock((string) ($s['icon'] ?: $c['icon'])) ?></span><b><?= e($s['name']) ?></b></a><?php endforeach; ?></div>
       <?php if (count($c['children']) > 4): ?><div class="mg-list"><?php foreach (array_slice($c['children'], 4) as $s): ?><a href="/c/<?= e($s['slug']) ?>"><?= e($s['name']) ?></a><?php endforeach; ?></div><?php endif; ?>
       <a class="all" href="/c/<?= e($c['slug']) ?>">Voir tout : <?= e($c['name']) ?> →</a></div><?php endif; ?></div>
   <?php endforeach; ?>
   <?php if (feature('quotes')): ?><div class="nl"><a href="/devis">Devis gratuit</a></div><?php endif; ?>
   <div class="nl hot"><a href="/nos-services">Services</a></div>
+  <div class="dr-sep mob-only" aria-hidden="true"></div>
+  <div class="nl mob-only"><a class="dr-i" href="/faq"><?= ic('list') ?>Aide et questions fréquentes</a></div>
+  <?php if (feature('orders')): ?><div class="nl mob-only"><a class="dr-i" href="/panier"><?= ic('cart') ?>Panier<?= $cartN ? ' (' . $cartN . ')' : '' ?></a></div><?php endif; ?>
+  <div class="nl mob-only"><a class="dr-i" href="/compte/favoris"><?= ic('heart') ?>Favoris</a></div>
+  <div class="nl mob-only"><a class="dr-i" href="<?= $u ? '/compte' : '/compte/connexion' ?>"><?= ic('user') ?><?= $u ? 'Mon compte' : 'Connexion' ?></a></div>
+  <div class="dr-contact mob-only"><a class="btn btn-a" href="<?= e(wa_link('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp</a><a class="btn btn-o" href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>
 </div></nav>
+<div class="scrim" data-nav-close aria-hidden="true"></div>
 </header>
 <main id="main">
 <?php foreach (flashes() as [$t, $m]): ?><div class="wrap" style="padding-top:18px"><div class="alert a-<?= e($t) ?>" role="status"><?= e($m) ?></div></div><?php endforeach; ?>

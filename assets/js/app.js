@@ -9,10 +9,35 @@
   }
   window.SP = { $: $, $$: $$, api: api, csrf: csrf };
 
-  // menu mobile
+  // menu mobile : tiroir à gauche (croix, fond assombri, Échap, clic extérieur, focus piégé, sous-catégories dépliables)
   var burger = $('[data-burger]'), nav = $('#navbar');
-  if (burger && nav) { burger.addEventListener('click', function () { var o = nav.classList.toggle('open'); burger.setAttribute('aria-expanded', o); });
-    d.addEventListener('click', function (e) { if (nav.classList.contains('open') && !nav.contains(e.target) && !burger.contains(e.target)) { nav.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); } }); }
+  if (burger && nav) {
+    var root = d.documentElement, back = null, mq = window.matchMedia ? window.matchMedia('(min-width: 861px)') : null;
+    var isOpen = function () { return nav.classList.contains('open'); };
+    var setOpen = function (o) {
+      nav.classList.toggle('open', o); burger.setAttribute('aria-expanded', o ? 'true' : 'false'); root.classList.toggle('nav-lock', o);
+      if (o) { back = d.activeElement; var c = nav.querySelector('[data-nav-close]'); if (c) c.focus(); }
+      else if (back && back.focus) { back.focus(); back = null; }
+    };
+    burger.addEventListener('click', function () { setOpen(!isOpen()); });
+    d.addEventListener('click', function (e) {
+      if (!isOpen()) return; var t = e.target;
+      if (t.closest('[data-nav-close]') || (!nav.contains(t) && !burger.contains(t))) setOpen(false);
+    });
+    nav.addEventListener('click', function (e) {
+      var g = e.target.closest('[data-sub]'); if (!g) return;
+      var item = g.parentNode, o = !item.classList.contains('sub-open'); item.classList.toggle('sub-open', o); g.setAttribute('aria-expanded', o ? 'true' : 'false');
+    });
+    d.addEventListener('keydown', function (e) {
+      if (!isOpen()) return;
+      if (e.key === 'Escape') { setOpen(false); return; }
+      if (e.key !== 'Tab') return;
+      var f = [].slice.call(nav.querySelectorAll('a[href],button')).filter(function (x) { return x.offsetParent !== null; }); if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && d.activeElement === first) { last.focus(); e.preventDefault(); } else if (!e.shiftKey && d.activeElement === last) { first.focus(); e.preventDefault(); }
+    });
+    if (mq && mq.addEventListener) mq.addEventListener('change', function (e) { if (e.matches && isOpen()) setOpen(false); });
+  }
 
   // diaporama d'accueil
   var slides = $$('.slide'), dots = $$('[data-slide]'), cur = 0, timer;

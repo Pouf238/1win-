@@ -53,7 +53,13 @@ Demande : « que mon site soit comme Onlineprinters dans la structure ». Seule 
 
 Retirés de l'accueil : le bandeau d'arguments `.assure` (repris dans la barre d'avantages) et le bandeau défilant. Le formulaire newsletter a quitté l'accueil pour le pied de page (même route `/newsletter`, mêmes protections : jeton, piège anti-robot, limite de débit). Aucun avis chiffré n'est affiché (rien d'inventé : la section témoignages n'apparaît que s'il y en a en base).
 Fichiers : `_app/views/layout/main.php`, `_app/views/shop/home.php`, `assets/css/site.css`, `assets/js/site.js` (carrousel), test D-01 renforcé (ordre des sections, présence de chaque bloc, un seul `id="nl"`). Aperçus : `docs/refonte-apercus/structure-accueil-bureau.jpg` et `structure-accueil-mobile.jpg`.
-Tests locaux : interrupteurs 69/69, sécurité 119/119, plateforme 17/17, unitaires 21/21. Pas de débordement horizontal à 390 px. Mise en production : en attente de votre autorisation explicite.
+Tests locaux : interrupteurs 70/70 (avec D-07), sécurité 119/119, plateforme 17/17, unitaires 21/21. Pas de débordement horizontal à 390 px. Mise en production : en attente de votre autorisation explicite.
+
+## Menu mobile : tiroir plein écran (7 nov. 2026 — local, NON déployé)
+Défaut constaté en production sur téléphone (vidéo de l'utilisateur) : le menu s'ouvrait dans une petite fenêtre de la hauteur de l'en-tête, avec défilement interne. Cause : l'en-tête avait un flou d'arrière-plan (`backdrop-filter`), qui devient le « parent » des éléments à position fixe ; le tiroir y restait enfermé. Correctif : pas de flou en mobile (≤ 860 px).
+Rendu demandé (vidéo de référence de l'utilisateur) : bouton ≡ à gauche du logo ; tiroir à gauche sur toute la hauteur, fond crème, logo + croix de fermeture, fond de page assombri ; « Tous nos produits », une ligne par catégorie avec flèche qui déplie les sous-catégories (+ « Voir tout »), « Devis gratuit », « Services », puis Aide, Panier (si les commandes sont ouvertes), Favoris, Connexion/Compte, boutons WhatsApp et téléphone.
+Comportements : fermeture par la croix, le fond assombri, la touche Échap ou un changement de lien ; focus placé sur la croix à l'ouverture et rendu au bouton ≡ à la fermeture, focus piégé dans le tiroir ; défilement de la page bloqué pendant l'ouverture ; animation coupée si « réduire les animations » ; sur ordinateur, rien ne change (méga-menu à vignettes).
+Fichiers : `_app/views/layout/main.php`, `assets/js/app.js`, `assets/css/site.css` ; test D-07 (structure + garde CSS contre le retour du défaut).
 
 ## Retour arrière
 Le style public est une couche séparée : retirer `site.css`/`site.js` du gabarit rend l'ancien aspect ; sinon `git revert` du commit de la refonte. Rien en base de données.

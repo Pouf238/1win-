@@ -166,5 +166,16 @@ module.exports = async function (X) {
     const css = fs.readFileSync(path.join(ROOT, 'assets/css/site.css'), 'utf8'); const guard = /\.rv-on \.rv:not\(\.in\)\{opacity:0/.test(css) && !/^\.rv\{[^}]*opacity:0/m.test(css) && /\[hidden\]\{display:none!important\}/.test(css);
     return { pass: !bad.length && guard, note: bad.slice(0, 4).join(' | ') + (guard ? '' : ' garde CSS absente') };
   });
+  await t('D-07', 'menu mobile : bouton burger avant le logo, tiroir avec croix, fond assombri, flèche + sous-liste pour chaque catégorie à sous-catégories, liens Aide/Favoris/contact ; garde CSS : en mobile l\'en-tête n\'a pas de flou d\'arrière-plan (sinon le tiroir fixe reste enfermé dans l\'en-tête)', async () => {
+    fh('setfeatures', '{}'); const b = (await new Client().r('GET', '/')).body;
+    const nav = b.slice(b.indexOf('<nav class="navbar"'), b.indexOf('</nav>'));
+    const withKids = (nav.match(/class="tg"/g) || []).length, subs = (nav.match(/<ul class="sub">/g) || []).length;
+    const order = b.indexOf('data-burger') > 0 && b.indexOf('data-burger') < b.indexOf('class="logo"');
+    const parts = /data-nav-close/.test(nav) && /class="dr-close"/.test(nav) && /<div class="scrim" data-nav-close/.test(b) && /href="\/faq"/.test(nav) && /href="\/compte\/favoris"/.test(nav) && /href="tel:/.test(nav) && /aria-controls="navbar"/.test(b);
+    const css = fs.readFileSync(path.join(ROOT, 'assets/css/site.css'), 'utf8'); const m = css.match(/@media \(max-width:860px\)\{\s*\/\* le flou[^*]*\*\/\s*\.header\{([^}]*)\}/);
+    const guard = !!m && /backdrop-filter:none/.test(m[1]) && /\.header \.navbar\{[^}]*position:fixed[^}]*top:0;bottom:0/.test(css);
+    const sw = fs.readFileSync(path.join(ROOT, 'assets/js/app.js'), 'utf8'); const js = /Escape/.test(sw) && /data-nav-close/.test(sw) && /nav-lock/.test(sw);
+    return { pass: withKids >= 4 && withKids === subs && order && parts && guard && js, note: `tg=${withKids} sub=${subs} ordre=${order} parties=${parts} garde=${guard} js=${js}` };
+  });
   fh('setfeatures', '{}');
 };
