@@ -7,6 +7,13 @@ function e($v): string { return htmlspecialchars((string) $v, ENT_QUOTES | ENT_S
 function url(string $p = ''): string { return '/' . ltrim($p, '/'); }
 function abs_url(string $p = ''): string { return rtrim(cfg('app_url'), '/') . '/' . ltrim($p, '/'); }
 function asset(string $p): string { $f = ROOT . '/assets/' . $p; return '/assets/' . $p . (is_file($f) ? '?v=' . filemtime($f) : ''); }
+/** Fichier posé à la racine du site (favicon.ico, site.webmanifest) avec numéro de version. */
+function root_asset(string $p): string { $f = ROOT . '/' . $p; return '/' . $p . (is_file($f) ? '?v=' . filemtime($f) : ''); }
+/** Balises d'icône du site (onglet, favoris, écran d'accueil du téléphone) : le « S » de la marque. */
+function site_icons(): string {
+    return '<link rel="icon" href="' . e(root_asset('favicon.ico')) . '" sizes="48x48"><link rel="icon" href="' . e(asset('img/brand/favicon.svg')) . '" type="image/svg+xml" sizes="any">'
+        . '<link rel="apple-touch-icon" href="' . e(asset('img/brand/apple-touch-icon.png')) . '"><link rel="manifest" href="' . e(root_asset('site.webmanifest')) . '">';
+}
 function redirect(string $to, int $code = 302): void { header('Location: ' . $to, true, $code); exit; }
 function json_out($data, int $code = 200): void { http_response_code($code); header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store'); echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit; }
 function jd($s, $d = []) { if (is_array($s)) return $s; $r = json_decode((string) $s, true); return is_array($r) ? $r : $d; }

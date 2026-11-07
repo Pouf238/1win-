@@ -12,7 +12,7 @@
   // menu mobile : tiroir à gauche (croix, fond assombri, Échap, clic extérieur, focus piégé, sous-catégories dépliables)
   var burger = $('[data-burger]'), nav = $('#navbar');
   if (burger && nav) {
-    var root = d.documentElement, back = null, mq = window.matchMedia ? window.matchMedia('(min-width: 861px)') : null;
+    var root = d.documentElement, back = null, mq = window.matchMedia ? window.matchMedia('(min-width: 1201px)') : null;
     var isOpen = function () { return nav.classList.contains('open'); };
     var setOpen = function (o) {
       nav.classList.toggle('open', o); burger.setAttribute('aria-expanded', o ? 'true' : 'false'); root.classList.toggle('nav-lock', o);

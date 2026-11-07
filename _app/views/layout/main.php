@@ -17,7 +17,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <meta name="theme-color" content="#1F7A8C">
 <meta property="og:type" content="website"><meta property="og:site_name" content="<?= e($name) ?>"><meta property="og:locale" content="fr_FR"><meta property="og:title" content="<?= e($title) ?>"><meta property="og:description" content="<?= e(mb_substr($desc, 0, 200)) ?>"><meta property="og:url" content="<?= e($canon) ?>"><meta property="og:image" content="<?= e($ogimg) ?>">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="<?= e(asset('img/brand/favicon-32.png')) ?>" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="<?= e(asset('img/brand/apple-touch-icon.png')) ?>">
+<?= site_icons() ?>
 <link rel="preload" href="<?= e(asset('fonts/montserrat-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="<?= e(asset('fonts/inter-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">

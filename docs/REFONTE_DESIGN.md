@@ -53,13 +53,36 @@ Demande : « que mon site soit comme Onlineprinters dans la structure ». Seule 
 
 Retirés de l'accueil : le bandeau d'arguments `.assure` (repris dans la barre d'avantages) et le bandeau défilant. Le formulaire newsletter a quitté l'accueil pour le pied de page (même route `/newsletter`, mêmes protections : jeton, piège anti-robot, limite de débit). Aucun avis chiffré n'est affiché (rien d'inventé : la section témoignages n'apparaît que s'il y en a en base).
 Fichiers : `_app/views/layout/main.php`, `_app/views/shop/home.php`, `assets/css/site.css`, `assets/js/site.js` (carrousel), test D-01 renforcé (ordre des sections, présence de chaque bloc, un seul `id="nl"`). Aperçus : `docs/refonte-apercus/structure-accueil-bureau.jpg` et `structure-accueil-mobile.jpg`.
-Tests locaux : interrupteurs 70/70 (avec D-07), sécurité 119/119, plateforme 17/17, unitaires 21/21. Pas de débordement horizontal à 390 px. Mise en production : en attente de votre autorisation explicite.
+Tests locaux : interrupteurs 72/72 (avec D-07 à D-09), sécurité 119/119, plateforme 17/17, unitaires 21/21. Pas de débordement horizontal à 390 px. Mise en production : en attente de votre autorisation explicite.
 
 ## Menu mobile : tiroir plein écran (7 nov. 2026 — local, NON déployé)
 Défaut constaté en production sur téléphone (vidéo de l'utilisateur) : le menu s'ouvrait dans une petite fenêtre de la hauteur de l'en-tête, avec défilement interne. Cause : l'en-tête avait un flou d'arrière-plan (`backdrop-filter`), qui devient le « parent » des éléments à position fixe ; le tiroir y restait enfermé. Correctif : pas de flou en mobile (≤ 860 px).
 Rendu demandé (vidéo de référence de l'utilisateur) : bouton ≡ à gauche du logo ; tiroir à gauche sur toute la hauteur, fond crème, logo + croix de fermeture, fond de page assombri ; « Tous nos produits », une ligne par catégorie avec flèche qui déplie les sous-catégories (+ « Voir tout »), « Devis gratuit », « Services », puis Aide, Panier (si les commandes sont ouvertes), Favoris, Connexion/Compte, boutons WhatsApp et téléphone.
 Comportements : fermeture par la croix, le fond assombri, la touche Échap ou un changement de lien ; focus placé sur la croix à l'ouverture et rendu au bouton ≡ à la fermeture, focus piégé dans le tiroir ; défilement de la page bloqué pendant l'ouverture ; animation coupée si « réduire les animations » ; sur ordinateur, rien ne change (méga-menu à vignettes).
 Fichiers : `_app/views/layout/main.php`, `assets/js/app.js`, `assets/css/site.css` ; test D-07 (structure + garde CSS contre le retour du défaut).
+
+## Vérification ordinateur / tablettes / téléphones (7 nov. 2026 — local)
+Méthode : navigateur réel (Chromium), 18 pages publiques × 12 largeurs (320, 360, 390, 414, 600, 768, 820, 1024, 1180, 1280, 1440, 1920 px) = 216 chargements ; balayage de l'en-tête de 320 à 1700 px par pas de 20-60 px ; 27 scénarios d'interaction (tactile, souris, clavier, paysage). Critères : aucun débordement horizontal, aucune image cassée, aucune erreur de console, en-tête et menu cohérents.
+Défauts trouvés et corrigés :
+1. **Tablettes en paysage et petits portables (861–1240 px)** : le menu de bureau (7 entrées) faisait ~1232 px de large ; la page défilait horizontalement et la barre d'avantages passait sur 2 lignes. → le tiroir à gauche s'applique maintenant jusqu'à 1200 px (iPad 1024 et 1180 px en paysage inclus, avec la recherche sur la même ligne que le logo) ; de 1201 à 1320 px le menu de bureau est resserré (police 13,5 px, marges réduites).
+2. **iPhone** : tous les champs de formulaire (recherche, devis, contact, connexion, configuration produit) étaient à 15-15,5 px, ce qui fait zoomer la page à la saisie. → 16 px en dessous de 1200 px.
+3. **Téléphone en paysage** (844 × 390) : l'en-tête collant occupait le tiers de l'écran. → il n'est plus collant quand l'écran fait moins de 520 px de haut.
+Résultat final : 216/216 chargements propres, en-tête propre de 320 à 1700 px, 27/27 interactions (tiroir plein hauteur à 768, 820, 1024, 1180 px et en paysage ; carrousel avec flèches sur ordinateur et au doigt sur téléphone ; méga-menu au survol ; recherche, newsletter, devis sur téléphone ; cibles tactiles ≥ 36 px ; champs ≥ 16 px). Tests D-07 et D-08 gardent ces points.
+Limite : aucun test sur de vrais appareils iOS/Android (navigateur de bureau émulé) ; le comportement du zoom iPhone est établi par la taille de police (règle documentée d'iOS Safari), pas par une mesure sur iPhone.
+
+## Icône du site (7 nov. 2026 — local, NON déployé)
+Le « S » de la marque (fourni par le propriétaire : `docs/identite-visuelle/`, 4 images) devient l'icône du site. Les anciennes icônes étaient un fragment mal découpé de l'ancien logo.
+| Fichier | Usage |
+|---|---|
+| `favicon.ico` (racine) | 16, 32, 48 px — onglet, favoris, résultats Google ; demandé par défaut par les navigateurs |
+| `assets/img/brand/favicon.svg` | icône vectorielle nette à toute taille (navigateurs récents) |
+| `favicon-16/32/48.png` | secours |
+| `apple-touch-icon.png` (180) | écran d'accueil iPhone/iPad, plein cadre (iOS arrondit lui-même) |
+| `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | Android / manifeste (la version « maskable » garde le dessin dans les 80 % centraux) |
+| `site.webmanifest` (racine) | nom « Symo Print », icônes, affichage navigateur (pas de mode application) |
+Dessin et couleurs d'origine (#0F7291, #F2912A, blanc) inchangés ; seuls les angles gris de l'image sont rendus transparents. Le logo de l'en-tête (SYMO PRINT) ne change pas.
+Mise en œuvre : fonction `site_icons()` (`_app/lib/core.php`) utilisée par le gabarit public et celui de l'administration ; fichiers versionnés par `?v=` (les navigateurs gardent les icônes très longtemps). Régénération : `python3 tools/build-icons.py` puis `node tools/render-icons.js`. `.htaccess` : type MIME du manifeste + en-têtes de sécurité des fichiers statiques. Test D-09.
+**À inclure au prochain déploiement** : `favicon.ico`, `site.webmanifest` (racine), les 8 fichiers d'icônes de `assets/img/brand/`, `.htaccess`, `_app/lib/core.php`, les deux gabarits.
 
 ## Retour arrière
 Le style public est une couche séparée : retirer `site.css`/`site.js` du gabarit rend l'ancien aspect ; sinon `git revert` du commit de la refonte. Rien en base de données.

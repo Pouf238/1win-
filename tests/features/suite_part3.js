@@ -138,9 +138,10 @@ module.exports = async function (X) {
     return { pass: h.status === 200 && /class="hb-main/.test(b) && /class="usps"/.test(b) && /class="hband"/.test(b) && (b.match(/class="cv-t"/g) || []).length >= 5 && (b.match(/class="sv rv"/g) || []).length === 3 && /data-car/.test(b) && /class="fp"/.test(b) && /class="fnews"/.test(b) && (b.match(/id="nl"/g) || []).length === 1 && (b.match(/class="bs"/g) || []).length === 1 && (b.match(/class="pst /g) || []).length === 4 && /css\/site\.css/.test(b) && /js\/site\.js/.test(b) && inline === 0 && !/<style[\s>]/i.test(b) && ['hb-main', 'class="bs"', 'data-car', 'class="sv3"', 'class="fp"', 'class="proc"'].map(k => b.indexOf(k)).every((v, i, a) => v > 0 && (i === 0 || v > a[i - 1])), note: 'inline=' + inline };
   });
   await t('D-02', 'aucune image cassée : toutes les images (maquettes, photos, produits) des 12 pages principales répondent 200', async () => {
+    // chaque réponse est lue jusqu'au bout : sinon des flux restent en attente côté Node (assertion interne intermittente)
     const bad = []; const seen = new Set(); let n = 0;
     for (const p of PAGES) { const r = await new Client().r('GET', p); if (r.status !== 200) { bad.push(p + ' ' + r.status); continue; }
-      for (const m of r.body.matchAll(/<img[^>]+\bsrc="([^"]+)"/g)) { const u = m[1].replace(/&amp;/g, '&'); if (/^https?:|^data:/.test(u) || seen.has(u)) continue; seen.add(u); n++; const x = await fetch((X.BASE || process.env.BASE) + u); if (x.status !== 200) bad.push(u + ' ' + x.status); } }
+      for (const m of r.body.matchAll(/<img[^>]+\bsrc="([^"]+)"/g)) { const u = m[1].replace(/&amp;/g, '&'); if (/^https?:|^data:/.test(u) || seen.has(u)) continue; seen.add(u); n++; const x = await fetch((X.BASE || process.env.BASE) + u); await x.arrayBuffer(); if (x.status !== 200) bad.push(u + ' ' + x.status); } }
     return { pass: bad.length === 0 && n > 20, note: n + ' images vérifiées ; ' + bad.slice(0, 3).join(' | ') };
   });
   await t('D-03', 'chaque type de produit et de rubrique a sa maquette de marque (27 pictogrammes → 27 SVG valides, logo inclus pour les articles personnalisés)', async () => {
@@ -172,10 +173,32 @@ module.exports = async function (X) {
     const withKids = (nav.match(/class="tg"/g) || []).length, subs = (nav.match(/<ul class="sub">/g) || []).length;
     const order = b.indexOf('data-burger') > 0 && b.indexOf('data-burger') < b.indexOf('class="logo"');
     const parts = /data-nav-close/.test(nav) && /class="dr-close"/.test(nav) && /<div class="scrim" data-nav-close/.test(b) && /href="\/faq"/.test(nav) && /href="\/compte\/favoris"/.test(nav) && /href="tel:/.test(nav) && /aria-controls="navbar"/.test(b);
-    const css = fs.readFileSync(path.join(ROOT, 'assets/css/site.css'), 'utf8'); const m = css.match(/@media \(max-width:860px\)\{\s*\/\* le flou[^*]*\*\/\s*\.header\{([^}]*)\}/);
+    const css = fs.readFileSync(path.join(ROOT, 'assets/css/site.css'), 'utf8'); const m = css.match(/@media \(max-width:1200px\)\{\s*\/\* le flou[^*]*\*\/\s*\.header\{([^}]*)\}/);
     const guard = !!m && /backdrop-filter:none/.test(m[1]) && /\.header \.navbar\{[^}]*position:fixed[^}]*top:0;bottom:0/.test(css);
     const sw = fs.readFileSync(path.join(ROOT, 'assets/js/app.js'), 'utf8'); const js = /Escape/.test(sw) && /data-nav-close/.test(sw) && /nav-lock/.test(sw);
     return { pass: withKids >= 4 && withKids === subs && order && parts && guard && js, note: `tg=${withKids} sub=${subs} ordre=${order} parties=${parts} garde=${guard} js=${js}` };
+  });
+  await t('D-08', 'appareils : champs de formulaire à 16 px sur petits écrans (pas de zoom automatique sur iPhone), en-tête non collé sur téléphone en paysage, menu de bureau resserré juste au-dessus du seuil du tiroir', async () => {
+    const css = fs.readFileSync(path.join(ROOT, 'assets/css/site.css'), 'utf8');
+    const f16 = /@media \(max-width:1200px\)\{input:not\(\[type=checkbox\]\)[^}]*select[^}]*textarea[^}]*\{font-size:16px\}\}/.test(css);
+    const land = /@media \(max-height:520px\) and \(orientation:landscape\)\{\.header\{position:static\}\}/.test(css);
+    const tight = /@media \(min-width:1201px\) and \(max-width:1320px\)\{\.navbar \.nl>a\{padding-inline:10px/.test(css);
+    const meta = /<meta name="viewport" content="width=device-width,\s*initial-scale=1/.test((await new Client().r('GET', '/')).body);
+    return { pass: f16 && land && tight && meta, note: `16px=${f16} paysage=${land} menu=${tight} viewport=${meta}` };
+  });
+  await t('D-09', 'icône du site : le « S » de la marque est déclaré (ico, svg, apple-touch, manifeste) sur le site public et l\'administration ; fichiers aux bonnes dimensions ; favicon.ico à 16/32/48 px ; manifeste valide ; tout est servi', async () => {
+    const b = (await new Client().r('GET', '/')).body; const adm = fs.readFileSync(path.join(ROOT, '_app/views/layout/admin.php'), 'utf8');
+    const head = /rel="icon" href="\/favicon\.ico\?v=\d+" sizes="48x48"/.test(b) && /rel="icon" href="\/assets\/img\/brand\/favicon\.svg\?v=\d+" type="image\/svg\+xml"/.test(b) && /rel="apple-touch-icon" href="\/assets\/img\/brand\/apple-touch-icon\.png/.test(b) && /rel="manifest" href="\/site\.webmanifest/.test(b) && /site_icons\(\)/.test(adm);
+    const dim = f => { const d = fs.readFileSync(path.join(ROOT, f)); return d.readUInt32BE(16) + 'x' + d.readUInt32BE(20); };
+    const want = { 'favicon-16.png': '16x16', 'favicon-32.png': '32x32', 'favicon-48.png': '48x48', 'apple-touch-icon.png': '180x180', 'icon-192.png': '192x192', 'icon-512.png': '512x512', 'icon-maskable-512.png': '512x512' };
+    const badDim = Object.entries(want).filter(([f, w]) => dim('assets/img/brand/' + f) !== w).map(([f]) => f);
+    const ico = fs.readFileSync(path.join(ROOT, 'favicon.ico')); const sizes = []; for (let i = 0; i < ico.readUInt16LE(4); i++) sizes.push(ico[6 + 16 * i] || 256);
+    const icoOk = ico.readUInt16LE(0) === 0 && ico.readUInt16LE(2) === 1 && sizes.join() === '16,32,48';
+    let man = {}; try { man = JSON.parse(fs.readFileSync(path.join(ROOT, 'site.webmanifest'), 'utf8')); } catch (e) {}
+    const manOk = man.name === 'Symo Print' && (man.icons || []).length >= 3 && man.icons.every(i => fs.existsSync(path.join(ROOT, i.src.replace(/^\//, '')))) && man.icons.some(i => i.purpose === 'maskable') && man.icons.some(i => i.sizes === '192x192') && man.icons.some(i => i.sizes === '512x512');
+    const svg = fs.readFileSync(path.join(ROOT, 'assets/img/brand/favicon.svg'), 'utf8'); const svgOk = /^<svg [^>]*viewBox="0 0 1024 1024"/.test(svg) && /#0F7291/.test(svg) && /#F2912A/.test(svg) && !/<script|onload=/i.test(svg);
+    const st = []; for (const u of ['/favicon.ico', '/site.webmanifest', '/assets/img/brand/favicon.svg', '/assets/img/brand/apple-touch-icon.png', '/assets/img/brand/icon-512.png']) st.push((await new Client().r('GET', u)).status);
+    return { pass: head && !badDim.length && icoOk && manOk && svgOk && st.every(x => x === 200), note: `balises=${head} dimensions=${badDim.join(',') || 'ok'} ico=${sizes.join('/')} manifeste=${manOk} svg=${svgOk} http=${st.join(',')}` };
   });
   fh('setfeatures', '{}');
 };

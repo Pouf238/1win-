@@ -22,10 +22,13 @@ RewriteRule ^ index.php [L,QSA]
 
 # Les pages dynamiques (PHP) envoient elles-mêmes leurs en-têtes de sécurité (CSP, HSTS…).
 # Ici : uniquement les fichiers statiques servis directement par le serveur web.
+<IfModule mod_mime.c>
+AddType application/manifest+json .webmanifest
+</IfModule>
 <IfModule mod_headers.c>
 Header always unset X-Powered-By
 Header unset X-Powered-By
-<FilesMatch "\.(woff2?|css|js|svg|png|webp|jpe?g|gif|ico|txt|xml)$">
+<FilesMatch "\.(woff2?|css|js|svg|png|webp|jpe?g|gif|ico|txt|xml|webmanifest)$">
 Header always set X-Content-Type-Options "nosniff"
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
 Header always set Strict-Transport-Security "max-age=31536000"

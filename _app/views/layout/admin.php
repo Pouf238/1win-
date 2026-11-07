@@ -6,7 +6,7 @@ $nav = [['dash', 'Tableau de bord', 'chart', '/admin', 'dashboard'], ['orders', 
   ['h', 'Messages et statuts'], ['statuses', 'Statuts de commande', 'list', '/admin/statuts', 'settings', 'tracking.statuses'], ['templates', 'Modèles de messages', 'mail', '/admin/modeles', 'settings', 'notifications.admin'], ['notifs', 'Notifications envoyées', 'mail', '/admin/notifications', 'settings', 'notifications.admin'],
   ['h', 'Administration'], ['settings', 'Réglages', 'settings', '/admin/reglages', 'settings'], ['users', 'Équipe et rôles', 'users', '/admin/utilisateurs', 'users'], ['security', 'Sécurité et journal', 'settings', '/admin/securite', 'security'], ['features', 'Fonctionnalités', 'settings', '/admin/fonctionnalites', 'features']]; ?>
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title><?= e($meta['title']) ?></title>
-<link rel="icon" href="<?= e(asset('img/brand/favicon-32.png')) ?>"><link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>"></head>
+<?= site_icons() ?><link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>"></head>
 <body class="adm-body" data-csrf="<?= e(csrf_token()) ?>"><div class="adm">
 <aside><a href="/admin"><img src="<?= e(asset('img/brand/logo-light.png')) ?>" alt="Symo Print" width="120" height="37"></a>
 <?php foreach ($nav as $n): if ($n[0] === 'h') { echo '<h5>' . e($n[1]) . '</h5>'; continue; } if (!can($n[4]) || (isset($n[5]) && !feature($n[5]))) continue; ?><a href="<?= $n[3] ?>" class="<?= ($active ?? '') === $n[0] ? 'on' : '' ?>"><?= ic($n[2]) ?><?= e($n[1]) ?></a><?php endforeach; ?>

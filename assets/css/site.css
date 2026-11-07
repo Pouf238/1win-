@@ -265,10 +265,10 @@ h1,h2,h3{letter-spacing:-.022em}
 /* ===== Menu mobile : tiroir plein écran à gauche (croix, fond assombri, sous-catégories dépliables) ===== */
 .navbar .dr-top,.navbar .mob-only,.navbar .sub,.header .navbar .nl>.tg{display:none}
 .scrim{display:none}
-@media (max-width:860px){
+@media (max-width:1200px){
   /* le flou d'arrière-plan fait de l'en-tête le « parent » des éléments fixes : le tiroir y restait enfermé (hauteur de l'en-tête). On le retire ici. */
   .header{backdrop-filter:none;-webkit-backdrop-filter:none;background:#fff}
-  .header .main{grid-template-columns:auto 1fr auto;column-gap:8px}
+  .header .main{grid-template-columns:auto auto minmax(0,1fr) auto;column-gap:14px}
   .header .burger{display:grid;place-items:center;width:44px;height:44px;padding:0;margin-left:-8px;color:#fff;border-radius:12px}.header .burger:hover{background:rgba(255,255,255,.12)}.header .burger .ic{width:27px;height:27px}
   .header .logo{justify-self:start}
   .header .navbar{display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;right:auto;inset-inline-end:auto;width:min(344px,86vw);z-index:210;background:#FAF7F1;border:0;overflow:hidden;box-shadow:26px 0 60px -22px rgba(0,0,0,.55);visibility:hidden;transform:translateX(-103%);transition:transform .34s var(--ease),visibility 0s linear .34s}
@@ -289,10 +289,20 @@ h1,h2,h3{letter-spacing:-.022em}
   .navbar .tg .ic{width:20px;height:20px;transition:transform .25s var(--ease)}.navbar .nl.sub-open>.tg .ic{transform:rotate(90deg)}
   .navbar .sub{display:none;list-style:none;margin:0;padding:2px 0 10px;background:#fff;border-top:1px solid var(--line)}.navbar .nl.sub-open>.sub{display:block}
   .navbar .sub a{display:block;padding:11px 22px 11px 36px;color:var(--ink);font-size:15px}.navbar .sub a:hover{background:var(--p0);color:var(--p)}.navbar .sub a.sub-all{color:var(--p);font-weight:700}
+  .header .navbar .nl>a::after,.header .navbar .nl.hot>a::before{display:none}
+  .topbar .r{display:none}
   .navbar .mega,.navbar .nl:hover>.mega,.navbar .nl:focus-within>.mega{display:none!important}
   .navbar .nl.hot{border-bottom:0}.header .navbar .nl.hot>a{justify-content:center;background:var(--a);color:#2b2108;margin:16px 18px 6px;border-radius:12px;padding:14px 18px}
   .navbar .dr-sep{display:block;height:10px;margin-top:6px;background:var(--p0);border-block:1px solid var(--line)}
   .header .navbar .nl>a.dr-i{gap:14px;font-family:var(--bd);font-weight:500;font-size:15.5px;padding:15px 22px}.dr-i .ic{width:20px;height:20px;color:var(--p);flex:none}
   .navbar .dr-contact.mob-only{display:grid;gap:10px;padding:20px 18px 4px}.dr-contact .btn{justify-content:center}
 }
+@media (max-width:860px){.header .main{grid-template-columns:auto 1fr auto;column-gap:8px}}
+@media (min-width:1201px) and (max-width:1320px){.navbar .nl>a{padding-inline:10px;font-size:13.5px}.navbar .nl>a::after{left:10px;right:10px}.topbar .usps li:nth-child(4){display:none}}
 @media (prefers-reduced-motion:reduce){.header .navbar,.scrim{transition:none!important}}
+
+/* téléphone en paysage : écran très bas, l'en-tête ne reste pas collé (il mangerait le tiers de l'écran) */
+@media (max-height:520px) and (orientation:landscape){.header{position:static}}
+
+/* champs de formulaire à 16 px sur écrans tactiles et petits écrans : sinon iPhone zoome la page à la saisie */
+@media (max-width:1200px){input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=submit]):not([type=button]),select:not([hidden]):not([data-x]):not([data-y]),textarea:not([hidden]):not([data-x]):not([data-y]){font-size:16px}}
