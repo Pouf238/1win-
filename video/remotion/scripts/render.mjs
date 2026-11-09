@@ -4,6 +4,7 @@ import {renderMedia, selectComposition} from '@remotion/renderer';
 import path from 'node:path';
 import fs from 'node:fs';
 import {globSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const outDir = path.join(root, 'out');
@@ -47,5 +48,13 @@ for (const id of ids) {
       }
     },
   });
+  // Durée exacte : la piste AAC dépasse de quelques ms (trames de 1024 échantillons) → recoupe à la milliseconde.
+  if (id !== 'Hero-Loop') {
+    const dur = (composition.durationInFrames / composition.fps).toFixed(3);
+    const tmp = outputLocation.replace(/\.mp4$/, '.tmp.mp4');
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', outputLocation, '-map', '0', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '320k',
+      '-af', `atrim=0:${dur}`, '-t', dur, '-movflags', '+faststart', tmp]);
+    fs.renameSync(tmp, outputLocation);
+  }
   console.log(`DONE ${id} -> ${outputLocation} en ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 }

@@ -51,7 +51,7 @@ export const Scene2Univers: React.FC = () => {
   const exit = ease.inCubic(prog(t, S.end - 0.4, S.end));
 
   const titles = [
-    {lines: stagger(U.titles[1].split(/(?<=QUI) /), tDer, 0.08, [undefined, BRAND.orange]), out: P1out},
+    {lines: stagger(U.titles[1].split(/(?<=QUI) /), Math.min(tDer, S.start + 0.05), 0.08, [undefined, BRAND.orange]), out: P1out},
     {lines: stagger(U.titles[0].split(/(?<=QUI) /), tIdee - 0.05, 0.08, [undefined, BRAND.orange]), out: P2out},
     {lines: stagger(U.titles[2].split(/(?<=QUI) /), tPap + 0.6, 0.08, [undefined, BRAND.orange]), out: S.end + 1},
   ];
