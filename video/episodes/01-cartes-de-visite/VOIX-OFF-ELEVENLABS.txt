@@ -1,0 +1,18 @@
+Vous tendez votre carte de visite... et elle se plie dans la main du client. <break time="0.4s" />
+Mauvaise première impression. <break time="0.3s" />
+Et le coupable, c'est souvent... le papier. <break time="0.7s" />
+
+Règle numéro un : l'épaisseur. <break time="0.3s" />
+En dessous de 300 grammes, votre carte paraît fragile. <break time="0.3s" />
+Visez 350 grammes : c'est le bon standard. <break time="0.7s" />
+
+Règle numéro deux : la finition. <break time="0.3s" />
+Mat : élégant, sobre... et on peut écrire dessus. <break time="0.3s" />
+Brillant : des couleurs qui éclatent, idéal pour les photos. <break time="0.3s" />
+Et pour un effet haut de gamme : le pelliculage soft touch, doux au toucher. <break time="0.6s" />
+
+À retenir : 350 grammes, et une finition qui vous ressemble. <break time="0.6s" />
+
+Et vous, plutôt mat ou brillant ? Dites-le en commentaire ! <break time="0.4s" />
+Abonnez-vous pour le prochain conseil. <break time="0.4s" />
+SYMO Print : vos idées prennent forme.
