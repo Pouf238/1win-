@@ -26,9 +26,9 @@ export const Scene4Mission: React.FC = () => {
     <AbsoluteFill>
       <Backdrop mode="light" />
       {/* Intro jargon */}
-      <KTitle lines={stagger(M.intro, Math.min(tIci - 0.05, S.start + 0.1), 0.14, [undefined, BRAND.orange])} tOut={starts[0] - 0.3} color={BRAND.ink} maxSize={110} />
+      <KTitle lines={stagger(M.intro, Math.min(tIci - 0.05, S.start - 0.25), 0.14, [undefined, BRAND.orange])} tOut={starts[0] - 0.3} color={BRAND.ink} maxSize={110} />
       <Zone rect={L.visual}>
-        {t < starts[0] + 0.3 && <Jargon t0={S.start + 0.05} tStrike={tJar} words={M.jargon} />}
+        {t < starts[0] + 0.3 && <Jargon t0={S.start - 0.3} tStrike={tJar} words={M.jargon} />}
         {/* Compteur */}
         {cur >= 0 && (
           <div style={{position: 'absolute', left: 0, right: 0, top: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16}}>

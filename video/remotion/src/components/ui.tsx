@@ -108,7 +108,7 @@ export const TShirt: React.FC<{w?: number; color?: string; print?: number; style
     <div style={{position: 'absolute', left: '33%', top: '32%', width: '34%', height: '34%', opacity: print,
       transform: `scale(${0.6 + 0.4 * print})`}}>
       {logo ? (
-        <Img src={LOGO.icon} style={{width: '100%', height: '100%', borderRadius: '18%'}} />
+        <Img src={LOGO.icon} style={{width: '100%', height: '100%', borderRadius: '22%'}} />
       ) : (
         <div style={{width: '100%', height: '100%', borderRadius: '50%', background: BRAND.orange, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           <div style={{width: '50%', height: '50%', borderRadius: '50%', border: `${w * 0.02}px solid ${BRAND.white}`}} />
@@ -161,7 +161,7 @@ export const LogoStroke: React.FC<{size: number; p: number; bar: number}> = ({si
 };
 
 export const LogoIcon: React.FC<{size: number; glow?: number; style?: React.CSSProperties}> = ({size, glow = 0.6, style}) => (
-  <div style={{width: size, height: size, borderRadius: size * 0.215, position: 'relative',
+  <div style={{width: size, height: size, borderRadius: size * 0.215, position: 'relative', overflow: 'hidden',
     boxShadow: `0 0 0 ${size * 0.012}px rgba(255,255,255,${0.35 * glow}), 0 0 ${size * 0.35}px rgba(255,255,255,${0.22 * glow}), 0 ${size * 0.08}px ${size * 0.2}px rgba(0,0,0,0.35)`,
     ...style}}>
     <Img src={LOGO.icon} style={{width: '100%', height: '100%', display: 'block'}} />
