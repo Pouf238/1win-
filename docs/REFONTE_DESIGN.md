@@ -120,3 +120,14 @@ Fichiers : `assets/js/spider.js`, `assets/js/silk-spider.js`, `assets/3d/{spider
 
 ## Retour arrière
 Le style public est une couche séparée : retirer `site.css`/`site.js` du gabarit rend l'ancien aspect ; sinon `git revert` du commit de la refonte. Rien en base de données.
+
+## Fiche dépliants : visuels fournis par le propriétaire (9 nov. 2026 — local, NON déployé)
+Cinq images fournies par le propriétaire du site, qui déclare en détenir l'autorisation d'utilisation et en assume la responsabilité (9 nov. 2026). Intégrées sans retouche (logos, noms et mentions conservés), converties en WebP (qualité 86, 1320 px de large, 22 à 40 Ko), sous les noms qui remplacent automatiquement les maquettes SVG dans `assets/img/produits/` :
+| Fichier | Forme |
+|---|---|
+| `depliant-3v-accordeon.webp` | accordéon (zigzag) |
+| `depliant-2v-paysage.webp` | 2 volets paysage |
+| `depliant-2v-carre.webp` | 2 volets carré |
+| `depliant-3v-roule.webp` | 3 volets roulé |
+| `depliant-2v-portrait.webp` | 2 volets (visuel par défaut ; format allongé) |
+Retour arrière : supprimer un de ces fichiers fait réapparaître la maquette SVG correspondante. En production, les visuels « paysage » et « carré » ne s'affichent qu'une fois l'option « Orientation » ajoutée au produit.
