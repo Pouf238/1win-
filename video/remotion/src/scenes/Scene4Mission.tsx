@@ -5,7 +5,7 @@ import {CONTENT} from '../config/content';
 import {Backdrop, Chip, KTitle, LightSweep, Pop, stagger, Zone} from '../components/core';
 import {BusinessCard, Flyer, IconCheck, IconHeart, IconLock, IconMegaphone, IconShare, Printer, TShirt} from '../components/ui';
 import {useLayout} from '../lib/layout';
-import {clamp, ease, prog, rand, scene, useT, ws} from '../lib/time';
+import {clamp, ease, prog, rand, scene, useT, ws, blurF} from '../lib/time';
 
 /**
  * SCÈNE 4 — NOTRE MISSION (26,3 → 37,9 s)
@@ -74,7 +74,7 @@ const Slide: React.FC<{a: number; b: number; children: React.ReactNode}> = ({a, 
   const x = (1 - pin) * 900 - pout * 900;
   const v = (1 - pin) + pout;
   return (
-    <div style={{position: 'absolute', inset: 0, transform: `translateX(${x}px)`, filter: `blur(${v * 14}px)`, opacity: 1 - pout}}>
+    <div style={{position: 'absolute', inset: 0, transform: `translateX(${x}px)`, filter: blurF(v * 14), opacity: 1 - pout}}>
       {children}
     </div>
   );

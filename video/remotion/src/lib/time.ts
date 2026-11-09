@@ -108,3 +108,6 @@ export const shake = (t: number, t0: number, amp = 18, dur = 0.5) => {
     r: Math.sin(t * 61) * k * 0.05,
   };
 };
+
+/** Filtre de flou omis quand il est négligeable (rendu bien plus rapide). */
+export const blurF = (px: number) => (px > 0.3 ? `blur(${px.toFixed(1)}px)` : undefined);

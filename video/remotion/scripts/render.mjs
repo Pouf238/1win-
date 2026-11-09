@@ -39,7 +39,6 @@ for (const id of ids) {
     audioCodec: 'aac', audioBitrate: '320k',
     muted: id === 'Hero-Loop',
     concurrency: 4, imageFormat: 'jpeg', jpegQuality: 92,
-    chromiumOptions: {gl: 'swangle'},
     onProgress: ({progress}) => {
       const p = Math.floor(progress * 10);
       if (p !== last) {

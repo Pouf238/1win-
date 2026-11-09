@@ -1,8 +1,8 @@
 import React from 'react';
-import {AbsoluteFill, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, staticFile, useCurrentFrame} from 'remotion';
 import {BRAND, FONT_HAND, FONT_SANS, fontFaces} from '../config/brand';
 import {useLayout, Rect} from '../lib/layout';
-import {anim, clamp, ease, prog, rand, useT} from '../lib/time';
+import {anim, blurF, clamp, ease, prog, rand, useT} from '../lib/time';
 
 /* =========================================================================
  * Styles globaux (polices embarquées)
@@ -48,18 +48,18 @@ export const Zone: React.FC<{rect: Rect; box?: number; children: React.ReactNode
  * ========================================================================= */
 export const Grain: React.FC<{opacity?: number}> = ({opacity = 0.07}) => {
   const frame = useCurrentFrame();
+  const r = (k: number) => Math.floor(rand(frame * 3 + k) * 256);
   return (
-    <AbsoluteFill style={{opacity, mixBlendMode: 'overlay', pointerEvents: 'none'}}>
-      <svg width="100%" height="100%">
-        <filter id={`grain${frame % 6}`}>
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed={frame % 6} />
-          <feColorMatrix type="saturate" values="0" />
-        </filter>
-        <rect width="100%" height="100%" filter={`url(#grain${frame % 6})`} />
-      </svg>
-    </AbsoluteFill>
+    <AbsoluteFill style={{opacity, mixBlendMode: 'overlay', pointerEvents: 'none',
+      backgroundImage: `url(${staticFile('noise.png')})`, backgroundSize: '256px 256px', backgroundPosition: `${r(1)}px ${r(2)}px`}} />
   );
 };
+
+/** Halo doux : dégradé radial (bien plus léger qu'un filtre de flou). */
+const Glow: React.FC<{x: number; y: number; d: number; color: string; opacity: number}> = ({x, y, d, color, opacity}) => (
+  <div style={{position: 'absolute', left: x, top: y, width: d, height: d, opacity,
+    background: `radial-gradient(circle, ${color} 0%, ${color}99 25%, ${color}33 50%, transparent 70%)`}} />
+);
 
 export const Backdrop: React.FC<{mode: 'dark' | 'light'; glow?: number}> = ({mode, glow = 0}) => {
   const t = useT();
@@ -74,20 +74,8 @@ export const Backdrop: React.FC<{mode: 'dark' | 'light'; glow?: number}> = ({mod
           }}
         />
         {/* halos lents */}
-        <div
-          style={{
-            position: 'absolute', width: m * 0.7, height: m * 0.7, borderRadius: '50%',
-            left: W * 0.5 - m * 0.35 + Math.sin(t * 0.21) * W * 0.25, top: H * 0.15 + Math.cos(t * 0.17) * H * 0.1,
-            background: BRAND.orange, opacity: 0.07 + glow * 0.18, filter: `blur(${m * 0.12}px)`,
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute', width: m * 0.6, height: m * 0.6, borderRadius: '50%',
-            left: W * 0.1 + Math.cos(t * 0.13) * W * 0.2, top: H * 0.55 + Math.sin(t * 0.19) * H * 0.08,
-            background: '#3FA3B6', opacity: 0.16, filter: `blur(${m * 0.1}px)`,
-          }}
-        />
+        <Glow x={W * 0.5 - m * 0.5 + Math.sin(t * 0.21) * W * 0.25} y={H * 0.05 + Math.cos(t * 0.17) * H * 0.1} d={m} color={BRAND.orange} opacity={0.09 + glow * 0.25} />
+        <Glow x={W * 0.1 - m * 0.4 + Math.cos(t * 0.13) * W * 0.2} y={H * 0.45 + Math.sin(t * 0.19) * H * 0.08} d={m * 0.85} color="#3FA3B6" opacity={0.2} />
         <AbsoluteFill style={{background: 'radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.45) 100%)'}} />
         <Grain opacity={0.08} />
       </AbsoluteFill>
@@ -104,20 +92,8 @@ export const Backdrop: React.FC<{mode: 'dark' | 'light'; glow?: number}> = ({mod
           opacity: 0.8,
         }}
       />
-      <div
-        style={{
-          position: 'absolute', width: m * 0.55, height: m * 0.55, borderRadius: '50%',
-          left: -m * 0.12 + Math.sin(t * 0.2) * 60, top: -m * 0.1,
-          background: BRAND.petrol, opacity: 0.1, filter: `blur(${m * 0.09}px)`,
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute', width: m * 0.45, height: m * 0.45, borderRadius: '50%',
-          right: -m * 0.1, bottom: -m * 0.05 + Math.cos(t * 0.23) * 60,
-          background: BRAND.orange, opacity: 0.12, filter: `blur(${m * 0.09}px)`,
-        }}
-      />
+      <Glow x={-m * 0.4 + Math.sin(t * 0.2) * 60} y={-m * 0.35} d={m * 0.8} color={BRAND.petrol} opacity={0.14} />
+      <Glow x={W - m * 0.4} y={H - m * 0.45 + Math.cos(t * 0.23) * 60} d={m * 0.7} color={BRAND.orange} opacity={0.16} />
       <Grain opacity={0.05} />
     </AbsoluteFill>
   );
@@ -157,7 +133,6 @@ export const FloatingPapers: React.FC<{count?: number; seed?: number; speed?: nu
           background: BRAND.white,
           borderRadius: 4,
           opacity: (0.35 + depth * 0.65) * opacity,
-          filter: `blur(${(1 - depth) * 6}px)`,
           boxShadow: `0 ${10 * depth}px ${30 * depth}px rgba(0,0,0,0.25)`,
           padding: w * 0.1,
           overflow: 'hidden',
@@ -280,7 +255,7 @@ export const KTitle: React.FC<{
                   display: 'inline-block', marginRight: '0.24em',
                   transform: `translateY(${y}em) scale(${0.7 + 0.3 * ease.outBack(p, 2)})`,
                   opacity: clamp(p * 3) * (1 - qq),
-                  filter: `blur(${(1 - ease.outCubic(p)) * 12 + qq * 8}px)`,
+                  filter: blurF((1 - ease.outCubic(p)) * 12 + qq * 8),
                   color: w.color ?? color,
                   fontWeight: w.hand ? 700 : undefined,
                   fontSize: w.hand ? '1.25em' : undefined,

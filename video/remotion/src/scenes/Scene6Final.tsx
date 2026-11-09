@@ -6,7 +6,7 @@ import {Backdrop, Chip, FloatingPapers, KTitle, LightSweep, Particles, Pop, stag
 import {CommentBubble, IconBell, IconCheck, IconSearch, IconShare, LogoIcon, Phone, ProfileScreen, TapHand, WordmarkCard} from '../components/ui';
 import {Flash} from '../components/SceneShell';
 import {useLayout} from '../lib/layout';
-import {clamp, ease, prog, rand, shake, spring, TL, useT, we, ws} from '../lib/time';
+import {clamp, ease, prog, rand, shake, spring, TL, useT, we, ws, blurF} from '../lib/time';
 
 /**
  * SCÈNE 6 — FINAL ET APPEL À L'ACTION (49,5 → 60 s)
@@ -146,7 +146,7 @@ export const Scene6Final: React.FC = () => {
                 {F.signatureB.map((w, i) => {
                   const p = prog(t, sigTimes[i] - 0.05, sigTimes[i] + 0.35);
                   return (
-                    <span key={w} style={{display: 'inline-block', marginRight: '0.25em', opacity: clamp(p * 3), filter: `blur(${(1 - p) * 10}px)`,
+                    <span key={w} style={{display: 'inline-block', marginRight: '0.25em', opacity: clamp(p * 3), filter: blurF((1 - p) * 10),
                       transform: `translateY(${(1 - ease.outBack(p, 2)) * 0.5}em)`, color: i === 3 ? BRAND.orange : BRAND.white}}>{w}</span>
                   );
                 })}

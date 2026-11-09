@@ -6,7 +6,7 @@ import {Backdrop, FloatingPapers, HandText, KTitle, Particles, Zone} from '../co
 import {CommentBubble} from '../components/ui';
 import {Flash} from '../components/SceneShell';
 import {useLayout} from '../lib/layout';
-import {anim, clamp, ease, prog, rand, shake, TL, useT, ws} from '../lib/time';
+import {anim, clamp, ease, prog, rand, shake, TL, useT, ws, blurF} from '../lib/time';
 
 /**
  * SCÈNE 1 — HOOK (0 → 7,6 s)
@@ -45,7 +45,7 @@ export const Scene1Hook: React.FC = () => {
     return {
       position: 'absolute', left: x + fx, top: y + fy + float, transform: `translate(-50%, -50%) rotate(${rot + suck * 90}deg) scale(${s})`,
       opacity: clamp(p * 4) * (1 - prog(t, tSuck + 0.3, tSuck + 0.42)),
-      filter: `blur(${(1 - depth) * 10 + suck * 8}px)`,
+      filter: blurF((1 - depth) * 10 + suck * 8),
     };
   };
 

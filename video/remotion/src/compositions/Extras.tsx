@@ -115,7 +115,7 @@ export const HeroLoop: React.FC = () => {
     const rot = r(6) * 360 + Math.sin(a + i) * 12;
     return (
       <div key={i} style={{position: 'absolute', left: x * (width + w * 2) - w, top: y * height, width: w, height: w * 1.41, background: BRAND.white,
-        borderRadius: 4, opacity: 0.2 + depth * 0.5, filter: `blur(${(1 - depth) * 6}px)`, padding: w * 0.1,
+        borderRadius: 4, opacity: 0.2 + depth * 0.5, padding: w * 0.1,
         transform: `perspective(900px) rotateZ(${rot}deg) rotateY(${Math.sin(a + i) * 35}deg)`, boxShadow: '0 20px 40px rgba(0,0,0,0.25)'}}>
         <div style={{height: w * 0.32, background: i % 3 === 0 ? BRAND.orange : BRAND.petrol, borderRadius: 3}} />
         {[0.9, 0.7, 0.8].map((k, j) => <div key={j} style={{marginTop: w * 0.07, height: w * 0.045, width: `${k * 100}%`, background: '#C9D6D9', borderRadius: 2}} />)}
@@ -131,8 +131,9 @@ export const HeroLoop: React.FC = () => {
   return (
     <AbsoluteFill style={{background: BRAND.petrolNight, overflow: 'hidden'}}>
       <AbsoluteFill style={{background: `radial-gradient(ellipse 70% 60% at ${50 + Math.sin(a) * 8}% ${45 + Math.cos(a) * 5}%, ${BRAND.petrol} 0%, ${BRAND.petrolDeep} 50%, ${BRAND.petrolNight} 100%)`}} />
-      <div style={{position: 'absolute', width: width * 0.5, height: width * 0.5, borderRadius: '50%', left: width * 0.55 + Math.cos(a) * width * 0.08,
-        top: -width * 0.1 + Math.sin(a) * height * 0.08, background: BRAND.orange, opacity: 0.12, filter: `blur(${width * 0.08}px)`}} />
+      <div style={{position: 'absolute', width: width * 0.7, height: width * 0.7, left: width * 0.45 + Math.cos(a) * width * 0.08,
+        top: -width * 0.25 + Math.sin(a) * height * 0.08, opacity: 0.16,
+        background: `radial-gradient(circle, ${BRAND.orange} 0%, ${BRAND.orange}66 30%, transparent 70%)`}} />
       {sheets}
       {dots}
       <AbsoluteFill style={{background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)'}} />
