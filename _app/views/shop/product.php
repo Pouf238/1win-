@@ -1,6 +1,7 @@
 <?php
 /** @var array $p $x $cfg $q $cat $related $crumbs $gal */
 $isArea = $p['pricing_model'] === 'area'; $qc = $x['qty']; $pr = $x['pricing']; $fav = in_array((int) $p['id'], user_favs(), true);
+$cz = feature('customization') && !price_on_request($p);   // sans prix fixé : pas de configurateur, demande de devis
 $presets = Pricing::presets($p, $cfg);
 function mod_label(array $c): string {
     $m = $c['price']['mode'] ?? 'fixed'; $v = (float) ($c['price']['value'] ?? 0); if ($v == 0) return '';
@@ -10,7 +11,7 @@ function mod_label(array $c): string {
 $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 'max' => (int) $qc['max'], 'step' => (int) $qc['step'], 'files' => Files::allowed(), 'maxmb' => (int) Settings::get('upload_max_mb', 50), 'name' => $p['name'], 'tax' => (bool) Settings::get('tax_enabled', 0)];
 ?>
 <div class="wrap"><?= crumbs($crumbs) ?>
-<?php if (feature('customization')): ?><script type="application/json" id="pcfg"><?= jsafe($jsCfg) ?></script><?php endif; ?>
+<?php if ($cz): ?><script type="application/json" id="pcfg"><?= jsafe($jsCfg) ?></script><?php endif; ?>
 <div class="pp" data-product="<?= (int) $p['id'] ?>">
 <div class="main-col">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><?php if ($p['promo_label']): ?><span class="tag"><?= e($p['promo_label']) ?></span><?php endif; ?><?php if ($p['is_new']): ?><span class="tag t-p">Nouveau</span><?php endif; ?><?php if ($p['bestseller']): ?><span class="tag t-n">Best-seller</span><?php endif; ?></div>
@@ -26,7 +27,7 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
     <?php if ($vis): ?><script type="application/json" id="pvis"><?= jsafe(['groups' => $vis['groups'], 'map' => $vis['map']]) ?></script><?php endif; ?>
   </div>
 
-  <?php if (feature('customization')): ?>
+  <?php if ($cz): ?>
   <form id="cfg" class="cfg" autocomplete="off" novalidate>
   <?php $n = 0; ?>
   <?php if ($isArea): ?><div class="og"><h3><span><?= ++$n ?>. Dimensions</span></h3><p class="hlp">En centimètres. Largeur de <?= (int) $pr['w']['min'] ?> à <?= (int) $pr['w']['max'] ?> cm, hauteur de <?= (int) $pr['h']['min'] ?> à <?= (int) $pr['h']['max'] ?> cm.</p>
@@ -67,7 +68,7 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
   <div class="tabp" id="t3"><div class="prose"><p>Le délai de fabrication est indiqué ci-dessus. La livraison à Abidjan prend en général 1 à 3 jours ouvrés selon la commune ; vers l'intérieur du pays, comptez 3 à 6 jours. Le retrait à l'atelier est gratuit. Détails : <a href="/livraison">politique de livraison</a>.</p></div></div>
 </div>
 
-<?php if (feature('customization')): ?><aside><div class="buybox" id="buybox" aria-live="polite">
+<?php if ($cz): ?><aside><div class="buybox" id="buybox" aria-live="polite">
   <div class="total" id="b-total"><?= money($q['total']) ?></div>
   <div class="unit"><span id="b-unit"><?= money($q['unit_price']) ?></span> / <?= e(rtrim($qc['unit'], 's.') ?: 'unité') ?><?php if (Settings::get('tax_enabled', 0)): ?> · <?= Settings::get('prices_include_tax', 1) ? 'TTC' : 'HT' ?><?php endif; ?></div>
   <div id="b-errors"><?php foreach ($q['errors'] as $er): ?><div class="alert a-warn"><?= e($er) ?></div><?php endforeach; ?></div>
@@ -79,9 +80,9 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
   <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-g btn-sm" type="button" data-fav="<?= (int) $p['id'] ?>" style="flex:1"><?= ic('heart') ?> Favori</button><a class="btn btn-g btn-sm" style="flex:1" href="<?= e(wa_link('Bonjour Symo Print, je souhaite commander : ' . $p['name'])) ?>" rel="noopener"><?= ic('wa') ?> WhatsApp</a></div>
   <div class="trust"><div><?= ic('shield') ?>Fichier vérifié, BAT validé</div><div><?= ic('truck') ?>Livraison Côte d'Ivoire</div><div><?= ic('clock') ?>Réponse rapide</div></div>
   <?php if (feature('orders')): ?><p class="muted" style="font-size:12.5px;margin:12px 0 0">Livraison calculée à la commande selon votre zone. Paiement Mobile Money, virement ou à la livraison.</p><?php endif; ?>
-</div></aside><?php else: ?><aside><div class="buybox"><div class="total"><small>À partir de</small> <?= money($p['price_from']) ?></div><p class="muted">Tarif indicatif, confirmé par notre équipe.</p><?php if (feature('quotes')): ?><a class="btn btn-a btn-lg btn-block" href="/devis?produit=<?= e(rawurlencode($p['name'])) ?>"><?= ic('file') ?> Demander un devis</a><?php endif; ?><a class="btn btn-g btn-block" style="margin-top:10px" href="<?= e(wa_link('Bonjour Symo Print, je souhaite des informations sur : ' . $p['name'])) ?>" rel="noopener"><?= ic('wa') ?> WhatsApp</a></div></aside><?php endif; ?>
+</div></aside><?php else: ?><aside><div class="buybox"><?php if (price_on_request($p)): ?><div class="total"><small>Prix</small> Sur devis</div><p class="muted">Indiquez quantité, couleurs et marquage : notre équipe vous envoie un prix rapidement.</p><?php else: ?><div class="total"><small>À partir de</small> <?= money($p['price_from']) ?></div><p class="muted">Tarif indicatif, confirmé par notre équipe.</p><?php endif; ?><?php if (feature('quotes')): ?><a class="btn btn-a btn-lg btn-block" href="/devis?produit=<?= e(rawurlencode($p['name'])) ?>"><?= ic('file') ?> Demander un devis</a><?php endif; ?><a class="btn btn-g btn-block" style="margin-top:10px" href="<?= e(wa_link('Bonjour Symo Print, je souhaite des informations sur : ' . $p['name'])) ?>" rel="noopener"><?= ic('wa') ?> WhatsApp</a></div></aside><?php endif; ?>
 </div>
 
 <?php if ($related): ?><section class="mb"><h2>Produits similaires</h2><div class="grid g4"><?php foreach ($related as $r) echo pcard($r); ?></div></section><?php endif; ?>
 </div>
-<?php if (feature('customization')): ?><div class="mob-bar noprint"><strong id="m-total"><?= money($q['total']) ?></strong><button class="btn btn-a" type="button" id="m-add" <?= ($sale ?? 'ok') === 'ok' ? '' : 'hidden disabled' ?>><?= ic('cart') ?> Ajouter au panier</button></div><?php endif; ?>
+<?php if ($cz): ?><div class="mob-bar noprint"><strong id="m-total"><?= money($q['total']) ?></strong><button class="btn btn-a" type="button" id="m-add" <?= ($sale ?? 'ok') === 'ok' ? '' : 'hidden disabled' ?>><?= ic('cart') ?> Ajouter au panier</button></div><?php endif; ?>

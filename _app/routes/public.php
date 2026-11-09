@@ -2,7 +2,7 @@
 // Routes publiques : accueil, catalogue, produit, recherche, API de prix / fichiers / favoris, pages, SEO.
 
 function product_list(string $where, array $params, string $sort, int $page, int $per = 12): array {
-    $order = ['price_asc' => 'price_from ASC', 'price_desc' => 'price_from DESC', 'new' => 'id DESC', 'name' => 'name ASC'][$sort] ?? 'bestseller DESC, featured DESC, sort ASC, name ASC';
+    $order = ['price_asc' => 'price_from <= 0, price_from ASC', 'price_desc' => 'price_from DESC', 'new' => 'id DESC', 'name' => 'name ASC'][$sort] ?? 'bestseller DESC, featured DESC, sort ASC, name ASC';
     $total = (int) DB::val("SELECT COUNT(*) FROM products p WHERE active=1 AND $where", $params);
     [$page, $pages, $off] = pagination($total, $per, $page);
     $rows = DB::all("SELECT * FROM products p WHERE active=1 AND $where ORDER BY $order LIMIT $per OFFSET $off", $params);
@@ -10,7 +10,7 @@ function product_list(string $where, array $params, string $sort, int $page, int
 }
 function filter_sql(): array {
     $w = ['1=1']; $p = [];
-    if (($m = (int) get('max')) > 0) { $w[] = 'price_from <= ?'; $p[] = $m; }
+    if (($m = (int) get('max')) > 0) { $w[] = 'price_from > 0 AND price_from <= ?'; $p[] = $m; }
     if (get('promo')) $w[] = "promo_label <> ''"; if (get('new')) $w[] = 'is_new=1'; if (get('best')) $w[] = 'bestseller=1';
     return [implode(' AND ', $w), $p];
 }
@@ -73,7 +73,7 @@ route('GET', '/p/{slug}', function ($a) {
     $crumbs = [['Catalogue', '/catalogue']]; if ($parent) $crumbs[] = [$parent['name'], '/c/' . $parent['slug']]; if ($cat) $crumbs[] = [$cat['name'], '/c/' . $cat['slug']]; $crumbs[] = [$p['name'], ''];
     $img = $p['image'] ? 'assets/img/produits/' . basename($p['image']) . '.webp' : null;
     $ld = [['@context' => 'https://schema.org', '@type' => 'Product', 'name' => $p['name'], 'description' => $p['short_desc'], 'sku' => 'SP-' . $p['id'], 'brand' => ['@type' => 'Brand', 'name' => shop('shop_name')],
-            'image' => $img ? [abs_url($img)] : [abs_url('assets/img/og.png')], 'offers' => ['@type' => 'Offer', 'priceCurrency' => 'XOF', 'price' => (int) $p['price_from'], 'availability' => 'https://schema.org/InStock', 'url' => abs_url('/p/' . $p['slug']), 'seller' => ['@type' => 'Organization', 'name' => shop('shop_name')]]],
+            'image' => $img ? [abs_url($img)] : [abs_url('assets/img/og.png')], ] + (price_on_request($p) ? [] : ['offers' => ['@type' => 'Offer', 'priceCurrency' => 'XOF', 'price' => (int) $p['price_from'], 'availability' => 'https://schema.org/InStock', 'url' => abs_url('/p/' . $p['slug']), 'seller' => ['@type' => 'Organization', 'name' => shop('shop_name')]]]),
         ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($c2, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $c2[0]], $crumbs, array_keys($crumbs))]];
     $gal = array_values(array_filter(array_merge([$p['image']], feature('catalog.gallery') ? jd($p['gallery']) : [])));
     page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée', 'desc' => $p['seo_desc'] ?: $p['short_desc'], 'jsonld' => $ld, 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', 'og_image' => $img]);

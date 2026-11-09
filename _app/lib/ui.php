@@ -29,6 +29,8 @@ function crumbs(array $items): string {
     return $h . '</nav>';
 }
 function user_favs(): array { static $f = null; if ($f === null) { $u = user(); $f = $u ? array_map('intval', array_column(DB::all('SELECT product_id FROM favorites WHERE user_id=?', [$u['id']]), 'product_id')) : []; } return $f; }
+/** Produit sans prix fixé (prix « à partir de » à 0) : affiché « Sur devis », jamais « 0 FCFA ». */
+function price_on_request(array $p): bool { return (float) ($p['price_from'] ?? 0) <= 0; }
 function pcard(array $p): string {
     $fav = in_array((int) $p['id'], user_favs(), true); $tags = '';
     if ($p['promo_label']) $tags .= '<span class="tag">' . e($p['promo_label']) . '</span>'; if ($p['is_new']) $tags .= '<span class="tag t-p">Nouveau</span>'; if ($p['bestseller']) $tags .= '<span class="tag t-n">Best-seller</span>';
@@ -36,7 +38,7 @@ function pcard(array $p): string {
     return '<article class="pcard"><a class="pic" href="' . e($url) . '" aria-label="' . e($p['name']) . '">' . product_img($p) . '</a><div class="tags">' . $tags . '</div>'
         . '<button class="fav' . ($fav ? ' on' : '') . '" type="button" data-fav="' . (int) $p['id'] . '" aria-label="Ajouter aux favoris" title="Favoris">' . ic('heart') . '</button>'
         . '<div class="body"><h3><a href="' . e($url) . '">' . e($p['name']) . '</a></h3><p class="sd">' . e($p['short_desc']) . '</p>'
-        . '<div class="pr"><div><small>À partir de</small><strong>' . money($p['price_from']) . '</strong>' . pfor($p) . ($p['pricing_status'] === 'demo' ? '<div class="demo-tag">Tarif indicatif</div>' : '') . '</div><a class="btn btn-p btn-sm" href="' . e($url) . '">Configurer</a></div></div></article>';
+        . (price_on_request($p) ? '<div class="pr"><div><small>Prix</small><strong>Sur devis</strong></div><a class="btn btn-p btn-sm" href="' . e($url) . '">Voir</a></div>' : '<div class="pr"><div><small>À partir de</small><strong>' . money($p['price_from']) . '</strong>' . pfor($p) . ($p['pricing_status'] === 'demo' ? '<div class="demo-tag">Tarif indicatif</div>' : '') . '</div><a class="btn btn-p btn-sm" href="' . e($url) . '">Configurer</a></div>') . '</div></article>';
 }
 function stars(int $n): string { return str_repeat('★', max(0, min(5, $n))) . str_repeat('☆', 5 - max(0, min(5, $n))); }
 function select_opts(array $opts, $cur): string { $h = ''; foreach ($opts as $v => $l) $h .= '<option value="' . e($v) . '"' . ((string) $v === (string) $cur ? ' selected' : '') . '>' . e($l) . '</option>'; return $h; }

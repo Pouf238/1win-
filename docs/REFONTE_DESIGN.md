@@ -131,3 +131,9 @@ Cinq images fournies par le propriétaire du site, qui déclare en détenir l'au
 | `depliant-3v-roule.webp` | 3 volets roulé |
 | `depliant-2v-portrait.webp` | 2 volets (visuel par défaut ; format allongé) |
 Retour arrière : supprimer un de ces fichiers fait réapparaître la maquette SVG correspondante. En production, les visuels « paysage » et « carré » ne s'affichent qu'une fois l'option « Orientation » ajoutée au produit.
+
+## Nouveaux objets et confiserie, vendus sur devis (9 nov. 2026 — local, NON déployé)
+Photos fournies par le propriétaire du site (autorisation d'utilisation déclarée par lui), conservées telles quelles (logos et mentions inclus), converties en WebP (1200 px max) dans `assets/img/produits/`. Les dos d'emballage (étiquettes du fournisseur en allemand) ne sont pas utilisés.
+- **Données** : `_app/cli/catalogue-objets-2026-11.php` (aperçu par défaut, `--apply` pour écrire ; rejouable, ne supprime rien) crée la catégorie « Confiserie publicitaire » et 15 fiches (porte-clés bambou/jeton et à sangle, décapsuleurs plastique, tours de cou, mugs couvercle bambou, sacs isothermes, sacs shopping non-tissé, sacs à cordelettes, barres chocolatées avec fourreau, cookies, boîtes de bonbons, dragées menthe, papillotes, dextrose, bonbons gélifiés) et complète les galeries de « Mugs avec base liège » et « Tote bags ».
+- **Sur devis** : prix à 0 = « Sur devis » partout (cartes, fiche avec bouton de devis, pas de configurateur, pas d'offre de prix dans les données structurées, exclues du filtre par prix, en fin de tri croissant). Noms génériques : aucune marque n'est promise.
+- **Galeries** : visibles seulement si le module « Galerie photos » est activé dans Administration → Fonctionnalités (sinon : photo principale seule).
