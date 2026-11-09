@@ -45,7 +45,7 @@ $NEW = [
     ['papeterie', 'calendriers-de-bureau', 'Calendriers de bureau', 'Calendriers chevalet à spirale, à vos photos et à votre logo.', "Calendrier de bureau à spirale sur chevalet, illustré à vos photos et à votre logo : sous les yeux de vos clients toute l'année.", 'calendrier-bureau', ['calendrier-bureau-pile'], 'flyer', 'ex.'],
 ];
 // galeries complétées sur des produits existants (rien n'est retiré)
-$GALLERY = ['enveloppes' => ['enveloppes-fenetre', 'enveloppes-autocollante'], 'calendriers-muraux' => ['calendrier-spirale-couverture', 'calendrier-spirale-mois', 'calendrier-spirale-ouvert'], 'carnets-blocs' => ['cahier-spirale', 'cahier-spirale-ouvert'], 'panneaux-rigides' => ['panneau-rigide-tranche'], 'tentes-pliantes' => ['tente-pliante-logo', 'tente-pliante-marche'], 'baches-publicitaires' => ['bache-oeillet', 'bache-tendeurs', 'bache-mat', 'bache-microperforee'], 'mug-base-liege' => ['mug-liege-blanc-mat', 'mug-liege-couvercle', 'mug-liege-perso'], 'tote-bags' => ['tote-coton-1', 'tote-coton-2']];
+$GALLERY = ['tshirts-personnalises' => ['tshirt-mon-logo-ici'], 'enveloppes' => ['enveloppes-fenetre', 'enveloppes-autocollante'], 'calendriers-muraux' => ['calendrier-spirale-couverture', 'calendrier-spirale-mois', 'calendrier-spirale-ouvert'], 'carnets-blocs' => ['cahier-spirale', 'cahier-spirale-ouvert'], 'panneaux-rigides' => ['panneau-rigide-tranche'], 'tentes-pliantes' => ['tente-pliante-logo', 'tente-pliante-marche'], 'baches-publicitaires' => ['bache-oeillet', 'bache-tendeurs', 'bache-mat', 'bache-microperforee'], 'mug-base-liege' => ['mug-liege-blanc-mat', 'mug-liege-couvercle', 'mug-liege-perso'], 'tote-bags' => ['tote-coton-1', 'tote-coton-2']];
 
 $missing = []; foreach ($NEW as $r) foreach (array_merge([$r[5]], $r[6]) as $n) if (!is_file(ROOT . "/assets/img/produits/$n.webp")) $missing[] = $n;
 foreach ($GALLERY as $g) foreach ($g as $n) if (!is_file(ROOT . "/assets/img/produits/$n.webp")) $missing[] = $n;
@@ -70,6 +70,16 @@ foreach ($NEW as [$c, $slug, $name, $short, $desc, $img, $gal, $icon, $unit]) {
         'qty_cfg' => je(['presets' => [50, 100, 250, 500], 'min' => 50, 'max' => 100000, 'step' => 1, 'default' => 100, 'unit' => $unit]),
         'groups_json' => '[]', 'delays' => je($GLOBALS['DELAYS']), 'file_info' => $GLOBALS['FI'], 'file_required' => 1, 'active' => 1, 'featured' => 0, 'bestseller' => 0, 'is_new' => 1,
         'promo_label' => '', 'pricing_status' => 'demo', 'price_from' => 0, 'availability' => 'on_request', 'keywords' => '', 'sort' => 0, 'updated_at' => now()]);
+}
+// photo principale posée seulement si la fiche n'en a pas (jamais remplacée)
+$MAIN = ['tshirts-personnalises' => 'tshirt-votre-logo'];
+foreach ($MAIN as $slug => $img) {
+    if (!is_file(ROOT . "/assets/img/produits/$img.webp")) { fwrite(STDERR, "ARRÊT : photo absente : $img
+"); exit(1); }
+    $p = DB::row('SELECT id, image FROM products WHERE slug=?', [$slug]); if (!$p) { $log[] = "absent (photo ignorée) : $slug"; continue; }
+    if ((string) $p['image'] !== '') { $log[] = "photo principale déjà présente : $slug"; continue; }
+    $log[] = "photo principale posée : $slug";
+    if ($apply) DB::upd('products', (int) $p['id'], ['image' => $img, 'updated_at' => now()]);
 }
 foreach ($GALLERY as $slug => $add) {
     $p = DB::row('SELECT id, gallery FROM products WHERE slug=?', [$slug]); if (!$p) { $log[] = "absent (galerie ignorée) : $slug"; continue; }
