@@ -1,6 +1,6 @@
-# SYMO Print — Conseil n° 1 : « Quel papier pour vos cartes de visite ? »
+# SYMO Print — Conseil (plus tard) : « Quel papier pour vos cartes de visite ? »
 
-**Vidéo n° 2 de la journée** · Motion design 9:16 · **40 s** · même charte et même voix que la vidéo de lancement.
+**Mis de côté pour un prochain épisode** · Motion design 9:16 · **40 s** · même charte et même voix que la vidéo de lancement.
 
 > Statut : script prêt, **en attente du fichier audio** (voix ElevenLabs).
 
