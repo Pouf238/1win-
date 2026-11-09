@@ -16,7 +16,7 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
 <div class="main-col">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><?php if ($p['promo_label']): ?><span class="tag"><?= e($p['promo_label']) ?></span><?php endif; ?><?php if ($p['is_new']): ?><span class="tag t-p">Nouveau</span><?php endif; ?><?php if ($p['bestseller']): ?><span class="tag t-n">Best-seller</span><?php endif; ?></div>
   <h1 style="font-size:clamp(26px,3vw,38px)"><?= e($p['name']) ?></h1><p class="muted" style="font-size:17px"><?= e($p['short_desc']) ?></p>
-  <?php if ($p['pricing_status'] === 'demo'): ?><div class="alert a-warn" style="font-size:14px">Tarif indicatif : le prix définitif est confirmé par notre équipe avant production.</div><?php endif; ?>
+  <?php if ($p['pricing_status'] === 'demo' && !price_on_request($p)): ?><div class="alert a-warn" style="font-size:14px">Tarif indicatif : le prix définitif est confirmé par notre équipe avant production.</div><?php endif; ?>
   <?php $vis = product_visuals($p, $cfg['opts'] ?? []); $items = [];
     foreach ($gal as $g) $items[] = ['src' => asset('img/produits/' . basename($g) . '.webp'), 'title' => $p['name'], 'key' => '', 'mock' => false];
     if ($vis) foreach ($vis['images'] as $m) $items[] = ['src' => $m['src'], 'title' => $m['title'], 'key' => $m['name'], 'mock' => $m['mock']];

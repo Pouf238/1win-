@@ -108,17 +108,3 @@ foreach ($pop as $p) { if (count($bs) >= 5) break; if (!in_array($p['id'], $seen
 
 <?php if ($tests): ?><section class="section"><div class="wrap"><div class="sec-head rv"><div><span class="bar"></span><h2>Ils nous font confiance</h2></div></div>
   <div class="grid g3"><?php foreach ($tests as $t): ?><div class="tcard rv"><div class="stars"><?= stars((int) $t['rating']) ?></div><p>« <?= e($t['text']) ?> »</p><b><?= e($t['name']) ?></b><div class="muted"><?= e($t['role']) ?></div></div><?php endforeach; ?></div></div></section><?php endif; ?>
-
-<?php
-// Araignée 3D décorative (ordinateur seulement) : adresses des fichiers et éléments où sa soie peut s'accrocher.
-// Le chargeur assets/js/spider.js lit ce bloc ; pour retirer l'effet, supprimer ce bloc ou 'js/spider.js' dans la route d'accueil.
-$spiderCfg = [
-    'script'  => asset('js/silk-spider.js'),
-    'model'   => asset('3d/spider.glb'),
-    'top'     => asset('3d/spider-top.webp'),
-    'face'    => asset('3d/spider-face.webp'),
-    'anchors' => '[data-silk-anchor], .hb-card, .hb-usp, .hb-mini, .pcard, .cv-t, .sv, .fp a, .pst, .studio, .gt, .vt-card',
-    'silk'    => '#5f8f9a', 'bounce' => '#f2f6f7', 'shadow' => '#0a2a33',
-];
-?>
-<script type="application/json" id="spider-cfg"><?= jsafe($spiderCfg) ?></script>

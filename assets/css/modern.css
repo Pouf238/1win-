@@ -1,0 +1,88 @@
+/* Symo Print — couche « moderne » (9 nov. 2026), chargée APRÈS app.css et site.css.
+ * Uniquement de l'apparence : aucune mise en page cassée, mêmes couleurs de marque (#1F7A8C / #F4A62A), même logo.
+ * Pour revenir à l'ancien aspect : retirer la ligne modern.css du gabarit (_app/views/layout/main.php). */
+:root{
+  --mbg:#F6F8F9;          /* fond général, gris très clair légèrement bleuté */
+  --mcard:#fff;
+  --mline:rgba(14,61,71,.09);
+  --mr:22px;              /* rayon des cartes */
+  --msh:0 1px 2px rgba(14,61,71,.06),0 8px 24px -12px rgba(14,61,71,.18);
+  --msh2:0 2px 4px rgba(14,61,71,.06),0 24px 48px -20px rgba(14,61,71,.32);
+  --mgrad:linear-gradient(135deg,#1F7A8C 0%,#145F6E 100%);
+  --mgrad-a:linear-gradient(135deg,#F7B649 0%,#F4A62A 55%,#E8921A 100%);
+}
+body{background:var(--mbg)}
+main,.page{background:transparent}
+
+/* ---------- typographie ---------- */
+h1{font-size:clamp(32px,4.6vw,58px);letter-spacing:-.035em;line-height:1.04}
+h2{letter-spacing:-.03em}
+.sec-head h2{font-size:clamp(26px,3vw,40px);line-height:1.08}
+.sec-head p{font-size:16.5px;color:var(--mut);max-width:62ch}
+.sec-head .bar{width:34px;height:4px;border-radius:4px;background:var(--mgrad-a)}
+.lead{font-size:clamp(16px,1.35vw,19px);line-height:1.6}
+
+/* ---------- sections : alternance blanc / gris clair, plus d'air ---------- */
+.section{padding-block:clamp(56px,7vw,96px);background:transparent}
+.section.soft{background:#fff;border-block:1px solid var(--mline)}
+
+/* ---------- boutons : pastilles, dégradé discret, relief au survol ---------- */
+.btn{border-radius:999px;font-weight:700}
+.btn-a{background:var(--mgrad-a);border-color:transparent;color:#2b2108;box-shadow:0 10px 24px -12px rgba(232,146,26,.75)}
+.btn-a:hover{color:#2b2108;transform:translateY(-2px);box-shadow:0 16px 30px -12px rgba(232,146,26,.85)}
+.btn-p{background:var(--mgrad);border-color:transparent;color:#fff;box-shadow:0 10px 24px -14px rgba(20,95,110,.8)}
+.btn-p:hover{color:#fff;transform:translateY(-2px);box-shadow:0 16px 30px -14px rgba(20,95,110,.9)}
+.btn-o{border-radius:999px;background:#fff;border:1.5px solid var(--mline);color:var(--p9)}
+.btn-o:hover{border-color:var(--p);color:var(--p);transform:translateY(-1px)}
+
+/* ---------- cartes produit ---------- */
+.pcard{border-radius:var(--mr);border:1px solid var(--mline);background:var(--mcard);box-shadow:var(--msh);overflow:hidden;transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .35s}
+.pcard:hover{transform:translateY(-6px);box-shadow:var(--msh2);border-color:rgba(31,122,140,.25)}
+.pcard .pic{background:linear-gradient(180deg,#F3F7F8,#fff);border-radius:calc(var(--mr) - 6px);margin:6px}
+.pcard .pic img{transition:transform .6s var(--ease)}
+.pcard:hover .pic img{transform:scale(1.05)}
+.pcard .pr strong{background:linear-gradient(135deg,#145F6E,#1F7A8C);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pcard .tags .tag{border-radius:999px;backdrop-filter:blur(6px)}
+
+/* ---------- blocs de l'accueil ---------- */
+.hbx{background:radial-gradient(1200px 500px at 85% -10%,rgba(244,166,42,.16),transparent 60%),radial-gradient(900px 500px at -10% 10%,rgba(31,122,140,.14),transparent 60%),var(--mbg)}
+.hb-main,.hb-card,.hb-usp,.hb-mini{border-radius:28px!important}
+.hb-usp,.hb-mini{box-shadow:var(--msh);border-color:var(--mline)!important}
+.hb-card{box-shadow:var(--msh2)}
+.cv-t,.sv,.pst,.fp a,.vt-card,.gt,.tcard{border-radius:var(--mr)}
+.cv-t,.sv,.pst,.tcard{border:1px solid var(--mline);box-shadow:var(--msh);transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+.cv-t:hover,.sv:hover,.pst:hover,.tcard:hover{transform:translateY(-5px);box-shadow:var(--msh2)}
+.fp a{background:#fff;border:1px solid var(--mline);transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s}
+.fp a:hover{transform:translateY(-3px);box-shadow:var(--msh);border-color:rgba(31,122,140,.3)}
+.pst .n{background:var(--mgrad-a);color:#2b2108}
+
+/* ---------- en-tête : verre dépoli sur ordinateur seulement
+   (sur mobile un flou d'arrière-plan enfermerait le menu tiroir dans l'en-tête : voir garde D-07) ---------- */
+@media (min-width:1201px){
+  .header.scrolled .navbar{background:rgba(255,255,255,.82);-webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px)}
+}
+.navbar .nl>a{border-radius:999px}
+.hband .search input,.search input{border-radius:999px}
+
+/* ---------- fiche produit ---------- */
+.gallery .main{border-radius:28px;box-shadow:var(--msh2);background:radial-gradient(600px 300px at 80% 0,rgba(244,166,42,.10),transparent 60%),linear-gradient(160deg,#EEF6F7,#fff 70%)}
+.thumbs button{border-radius:14px}
+.buybox{border-radius:26px;border:1px solid var(--mline);box-shadow:var(--msh2);background:#fff}
+.buybox .total{letter-spacing:-.03em}
+.og{border-radius:18px;border-color:var(--mline);background:#fff;box-shadow:var(--msh)}
+.opt .box{border-radius:14px}
+.trust>div{border-radius:16px}
+
+/* ---------- catégories, pages, formulaires ---------- */
+.phead,.cat-hero{border-radius:0 0 36px 36px}
+.panel,.card,.filters,aside .box{border-radius:var(--mr)}
+.inp,input[type=text],input[type=email],input[type=tel],input[type=password],input[type=search],input[type=number],select,textarea{border-radius:14px}
+.inp:focus,input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(31,122,140,.14);border-color:var(--p)}
+
+/* ---------- pied de page ---------- */
+.fnews{border-radius:28px;background:var(--mgrad);box-shadow:var(--msh2)}
+
+/* ---------- accessibilité : pas de mouvement si l'appareil le demande ---------- */
+@media (prefers-reduced-motion:reduce){
+  .pcard,.pcard:hover,.cv-t:hover,.sv:hover,.pst:hover,.tcard:hover,.fp a:hover,.btn:hover,.pcard:hover .pic img{transform:none!important;transition:none!important}
+}
