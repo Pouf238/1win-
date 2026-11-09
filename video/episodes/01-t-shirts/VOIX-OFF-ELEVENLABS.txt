@@ -8,7 +8,11 @@ Parfait pour les noms, les numéros et les logos simples. <break time="0.6s" />
 
 Deux : le D.T.F. <break time="0.3s" />
 Votre visuel est imprimé sur un film, puis transféré. <break time="0.3s" />
-Toutes les couleurs, même les photos. <break time="0.6s" />
+Toutes les couleurs, même les photos. <break time="0.4s" />
+Mais attention : tout dépend de la tête d'impression. <break time="0.3s" />
+La X.P. six cents : l'entrée de gamme. <break time="0.3s" />
+La i trois mille deux cents : une tête industrielle, plus rapide et plus précise. <break time="0.4s" />
+Et SYMO Print fait partie des rares imprimeurs équipés de la i trois mille deux cents. <break time="0.6s" />
 
 Trois : la sérigraphie. <break time="0.3s" />
 L'encre passe à travers un écran. <break time="0.3s" />
@@ -18,10 +22,10 @@ Quatre : la broderie. <break time="0.3s" />
 Votre logo est cousu, fil par fil. <break time="0.3s" />
 L'effet haut de gamme, pour les polos et les uniformes. <break time="0.7s" />
 
-En résumé : un nom ou un numéro ? Flex. <break time="0.3s" />
+En résumé : noms et numéros ? Flex. <break time="0.3s" />
 Plein de couleurs ? D.T.F. <break time="0.3s" />
-Une grosse commande ? Sérigraphie. <break time="0.3s" />
-Une image premium ? Broderie. <break time="0.6s" />
+Grosses commandes ? Sérigraphie. <break time="0.3s" />
+Image premium ? Broderie. <break time="0.6s" />
 
 Et vous, laquelle choisissez-vous ? Dites-le en commentaire, et abonnez-vous. <break time="0.4s" />
 SYMO Print : vos idées prennent forme.
