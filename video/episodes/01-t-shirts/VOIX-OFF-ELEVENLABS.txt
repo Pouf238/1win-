@@ -1,31 +1,30 @@
-Votre logo sur vos t-shirts... qui craque après trois lavages ? <break time="0.4s" />
-Le problème, ce n'est pas le t-shirt : c'est la technique. <break time="0.3s" />
-Voici les quatre à connaître. <break time="0.7s" />
+Un t-shirt. Un logo. Quatre techniques... <break time="0.4s" />
+Mais une seule est faite pour vous. <break time="0.3s" />
+Choisissez votre combattant ! <break time="0.8s" />
 
-Un : le flex. <break time="0.3s" />
-Un film coloré, découpé, puis pressé à chaud. <break time="0.3s" />
-Parfait pour les noms, les numéros et les logos simples. <break time="0.6s" />
+Joueur un : le Flex ! <break time="0.3s" />
+Découpé au millimètre, pressé à chaud. <break time="0.2s" />
+Sa spécialité : les noms et les numéros. <break time="0.2s" />
+Le maillot du maracana ? C'est lui ! <break time="0.6s" />
 
-Deux : le D.T.F. <break time="0.3s" />
-Votre visuel est imprimé sur un film, puis transféré. <break time="0.3s" />
-Toutes les couleurs, même les photos. <break time="0.4s" />
-Mais attention : tout dépend de la tête d'impression. <break time="0.3s" />
-La X.P. six cents : l'entrée de gamme. <break time="0.3s" />
-La i trois mille deux cents : une tête industrielle, plus rapide et plus précise. <break time="0.4s" />
-Et SYMO Print fait partie des rares imprimeurs équipés de la i trois mille deux cents. <break time="0.6s" />
+Joueur deux : le D.T.F. ! <break time="0.3s" />
+Toutes les couleurs, même les photos. <break time="0.3s" />
+Et il cache un bonus : sa tête d'impression. <break time="0.4s" />
+En X.P. six cents, il joue en amateur. <break time="0.3s" />
+En i trois mille deux cents, il passe en mode pro ! <break time="0.4s" />
+Et chez SYMO Print, on fait partie des rares à l'avoir. <break time="0.6s" />
 
-Trois : la sérigraphie. <break time="0.3s" />
-L'encre passe à travers un écran. <break time="0.3s" />
-Ultra résistante, et économique en grande quantité. <break time="0.6s" />
+Joueur trois : la Sérigraphie ! <break time="0.3s" />
+Une raclette, et ça enchaîne : cent, deux cents, cinq cents t-shirts. <break time="0.3s" />
+Plus vous en faites, moins ça coûte. <break time="0.6s" />
 
-Quatre : la broderie. <break time="0.3s" />
-Votre logo est cousu, fil par fil. <break time="0.3s" />
-L'effet haut de gamme, pour les polos et les uniformes. <break time="0.7s" />
+Joueur quatre : la Broderie ! <break time="0.3s" />
+Pas d'encre : du fil. <break time="0.3s" />
+Elle résiste à tout : la classe des polos et des uniformes. <break time="0.7s" />
 
-En résumé : noms et numéros ? Flex. <break time="0.3s" />
-Plein de couleurs ? D.T.F. <break time="0.3s" />
-Grosses commandes ? Sérigraphie. <break time="0.3s" />
-Image premium ? Broderie. <break time="0.6s" />
+Alors... qui gagne ? <break time="0.6s" />
+Des noms : Flex. <break time="0.2s" /> Des couleurs : D.T.F. <break time="0.2s" />
+Du volume : Sérigraphie. <break time="0.2s" /> Du prestige : Broderie. <break time="0.6s" />
 
-Et vous, laquelle choisissez-vous ? Dites-le en commentaire, et abonnez-vous. <break time="0.4s" />
+Et vous, c'est quoi votre combattant ? Dites-le en commentaire ! <break time="0.4s" />
 SYMO Print : vos idées prennent forme.
