@@ -6,6 +6,7 @@
 > L'analyse détaillée des références est dans [`ANALYSE-REFERENCES.md`](./ANALYSE-REFERENCES.md).
 
 **Ce qui change par rapport à la v1, tiré des références :**
+- **Les t-shirts et le textile sont présents** du hook au final : question n° 2, liste de la scène 2, écran partagé « papier ou textile », techniques DTF et broderie, commentaire tapé.
 - Le hook part de **vraies questions de clients** affichées en bulles de commentaires (réf. 3), pas d'une phrase abstraite.
 - **La voix démarre dès 0,1 s.** Aucune des trois références ne laisse de silence au début.
 - **Une phrase = une idée = un plan** (réf. 2), et aucune phrase ne dépasse 3 s.
@@ -22,12 +23,12 @@
 
 ```
 Quel papier pour mes cartes de visite ? /
-Pourquoi mes couleurs sortent ternes ? //
+Quelle technique pour mes t-shirts ? //
 Et si on vous faisait découvrir l'imprimerie… // autrement ?
 
-Derrière chaque carte de visite, / chaque flyer, / chaque affiche… /
+Derrière chaque carte de visite, / chaque affiche, / chaque t-shirt… /
 il y a une idée // qui mérite de prendre vie. //
-Et ça, / c'est notre métier.
+Papier / ou textile : / c'est notre métier.
 
 Nous, / c'est SYMO Print. //
 Et aujourd'hui… / l'impression prend la parole ! /
@@ -50,7 +51,7 @@ Abonnez-vous, / partagez… / et restez connectés. //
 SYMO Print : / vos idées prennent forme.
 ```
 
-**128 mots, environ 50 s de parole** sur 60 s. Le débit moyen est de 2,1 à 2,6 mots/s selon les scènes, soit aussi posé que les références (2,4 à 2,7 mots/s).
+**Environ 130 mots, soit environ 50 s de parole** sur 60 s. Le débit moyen est de 2,1 à 2,6 mots/s selon les scènes, soit aussi posé que les références (2,4 à 2,7 mots/s).
 
 > ⚠️ **À valider :** « on vous répond en vidéo » est un engagement envers votre audience. Si vous ne souhaitez pas le prendre, remplacez-le par « **on vous lit !** ». Le minutage ne change pas.
 
@@ -64,16 +65,16 @@ SYMO Print : / vos idées prennent forme.
 | Temps | VO | À l'écran | Son |
 |---|---|---|---|
 | 0.1 – 1.9 | « Quel papier pour mes cartes de visite ? » | Bulle de commentaire n° 1 qui surgit (pop et flou de mouvement), avec avatar et « il y a 2 min ». | MUS : pulsation grave. SFX : *pop* de notification. |
-| 2.1 – 3.7 | « Pourquoi mes couleurs sortent ternes ? » | Bulle n° 2, puis les bulles « Flyer ou dépliant ? », « C'est quoi le 350 g ? » et « Mat ou brillant ? » s'empilent en avalanche, en profondeur (parallax). | *Pops* en cascade, de plus en plus rapides. |
+| 2.1 – 3.7 | « Quelle technique pour mes t-shirts ? » | Bulle n° 2, avec la vignette d'un t-shirt. Puis les bulles « DTF ou broderie ? », « Flyer ou dépliant ? », « Mat ou brillant ? » et « Pourquoi mes couleurs sortent ternes ? » s'empilent en avalanche, en profondeur (parallax). | *Pops* en cascade, de plus en plus rapides. |
 | 3.9 – 4.1 | *(pause)* | Les bulles sont aspirées vers le centre. | Riser court. |
 | 4.2 – 7.0 | « Et si on vous faisait découvrir l'imprimerie… autrement ? » | **Titre :** ET SI ON VOUS FAISAIT DÉCOUVRIR L'IMPRIMERIE, puis *autrement ?* en **manuscrite orange**, plein cadre. | *Bass hit* sur « autrement ». Whoosh et transition par masque vers le clair. |
 
 #### SCÈNE 2 — L'UNIVERS DE L'IMPRESSION (00:07 → 00:17) · fond clair
 | Temps | VO | À l'écran | Son |
 |---|---|---|---|
-| 7.3 – 10.6 | « Derrière chaque carte de visite, chaque flyer, chaque affiche… » | Trois supports en 2.5D qui tombent l'un après l'autre (carte, puis flyer, puis affiche), sur le rythme des trois mots. **Titre :** DES IDÉES QUI PRENNENT VIE. | SFX : papier qui claque à chaque support. MUS : la rythmique entre. |
-| 10.9 – 13.6 | « il y a une idée qui mérite de prendre vie. » | Une ampoule-croquis passe dans la machine et ressort en flyer couleur, avec un balayage CMJN. **Titre :** DES COULEURS QUI ATTIRENT LES REGARDS. | SFX : imprimante et feuilles qui sortent. |
-| 14.2 – 16.0 | « Et ça, c'est notre métier. » | Rouleaux de papier, cartes en cascade, speed ramp. **Titre :** DES IMPRESSIONS QUI MARQUENT LES ESPRITS. | Riser vers la révélation. |
+| 7.3 – 10.6 | « Derrière chaque carte de visite, chaque affiche, chaque t-shirt… » | Trois supports en 2.5D qui tombent l'un après l'autre (carte de visite, puis affiche, puis **t-shirt plié qui se déploie**), sur le rythme des trois mots. **Titre :** DES IDÉES QUI PRENNENT VIE. | SFX : papier qui claque à chaque support. MUS : la rythmique entre. |
+| 10.9 – 13.6 | « il y a une idée qui mérite de prendre vie. » | Une ampoule-croquis se divise en deux : un flyer couleur sort de l'imprimante, et un logo se transfère sur un t-shirt sous la presse à chaud. Balayage CMJN. **Titre :** DES COULEURS QUI ATTIRENT LES REGARDS. | SFX : imprimante et feuilles qui sortent. |
+| 14.2 – 16.2 | « Papier ou textile : c'est notre métier. » | Écran partagé : à gauche, rouleaux de papier et cartes en cascade ; à droite, t-shirts, polos et sweats imprimés qui défilent. Speed ramp. **Titre :** DES IMPRESSIONS QUI MARQUENT LES ESPRITS. | Riser vers la révélation. |
 | 16.0 – 17.0 | — | Retour au fond sombre. | — |
 
 #### SCÈNE 3 — RÉVÉLATION DU LOGO (00:17 → 00:27) · fond sombre
@@ -94,7 +95,7 @@ Une phrase à la fois, un visuel par phrase, avec un **compteur 1/5 → 5/5** en
 | 28.7 – 30.4 | « Des conseils pour mieux imprimer. » | **1/5** · DES CONSEILS POUR MIEUX IMPRIMER. Une feuille avec ses traits de coupe et une coche. | whoosh |
 | 30.7 – 32.5 | « Des astuces pour mieux communiquer. » | **2/5** · DES ASTUCES POUR MIEUX COMMUNIQUER. Mégaphone et bulles. | pop |
 | 32.8 – 34.5 | « Les coulisses de l'imprimerie. » | **3/5** · LES COULISSES DE L'IMPRIMERIE. Un rideau s'ouvre sur la machine en marche. | imprimante |
-| 34.8 – 37.1 | « Les techniques et les secrets de l'impression. » | **4/5** · LES TECHNIQUES ET SECRETS DE L'IMPRESSION. Un **cadenas s'ouvre** (réf. 3) sur des pastilles CMJN. | clic + scintillement |
+| 34.8 – 37.1 | « Les techniques et les secrets de l'impression. » | **4/5** · LES TECHNIQUES ET SECRETS DE L'IMPRESSION. Un **cadenas s'ouvre** (réf. 3) sur trois techniques : pastilles CMJN (papier), film **DTF** qu'on décolle d'un t-shirt et fil de **broderie**. | clic + scintillement |
 | 37.4 – 39.7 | « Et des idées pour valoriser votre image. » | **5/5** · DES IDÉES POUR VALORISER VOTRE IMAGE. Une carte de visite se retourne et brille, avec des étoiles orange. | riser court |
 
 #### SCÈNE 5 — LA COMMUNAUTÉ (00:40 → 00:51) · fond clair, puis sombre
@@ -102,12 +103,12 @@ Une phrase à la fois, un visuel par phrase, avec un **compteur 1/5 → 5/5** en
 |---|---|---|---|
 | 40.2 – 44.6 | « Que vous soyez entrepreneur, commerçant, créateur… ou simplement curieux, » | Quatre pictos (mallette, boutique, crayon, loupe) s'allument un à un sur chaque mot, reliés par un réseau. **Titre :** QUE VOUS SOYEZ ENTREPRENEUR, COMMERÇANT, CRÉATEUR OU SIMPLEMENT CURIEUX… | *Tick* sur chaque métier. |
 | 44.8 – 46.5 | « cet univers est aussi le vôtre. » | Les pictos convergent dans un cercle. **Titre :** CET UNIVERS EST AUSSI LE VÔTRE ! | *swell* chaleureux |
-| 47.0 – 50.6 | « Une question ? Posez-la en commentaire : on vous répond en vidéo ! » | Un champ de commentaire où le texte se tape lettre par lettre (réf. 3) : « Comment choisir mon papier ? ». Envoi, puis réponse de SYMO Print : « Réponse en vidéo 🎬 », avec cœurs. | clavier et *pop* |
+| 47.0 – 50.6 | « Une question ? Posez-la en commentaire : on vous répond en vidéo ! » | Un champ de commentaire où le texte se tape lettre par lettre (réf. 3) : « Quelle technique pour imprimer le logo sur mes t-shirts ? ». Envoi, puis réponse de SYMO Print : « Réponse en vidéo 🎬 », avec cœurs. | clavier et *pop* |
 
 #### SCÈNE 6 — FINAL ET APPEL À L'ACTION (00:51 → 01:00) · fond sombre
 | Temps | VO | À l'écran | Son |
 |---|---|---|---|
-| 51.0 – 53.2 | « Bienvenue dans l'univers SYMO Print ! » | **Fin en boucle :** les bulles du hook reviennent et chacune reçoit une **coche orange**. Elles s'effacent, et le logo revient au centre. **Titre :** BIENVENUE DANS L'UNIVERS SYMO PRINT ! | *Impact* (point culminant n° 2), musique à pleine énergie. |
+| 51.0 – 53.2 | « Bienvenue dans l'univers SYMO Print ! » | **Fin en boucle :** les bulles du hook reviennent (papier, t-shirts…) et chacune reçoit une **coche orange**. Elles s'effacent, et le logo revient au centre. **Titre :** BIENVENUE DANS L'UNIVERS SYMO PRINT ! | *Impact* (point culminant n° 2), musique à pleine énergie. |
 | 53.7 – 56.3 | « Abonnez-vous, partagez… et restez connectés. » | Bouton **S'abonner** pressé par un doigt (réf. 1), puis icônes de partage et de cloche. **Titre :** ABONNEZ-VOUS, PARTAGEZ ET RESTEZ CONNECTÉS ! | *Tap* et *ding* |
 | 56.8 – 59.0 | « SYMO Print : vos idées prennent forme. » | Logo et **SYMO PRINT — VOS IDÉES PRENNENT FORME.**, avec en dessous une barre de recherche « @symoprint » (réf. 1 et 2). | Dernier accord. |
 | 59.0 – 60.0 | — | Logo et signature figés jusqu'à la dernière image. | Queue de réverbération, sans coupure brutale. |
