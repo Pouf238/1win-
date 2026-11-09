@@ -1,0 +1,23 @@
+{
+  "name": "symo-print-launch-video",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Vidéo de lancement SYMO Print — « L'impression prend la parole ! » (Remotion)",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render:master": "node scripts/render.mjs master",
+    "render:all": "node scripts/render.mjs all"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.541",
+    "@remotion/cli": "4.0.541",
+    "@remotion/renderer": "4.0.541",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.541"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "typescript": "5.6.3"
+  }
+}

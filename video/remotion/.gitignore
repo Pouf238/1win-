@@ -1,0 +1,5 @@
+node_modules/
+out/
+.remotion/
+# audio généré par video/audio/build_audio.py
+public/audio/*.wav

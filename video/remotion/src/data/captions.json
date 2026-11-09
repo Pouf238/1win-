@@ -1,0 +1,255 @@
+[
+ {
+  "text": "Quel papier pour mes cartes de visite ?",
+  "from": [
+   "quelles",
+   1
+  ],
+  "to": [
+   "visite",
+   1
+  ]
+ },
+ {
+  "text": "Quelle technique pour mes t-shirts ?",
+  "from": [
+   "quelles",
+   2
+  ],
+  "to": [
+   "shirts",
+   1
+  ]
+ },
+ {
+  "text": "Et si on vous faisait découvrir l'imprimerie… autrement ?",
+  "from": [
+   "et",
+   1
+  ],
+  "to": [
+   "autrement",
+   1
+  ]
+ },
+ {
+  "text": "Derrière chaque carte de visite, chaque affiche, chaque t-shirt…",
+  "from": [
+   "derrière",
+   1
+  ],
+  "to": [
+   "shirt",
+   1
+  ]
+ },
+ {
+  "text": "il y a une idée qui mérite de prendre vie.",
+  "from": [
+   "il",
+   1
+  ],
+  "to": [
+   "vie",
+   1
+  ]
+ },
+ {
+  "text": "Papier ou textile : c'est notre métier.",
+  "from": [
+   "papiers",
+   2
+  ],
+  "to": [
+   "métier",
+   1
+  ]
+ },
+ {
+  "text": "Nous, c'est SYMO Print.",
+  "from": [
+   "nous",
+   1
+  ],
+  "to": [
+   "simoprint",
+   1
+  ]
+ },
+ {
+  "text": "Nouveau compte, nouvelle aventure :",
+  "from": [
+   "nouveaux",
+   1
+  ],
+  "to": [
+   "aventures",
+   1
+  ]
+ },
+ {
+  "text": "l'impression prend la parole !",
+  "from": [
+   "impression",
+   1
+  ],
+  "to": [
+   "parole",
+   1
+  ]
+ },
+ {
+  "text": "On arrive sur vos écrans.",
+  "from": [
+   "on",
+   2
+  ],
+  "to": [
+   "écrans",
+   1
+  ]
+ },
+ {
+  "text": "Ici, pas de jargon.",
+  "from": [
+   "ici",
+   1
+  ],
+  "to": [
+   "jargon",
+   1
+  ]
+ },
+ {
+  "text": "Des conseils pour mieux imprimer.",
+  "from": [
+   "des",
+   1
+  ],
+  "to": [
+   "imprimer",
+   1
+  ]
+ },
+ {
+  "text": "Des astuces pour mieux communiquer.",
+  "from": [
+   "des",
+   2
+  ],
+  "to": [
+   "communiquer",
+   1
+  ]
+ },
+ {
+  "text": "Les coulisses de l'imprimerie.",
+  "from": [
+   "les",
+   1
+  ],
+  "to": [
+   "imprimerie",
+   2
+  ]
+ },
+ {
+  "text": "Les techniques et les secrets de l'impression.",
+  "from": [
+   "les",
+   2
+  ],
+  "to": [
+   "impression",
+   2
+  ]
+ },
+ {
+  "text": "Et des idées pour valoriser votre image.",
+  "from": [
+   "et",
+   3
+  ],
+  "to": [
+   "image",
+   1
+  ]
+ },
+ {
+  "text": "Que vous soyez entrepreneur, commerçant, créateur…",
+  "from": [
+   "que",
+   1
+  ],
+  "to": [
+   "créateur",
+   1
+  ]
+ },
+ {
+  "text": "ou simplement curieux, cet univers est aussi le vôtre.",
+  "from": [
+   "ou",
+   2
+  ],
+  "to": [
+   "vôtre",
+   1
+  ]
+ },
+ {
+  "text": "Une question ? Posez-la en commentaire :",
+  "from": [
+   "une",
+   2
+  ],
+  "to": [
+   "commentaire",
+   1
+  ]
+ },
+ {
+  "text": "on vous répond en vidéo !",
+  "from": [
+   "on",
+   3
+  ],
+  "to": [
+   "vidéo",
+   1
+  ]
+ },
+ {
+  "text": "Bienvenue dans l'univers SYMO Print !",
+  "from": [
+   "bienvenue",
+   1
+  ],
+  "to": [
+   "simoprint",
+   2
+  ]
+ },
+ {
+  "text": "Abonnez-vous, partagez… et restez connectés.",
+  "from": [
+   "abonnez",
+   1
+  ],
+  "to": [
+   "connectés",
+   1
+  ]
+ },
+ {
+  "text": "SYMO Print : vos idées prennent forme.",
+  "from": [
+   "simoprint",
+   3
+  ],
+  "to": [
+   "forme",
+   1
+  ]
+ }
+]
