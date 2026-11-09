@@ -6,6 +6,7 @@
 > L'analyse détaillée des références est dans [`ANALYSE-REFERENCES.md`](./ANALYSE-REFERENCES.md).
 
 **Ce qui change par rapport à la v1, tiré des références :**
+- **Le fait que ce soit un nouveau compte est clairement annoncé** : « Nouveau compte, nouvelle aventure » en voix off (comme « je viens de créer un compte » dans la réf. 1), un tampon « NOUVEAU COMPTE », une carte de profil à 0 abonné, puis un compteur qui passe de 0 à 1 au moment du CTA.
 - **Les t-shirts et le textile sont présents** du hook au final : question n° 2, liste de la scène 2, écran partagé « papier ou textile », techniques DTF et broderie, commentaire tapé.
 - Le hook part de **vraies questions de clients** affichées en bulles de commentaires (réf. 3), pas d'une phrase abstraite.
 - **La voix démarre dès 0,1 s.** Aucune des trois références ne laisse de silence au début.
@@ -31,7 +32,8 @@ il y a une idée // qui mérite de prendre vie. //
 Papier / ou textile : / c'est notre métier.
 
 Nous, / c'est SYMO Print. //
-Et aujourd'hui… / l'impression prend la parole ! /
+Nouveau compte, / nouvelle aventure : /
+l'impression prend la parole ! /
 On arrive sur vos écrans.
 
 Ici, / pas de jargon. /
@@ -51,7 +53,7 @@ Abonnez-vous, / partagez… / et restez connectés. //
 SYMO Print : / vos idées prennent forme.
 ```
 
-**Environ 130 mots, soit environ 50 s de parole** sur 60 s. Le débit moyen est de 2,1 à 2,6 mots/s selon les scènes, soit aussi posé que les références (2,4 à 2,7 mots/s).
+**Environ 135 mots, soit environ 51 s de parole** sur 60 s. Le débit moyen est de 2,1 à 2,6 mots/s selon les scènes, soit aussi posé que les références (2,4 à 2,7 mots/s).
 
 > ⚠️ **À valider :** « on vous répond en vidéo » est un engagement envers votre audience. Si vous ne souhaitez pas le prendre, remplacez-le par « **on vous lit !** ». Le minutage ne change pas.
 
@@ -80,18 +82,19 @@ SYMO Print : / vos idées prennent forme.
 #### SCÈNE 3 — RÉVÉLATION DU LOGO (00:17 → 00:27) · fond sombre
 | Temps | VO | À l'écran | Son |
 |---|---|---|---|
-| 17.0 – 19.4 | — | **Décompte 3… 2…** dans un anneau orange qui se remplit (réf. 2). Le tracé du « S » se dessine, avec particules et lumière. | *Ticks* d'horloge, riser. |
-| 19.5 | — | **Logo SYMO Print complet** | **Logo reveal et bass impact** (point culminant n° 1). |
-| 20.0 – 21.4 | « Nous, c'est SYMO Print. » | **Titre :** NOUS SOMMES SYMO PRINT. Lent travelling avant, le logo reste parfaitement lisible. | — |
-| 22.0 – 24.4 | « Et aujourd'hui… l'impression prend la parole ! » | Une onde sonore orange sort du logo (réf. 3), et *prend la parole* s'écrit en manuscrite. | SFX : *swell*. |
-| 24.8 – 26.6 | « On arrive sur vos écrans. » | Le logo se loge dans un smartphone, sur une carte de profil « SYMO Print · NOUVEAU COMPTE · **S'abonner** » (réf. 1). **Titre :** ET NOUS ARRIVONS SUR VOS ÉCRANS ! | Whoosh de sortie. |
+| 17.0 – 18.9 | — | **Décompte 3… 2…** dans un anneau orange qui se remplit (réf. 2). Le tracé du « S » se dessine, avec particules et lumière. | *Ticks* d'horloge, riser. |
+| 19.0 | — | **Logo SYMO Print complet** | **Logo reveal et bass impact** (point culminant n° 1). |
+| 19.4 – 20.8 | « Nous, c'est SYMO Print. » | **Titre :** NOUS SOMMES SYMO PRINT. Lent travelling avant, le logo reste parfaitement lisible. | — |
+| 21.1 – 23.0 | « Nouveau compte, nouvelle aventure : » | Un macaron orange **« NOUVEAU COMPTE »** tamponne l'écran à côté du logo, comme un coup de tampon d'imprimerie. **Titre :** NOUVEAU COMPTE, NOUVELLE AVENTURE ! | SFX : *tampon* (stamp) et petit *ding*. |
+| 23.3 – 25.3 | « l'impression prend la parole ! » | Une onde sonore orange sort du logo (réf. 3), et *prend la parole* s'écrit en manuscrite. | SFX : *swell*. |
+| 25.6 – 27.3 | « On arrive sur vos écrans. » | Le logo se loge dans un smartphone, sur une carte de profil toute neuve (réf. 1) : « SYMO Print · **NOUVEAU COMPTE** · **0** abonné · **0** vidéo · **S'abonner** ». La grille de vidéos est encore vide. **Titre :** ET NOUS ARRIVONS SUR VOS ÉCRANS ! | Whoosh de sortie. |
 
 #### SCÈNE 4 — NOTRE MISSION (00:27 → 00:40) · fond clair
 Une phrase à la fois, un visuel par phrase, avec un **compteur 1/5 → 5/5** en haut de l'écran (réf. 3). Seule la phrase en cours est affichée.
 
 | Temps | VO | Titre et visuel | SFX |
 |---|---|---|---|
-| 27.2 – 28.4 | « Ici, pas de jargon. » | Des termes techniques (« quadri », « fond perdu », « BAT ») sont barrés d'un trait orange (réf. 2). | *scratch* |
+| 27.5 – 28.6 | « Ici, pas de jargon. » | Des termes techniques (« quadri », « fond perdu », « BAT ») sont barrés d'un trait orange (réf. 2). | *scratch* |
 | 28.7 – 30.4 | « Des conseils pour mieux imprimer. » | **1/5** · DES CONSEILS POUR MIEUX IMPRIMER. Une feuille avec ses traits de coupe et une coche. | whoosh |
 | 30.7 – 32.5 | « Des astuces pour mieux communiquer. » | **2/5** · DES ASTUCES POUR MIEUX COMMUNIQUER. Mégaphone et bulles. | pop |
 | 32.8 – 34.5 | « Les coulisses de l'imprimerie. » | **3/5** · LES COULISSES DE L'IMPRIMERIE. Un rideau s'ouvre sur la machine en marche. | imprimante |
@@ -109,7 +112,7 @@ Une phrase à la fois, un visuel par phrase, avec un **compteur 1/5 → 5/5** en
 | Temps | VO | À l'écran | Son |
 |---|---|---|---|
 | 51.0 – 53.2 | « Bienvenue dans l'univers SYMO Print ! » | **Fin en boucle :** les bulles du hook reviennent (papier, t-shirts…) et chacune reçoit une **coche orange**. Elles s'effacent, et le logo revient au centre. **Titre :** BIENVENUE DANS L'UNIVERS SYMO PRINT ! | *Impact* (point culminant n° 2), musique à pleine énergie. |
-| 53.7 – 56.3 | « Abonnez-vous, partagez… et restez connectés. » | Bouton **S'abonner** pressé par un doigt (réf. 1), puis icônes de partage et de cloche. **Titre :** ABONNEZ-VOUS, PARTAGEZ ET RESTEZ CONNECTÉS ! | *Tap* et *ding* |
+| 53.7 – 56.3 | « Abonnez-vous, partagez… et restez connectés. » | Retour de la carte de profil « NOUVEAU COMPTE » de la scène 3. Un doigt presse **S'abonner** (réf. 1) et le compteur passe de **0 à 1** abonné, puis s'emballe (réf. 2). Icônes de partage et de cloche. **Titre :** ABONNEZ-VOUS, PARTAGEZ ET RESTEZ CONNECTÉS ! Pastille : *Soyez parmi nos premiers abonnés !* | *Tap* et *ding* |
 | 56.8 – 59.0 | « SYMO Print : vos idées prennent forme. » | Logo et **SYMO PRINT — VOS IDÉES PRENNENT FORME.**, avec en dessous une barre de recherche « @symoprint » (réf. 1 et 2). | Dernier accord. |
 | 59.0 – 60.0 | — | Logo et signature figés jusqu'à la dernière image. | Queue de réverbération, sans coupure brutale. |
 
@@ -120,7 +123,7 @@ Une phrase à la fois, un visuel par phrase, avec un **compteur 1/5 → 5/5** en
 - **Ton :** chaleureux, assuré, complice. On sourit en parlant, sans ton « pub radio ». **Vouvoiement**, conformément à votre brief.
 - **Hook (0 à 7 s) :** les deux questions sont dites comme si on **citait un client**, un peu plus vite et sur un ton légèrement amusé. Puis on ralentit et on baisse la voix pour « Et si on vous faisait découvrir l'imprimerie… », avec un sourire audible sur « autrement ? ».
 - **Scène 2 :** « carte de visite / flyer / affiche » sont dits comme trois battements réguliers.
-- **Scène 3 :** fierté sur « Nous, c'est SYMO Print. » et énergie montante sur « l'impression prend la parole ! ».
+- **Scène 3 :** fierté sur « Nous, c'est SYMO Print. », enthousiasme sincère sur « Nouveau compte, nouvelle aventure » (comme une bonne nouvelle qu'on annonce), puis énergie montante sur « l'impression prend la parole ! ».
 - **Scène 4 :** « Ici, pas de jargon. » est dit sec et direct. La liste s'égrène ensuite au même rythme, une phrase par battement.
 - **Scène 5 :** proximité sur « cet univers est aussi le vôtre », et une vraie invitation sur « Une question ? ».
 - **Final :** énergie maximale mais articulée. La signature finale est dite plus lentement, avec une note descendante et conclusive.
