@@ -53,7 +53,11 @@ function photo(string $slot, array $o = []): string {
 }
 /** Visuel d'un produit : photo si disponible, sinon maquette de marque du type de produit. */
 function product_img(array $p, string $cls = ''): string {
-    if (!empty($p['image'])) { $f = ROOT . '/assets/img/produits/' . basename($p['image']) . '.webp'; if (is_file($f)) return '<img src="' . e(asset('img/produits/' . basename($p['image']) . '.webp')) . '" alt="' . e($p['name']) . '" loading="lazy" decoding="async" class="' . e($cls) . '">'; }
+    // photo principale, sinon première photo de la galerie (refonte du 10 nov. 2026 : moins de maquettes dessinées)
+    foreach (array_merge([(string) ($p['image'] ?? '')], array_map('strval', (array) (json_decode((string) ($p['gallery'] ?? ''), true) ?: []))) as $n) {
+        $n = basename(preg_replace('/\.webp$/', '', $n)); if ($n === '') continue;
+        if (is_file(ROOT . '/assets/img/produits/' . $n . '.webp')) return '<img src="' . e(asset('img/produits/' . $n . '.webp')) . '" alt="' . e($p['name']) . '" loading="lazy" decoding="async" class="' . e($cls) . '">';
+    }
     return mock((string) ($p['icon'] ?? 'flyer'), (string) $p['name'], $cls);
 }
 /** Produits à photo pour la vitrine animée de l'accueil : 3 à 5 produits actifs dont le fichier image existe (sinon la section est masquée). */
@@ -102,4 +106,25 @@ function product_visuals(array $p, array $opts = []): ?array {
         $imgs[] = ['name' => $n, 'title' => $v['titles'][$n] ?? $n, 'mock' => !$own, 'src' => $own ? asset('img/produits/' . $n . '.webp') : asset('img/mock/' . $n . '.svg')];
     }
     return ['groups' => $v['groups'], 'current' => $cur, 'images' => $imgs, 'map' => $v['images']];
+}
+
+/** Photo d'une catégorie (accueil, menus) : photo choisie, sinon celle d'un de ses produits, sinon maquette. */
+const CAT_PHOTOS = [
+    'impression-commerciale' => 'depliant-3v-accordeon', 'flyers-depliants' => 'depliant-2v-carre', 'brochures-catalogues' => 'cahier-spirale',
+    'affiches' => 'affiche-baguettes', 'cartes' => 'calendrier-bureau', 'papeterie' => 'enveloppes-fenetre',
+    'grand-format' => 'bache-barriere-chantier', 'baches-banderoles' => 'bache-echafaudage', 'roll-up-kakemono' => 'banniere-suspendue-salon',
+    'panneaux' => 'panneau-rigide-tranche', 'drapeaux-oriflammes' => 'guirlande-fanions',
+    'objets-publicitaires' => 'mug-liege', 'textiles' => 'tshirt-votre-logo', 'mugs-bouteilles' => 'bouteille-isotherme', 'sacs-stylos' => 'sac-papier',
+    'goodies' => 'parapluie-ouvert', 'confiserie' => 'cookie-sachet',
+    'communication-evenementielle' => 'tente-pliante-marche', 'badges-billets' => 'tour-de-cou-bleu', 'stands-plv' => 'tente-pliante-logo',
+    'autocollants-etiquettes' => 'boite-pastilles', 'stickers' => 'boite-bonbons-perso', 'etiquettes' => 'dragees-menthe-sachet', 'vinyles' => 'bache-microperforee',
+];
+function cat_photo(array $c, string $sizes = ''): string {
+    $n = CAT_PHOTOS[$c['slug']] ?? '';
+    if ($n === '' || !is_file(ROOT . "/assets/img/produits/$n.webp")) {
+        $n = (string) (DB::val("SELECT p.image FROM products p JOIN categories c ON c.id=p.category_id WHERE p.active=1 AND p.image<>'' AND (c.slug=? OR c.parent_id=(SELECT id FROM categories WHERE slug=?)) ORDER BY p.bestseller DESC, p.sort LIMIT 1", [$c['slug'], $c['slug']]) ?: '');
+        $n = basename($n);
+    }
+    if ($n !== '' && is_file(ROOT . "/assets/img/produits/$n.webp")) return '<img src="' . e(asset("img/produits/$n.webp")) . '" alt="" loading="lazy" decoding="async">';
+    return mock((string) ($c['icon'] ?? 'flyer'));
 }

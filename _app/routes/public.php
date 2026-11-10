@@ -26,7 +26,7 @@ route('GET', '/', function () {
     $vitrine = vitrine_products();
     $ld = [['@context' => 'https://schema.org', '@type' => 'LocalBusiness', 'name' => shop('shop_name'), 'url' => abs_url('/'), 'telephone' => shop('phone'), 'image' => abs_url('assets/img/og.png'), 'description' => shop('tagline') . '. Imprimerie à Abidjan.',
         'address' => ['@type' => 'PostalAddress', 'streetAddress' => shop('address'), 'addressLocality' => shop('city'), 'addressCountry' => 'CI'], 'priceRange' => 'FCFA']];
-    page('shop/home', compact('banners', 'cats', 'best', 'pop', 'promo', 'new', 'tests', 'vitrine'), ['jsonld' => $ld, 'body' => 'home', 'scripts' => $vitrine ? ['js/vitrine.js'] : []]);   // araignée 3D retirée à la demande du propriétaire (9 nov. 2026) ; fichiers conservés, inactifs
+    page('shop/home', compact('banners', 'cats', 'best', 'pop', 'promo', 'new', 'tests', 'vitrine'), ['jsonld' => $ld, 'body' => 'home', 'scripts' => []]);   // araignée 3D retirée à la demande du propriétaire (9 nov. 2026) ; fichiers conservés, inactifs
 });
 
 route('GET', '/catalogue', function () {

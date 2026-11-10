@@ -6,6 +6,14 @@
 
 > **Mise à jour du 9 nov. 2026 : DÉPLOYÉE en production à 16:23 UTC (autorisée par vous : « TU PEUX FAIRE LE DEPLOYEMENT »)** — version `ef913e2` **sans l'araignée 3D** (exclus : `assets/3d/`, `assets/js/silk-spider.js`, `assets/js/spider.js`, `.htaccess`). 111 fichiers, état de départ vérifié identique à `fa5fd1b`, 111/111 empreintes et syntaxes conformes, sans coupure (300 contrôles extérieurs : tous « 200 »). Script `_app/cli/catalogue-objets-2026-11.php --apply` lancé une fois (16:26 UTC) : « APPLIQUÉ », catégorie Confiserie publicitaire + 30 fiches sur devis, galeries complétées (produits 52 → 82 ; comptes, devis, réglages, fichiers clients identiques). L'interrupteur `catalog.gallery` reste à activer par vous dans l'administration. Sauvegarde indépendante : `~/domains/symoprint.com/backups/independantes/pre-catalogue/`. Retour arrière du code : `sh ~/domains/symoprint.com/public_html/_app/storage/deploy-stage/ops.sh rollback pre-catalogue`.
 
+> **Refonte « pro » du 10 nov. 2026 (locale, NON déployée)** — à la demande du propriétaire (« le site n'est pas beau », modèle cité : onlineprinters.fr, en inspiration seulement).
+> - `assets/css/pro.css` remplace `modern.css` dans le gabarit : fond clair, petits arrondis (8 px), boutons rectangulaires, cartes plates, photos sur fond beige-gris, plus aucune apparition au défilement (fin des zones vides).
+> - Accueil réécrit (`_app/views/shop/home.php`) : mosaïque de vraies photos (T-shirts, mug, confiserie, bâche, tente), meilleures ventes, catégories en photos, services, nouveautés, « Trouvez le produit » en photos, 4 étapes, avis. Retirés : vitrine animée (fichier `vitrine.js` conservé, plus chargé), bandeau-affiche, galerie des procédés, maquettes dessinées.
+> - `product_img()` prend la 1re photo de la galerie si la photo principale manque ; `cat_photo()` (table `CAT_PHOTOS`) donne une photo à chaque catégorie, sinon celle d'un de ses produits, sinon la maquette.
+> - En-têtes de pages (`.phead`) : bandeau clair compact avec la photo de la catégorie.
+> - Tests : V-01 à V-04 et D-01 réécrits pour la nouvelle structure ; 75/75, sécurité 119/119, plateforme 17/17.
+> - Retour arrière : remettre `css/modern.css` dans `_app/views/layout/main.php` et restaurer `home.php` depuis `ef913e2`.
+
 ## Ce qui est conservé (charte strictement inchangée)
 Couleurs `#1F7A8C` (bleu pétrole), `#F4A62A` (orange), blanc, gris clair ; polices Montserrat (titres) et Inter (texte) ; logo Symo Print (même dessin). Seules des **teintes dérivées** de ces couleurs sont utilisées (fond crème = teinte claire de l'orange). Aucune route, aucun formulaire, aucune fonction n'a été supprimé ou modifié ; l'administration n'est pas touchée (elle garde `app.css` seul).
 

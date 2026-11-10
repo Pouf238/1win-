@@ -108,34 +108,34 @@ module.exports = async function (X) {
   });
   await t('M-13', 'les 12 modules sont désactivés dans les valeurs par défaut du code (aucune activation automatique)', async () => { fh('setfeatures', '{}'); const s = state(); const on = ['tracking.lookup', 'accounts.claim', 'quotes.adaptive', 'quotes.thread', 'quotes.expiry', 'quotes.convert', 'tracking.statuses', 'notifications.admin', 'notifications.account', 'files.manage', 'catalog.gallery', 'catalog.availability'].filter(k => s[k][0] === 1 || s[k][1] === 1); return { pass: on.length === 0, note: on.join(',') }; });
 
-  sect('7. Vitrine animée de l\'accueil (effets de physique sur les photos produits)');
-  await t('V-01', 'accueil : la vitrine propose 3 à 5 objets à photo, chaque lien mène à une fiche produit existante, 1re photo servie sans JavaScript', async () => {
-    fh('setfeatures', '{}'); const h = await new Client().r('GET', '/'); const links = [...h.body.matchAll(/class="vt-item[^"]*" href="(\/p\/[a-z0-9-]+)"/g)].map(m => m[1]);
+  sect('7. Accueil « pro » (10 nov. 2026) : mosaïque de photos ; la vitrine animée est retirée, son fichier reste servi mais n\'est plus chargé');
+  await t('V-01', 'accueil : la mosaïque d\'ouverture affiche de vraies photos produits et chaque case mène à une page existante', async () => {
+    fh('setfeatures', '{}'); const h = await new Client().r('GET', '/'); const m = h.body.slice(h.body.indexOf('class="px-mosaic"'), h.body.indexOf('</section>', h.body.indexOf('class="px-mosaic"')));
+    const links = [...m.matchAll(/<a class="px-[a-z0-9 -]+" href="([^"]+)"/g)].map(x => x[1]); const imgs = (m.match(/<img src="\/assets\/img\/produits\/[a-z0-9-]+\.webp/g) || []).length;
     const ok = []; for (const l of links) ok.push((await new Client().r('GET', l)).status);
-    return { pass: h.status === 200 && links.length >= 3 && links.length <= 5 && ok.every(x => x === 200) && /<figure class="vt-card"><img src="\/assets\/img\/produits\/[a-z0-9-]+\.webp/.test(h.body) && /data-vt-live/.test(h.body), note: links.length + ' objets, fiches ' + ok.join(',') };
+    return { pass: h.status === 200 && links.length >= 5 && ok.every(x => x === 200) && imgs >= 5, note: links.length + ' cases, ' + imgs + ' photos, ' + ok.join(',') };
   });
-  await t('V-02', 'compatible avec la CSP : script externe uniquement (aucun script ni gestionnaire en ligne, aucun <style>), le fichier est servi', async () => {
+  await t('V-02', 'compatible avec la CSP : aucun script ni gestionnaire en ligne, aucun <style> sur l\'accueil', async () => {
     const c = new Client(), h = await c.r('GET', '/'); const csp = h.h.get('content-security-policy') || '';
-    const js = await c.r('GET', (h.body.match(/<script src="(\/assets\/js\/vitrine\.js[^"]*)"/) || [])[1] || '/assets/js/vitrine.js');
     const inline = (h.body.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/(?:ld\+)?json)[^>]*>/g) || []).length;
-    return { pass: js.status === 200 && /Vitrine animée/.test(js.body) && inline === 0 && !/<style[\s>]/i.test(h.body) && !/\son(click|load|pointerenter|focus)=/i.test(h.body) && /script-src 'self'/.test(csp) && !/script-src[^;]*unsafe-inline/.test(csp), note: 'inline=' + inline + ' csp=' + csp.slice(0, 60) };
+    return { pass: inline === 0 && !/<style[\s>]/i.test(h.body) && !/\son(click|load|pointerenter|focus)=/i.test(h.body) && /script-src 'self'/.test(csp) && !/script-src[^;]*unsafe-inline/.test(csp), note: 'inline=' + inline };
   });
-  await t('V-03', 'le script n\'est chargé que sur l\'accueil (pas sur le catalogue ni les fiches) et la section n\'existe que là', async () => {
-    const a = await new Client().r('GET', '/catalogue'), b = await new Client().r('GET', '/p/' + sh('getcol', 'products', 'id=7', 'slug'));
-    return { pass: !/vitrine\.js/.test(a.body + b.body) && !/data-vitrine/.test(a.body + b.body), note: '' };
+  await t('V-03', 'l\'ancienne vitrine animée n\'est plus chargée nulle part (accueil, catalogue, fiche)', async () => {
+    const a = await new Client().r('GET', '/catalogue'), b = await new Client().r('GET', '/p/' + sh('getcol', 'products', 'id=7', 'slug')), h = await new Client().r('GET', '/');
+    return { pass: !/vitrine\.js|data-vitrine/.test(a.body + b.body + h.body) && /css\/pro\.css/.test(h.body) && !/css\/modern\.css/.test(h.body), note: '' };
   });
-  await t('V-04', 'la vitrine ne dépend d\'aucun interrupteur : accueil identique et disponible avec toutes les fonctions fermées (préréglage vitrine) comme ouvertes', async () => {
+  await t('V-04', 'l\'accueil ne dépend d\'aucun interrupteur : même mosaïque avec toutes les fonctions fermées comme ouvertes', async () => {
     fh('setfeatures', '{}'); const a = await new Client().r('GET', '/'); fh('allon'); const b = await new Client().r('GET', '/'); fh('setfeatures', '{}');
-    const n = x => (x.body.match(/class="vt-item/g) || []).length;
-    return { pass: a.status === 200 && b.status === 200 && n(a) === n(b) && n(a) >= 3, note: n(a) + '/' + n(b) };
+    const n = x => (x.body.match(/class="px-tile/g) || []).length;
+    return { pass: a.status === 200 && b.status === 200 && n(a) === n(b) && n(a) >= 4, note: n(a) + '/' + n(b) };
   });
 
   sect('8. Refonte graphique : visuels, pages, liens d\'images, licences, accessibilité de base');
   const PAGES = ['/', '/catalogue', '/c/affiches', '/p/depliants', '/nos-services', '/a-propos', '/livraison', '/guide-fichiers', '/faq', '/contact', '/credits-photos', '/compte/connexion', '/devis'];
-  await t('D-01', 'accueil (structure) : barre d\'avantages, bandeau d\'en-tête, hero en mosaïque, meilleures ventes en 5 tuiles, carrousel de catégories, 3 cartes de services, grille « Trouvez le produit », parcours en 4 étapes, newsletter au pied de page, feuille de style et script chargés (aucun script ni style en ligne)', async () => {
+  await t('D-01', 'accueil (structure « pro ») : barre d\'avantages, bandeau d\'en-tête, mosaïque photo, meilleures ventes, carrousel de catégories en photos, 3 cartes de services, grille « Trouvez le produit », parcours en 4 étapes, newsletter au pied de page, feuilles de style et script chargés (aucun script ni style en ligne)', async () => {
     fh('setfeatures', '{}'); const h = await new Client().r('GET', '/'); const b = h.body;
     const inline = (b.match(/<script(?![^>]*\bsrc=)(?![^>]*application\/(?:ld\+)?json)[^>]*>/g) || []).length;
-    return { pass: h.status === 200 && /class="hb-main/.test(b) && /class="usps"/.test(b) && /class="hband"/.test(b) && (b.match(/class="cv-t"/g) || []).length >= 5 && (b.match(/class="sv rv"/g) || []).length === 3 && /data-car/.test(b) && /class="fp"/.test(b) && /class="fnews"/.test(b) && (b.match(/id="nl"/g) || []).length === 1 && (b.match(/class="bs"/g) || []).length === 1 && (b.match(/class="pst /g) || []).length === 4 && /css\/site\.css/.test(b) && /js\/site\.js/.test(b) && inline === 0 && !/<style[\s>]/i.test(b) && ['hb-main', 'class="bs"', 'data-car', 'class="sv3"', 'class="fp"', 'class="proc"'].map(k => b.indexOf(k)).every((v, i, a) => v > 0 && (i === 0 || v > a[i - 1])), note: 'inline=' + inline };
+    return { pass: h.status === 200 && /class="px-mosaic"/.test(b) && /class="usps"/.test(b) && /class="hband"/.test(b) && (b.match(/class="px-cat"/g) || []).length >= 5 && (b.match(/class="px-sv"/g) || []).length === 3 && /data-car/.test(b) && /class="px-find"/.test(b) && /class="fnews"/.test(b) && (b.match(/id="nl"/g) || []).length === 1 && (b.match(/<ol class="px-steps">/g) || []).length === 1 && (b.match(/<li><span>\d<\/span>/g) || []).length === 4 && /css\/site\.css/.test(b) && /css\/pro\.css/.test(b) && /js\/site\.js/.test(b) && inline === 0 && !/<style[\s>]/i.test(b) && ['px-mosaic', 'class="px-cards"', 'data-car', 'class="px-svc"', 'class="px-find"', 'class="px-steps"'].map(k => b.indexOf(k)).every((v, i, a) => v > 0 && (i === 0 || v > a[i - 1])), note: 'inline=' + inline };
   });
   await t('D-02', 'aucune image cassée : toutes les images (maquettes, photos, produits) des 12 pages principales répondent 200', async () => {
     // chaque réponse est lue jusqu'au bout : sinon des flux restent en attente côté Node (assertion interne intermittente)
