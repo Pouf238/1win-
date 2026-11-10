@@ -86,7 +86,10 @@ const PRODUCT_VISUALS = [
     'depliants' => [
         'groups' => ['pliage', 'orientation'],
         'images' => ['2v' => 'depliant-2v-portrait', '2v|portrait' => 'depliant-2v-portrait', '2v|paysage' => 'depliant-2v-paysage', '2v|carre' => 'depliant-2v-carre', '3v' => 'depliant-3v-roule', 'acc' => 'depliant-3v-accordeon'],
-        'titles' => ['depliant-2v-portrait' => 'Dépliant 2 volets, format portrait', 'depliant-2v-paysage' => 'Dépliant 2 volets, format paysage', 'depliant-2v-carre' => 'Dépliant 2 volets, format carré', 'depliant-3v-roule' => 'Dépliant 3 volets roulés', 'depliant-3v-accordeon' => 'Dépliant 3 volets accordéon'],
+        'titles' => ['depliant-2v-portrait' => 'Dépliant 2 volets, format portrait', 'depliant-2v-paysage' => 'Dépliant 2 volets, format paysage (ouvert)', 'depliant-2v-carre' => 'Dépliant 2 volets, format carré', 'depliant-3v-roule' => 'Dépliant 3 volets roulés', 'depliant-3v-accordeon' => 'Dépliant 3 volets accordéon',
+            'depliant-2v-paysage-ferme' => 'Dépliant 2 volets, format paysage (fermé)', 'depliant-2v-carre-ouvert' => 'Dépliant 2 volets, format carré (ouvert)', 'depliant-3v-roule-exterieur' => 'Dépliant 3 volets roulés (extérieur)', 'depliant-3v-roule-ouvert' => 'Dépliant 3 volets roulés (intérieur)'],
+        // vues supplémentaires d'un même format (photos fournies par le propriétaire) : affichées juste après le visuel du format, à faire défiler
+        'extra' => ['depliant-2v-paysage' => ['depliant-2v-paysage-ferme'], 'depliant-2v-carre' => ['depliant-2v-carre-ouvert'], 'depliant-3v-roule' => ['depliant-3v-roule-exterieur', 'depliant-3v-roule-ouvert']],
     ],
 ];
 /**
@@ -109,21 +112,27 @@ function product_visuals(array $p, array $opts = []): ?array {
     $imgs = []; foreach ($names as $n) {                 // une photo déposée sous le même nom (assets/img/produits/<nom>.webp) remplace la maquette
         $own = is_file(ROOT . '/assets/img/produits/' . $n . '.webp');
         $imgs[] = ['name' => $n, 'title' => $v['titles'][$n] ?? $n, 'mock' => !$own, 'src' => $own ? asset('img/produits/' . $n . '.webp') : asset('img/mock/' . $n . '.svg')];
+        foreach ($v['extra'][$n] ?? [] as $x) if (is_file(ROOT . '/assets/img/produits/' . $x . '.webp'))   // autres vues du même format (photos seulement)
+            $imgs[] = ['name' => $x, 'title' => $v['titles'][$x] ?? $x, 'mock' => false, 'src' => asset('img/produits/' . $x . '.webp'), 'extra' => true];
     }
     return ['groups' => $v['groups'], 'current' => $cur, 'images' => $imgs, 'map' => $v['images']];
 }
 
 /** Photo d'une catégorie (accueil, menus) : photo choisie, sinon celle d'un de ses produits, sinon maquette. */
+// Règle (10 nov. 2026, après contrôle du propriétaire) : une catégorie ne montre QUE la photo d'un produit qu'elle contient vraiment.
+// Pas de photo juste pour cartes de visite, brochures, roll-up, autocollants, étiquettes, vinyles : la maquette du bon produit est affichée.
+// Garde-fou automatique : test D-13 (chaque photo ci-dessous appartient à un produit de la catégorie ou de ses rubriques).
 const CAT_PHOTOS = [
-    'impression-commerciale' => 'depliant-3v-accordeon', 'flyers-depliants' => 'depliant-2v-carre', 'brochures-catalogues' => 'cahier-spirale',
-    'affiches' => 'affiche-baguettes', 'cartes' => 'calendrier-bureau', 'papeterie' => 'enveloppes-fenetre',
-    'grand-format' => 'bache-barriere-chantier', 'baches-banderoles' => 'bache-echafaudage', 'roll-up-kakemono' => 'banniere-suspendue-salon',
+    'impression-commerciale' => 'depliant-3v-accordeon', 'flyers-depliants' => 'depliant-2v-carre',
+    'affiches' => 'affiche-baguettes', 'papeterie' => 'enveloppes-fenetre',
+    'grand-format' => 'bache-barriere-chantier', 'baches-banderoles' => 'bache-echafaudage',
     'panneaux' => 'panneau-rigide-tranche', 'drapeaux-oriflammes' => 'guirlande-fanions',
     'objets-publicitaires' => 'mug-liege', 'textiles' => 'tshirt-votre-logo', 'mugs-bouteilles' => 'bouteille-isotherme', 'sacs-stylos' => 'sac-papier',
     'goodies' => 'parapluie-ouvert', 'confiserie' => 'cookie-sachet',
     'communication-evenementielle' => 'tente-pliante-marche', 'badges-billets' => 'tour-de-cou-bleu', 'stands-plv' => 'tente-pliante-logo',
-    'autocollants-etiquettes' => 'boite-pastilles', 'stickers' => 'boite-bonbons-perso', 'etiquettes' => 'dragees-menthe-sachet', 'vinyles' => 'bache-microperforee',
 ];
+/** Produits « visuels par option » dont les photos portent le nom des visuels (pas de colonne image) : utile pour savoir à quel produit appartient une photo. */
+const VISUAL_OWNERS = ['depliants' => ['depliant-2v-portrait', 'depliant-2v-paysage', 'depliant-2v-carre', 'depliant-3v-roule', 'depliant-3v-accordeon', 'depliant-2v-paysage-ferme', 'depliant-2v-carre-ouvert', 'depliant-3v-roule-exterieur', 'depliant-3v-roule-ouvert']];
 function cat_photo(array $c, string $sizes = ''): string {
     $n = CAT_PHOTOS[$c['slug']] ?? '';
     if ($n === '' || !is_file(ROOT . "/assets/img/produits/$n.webp")) {

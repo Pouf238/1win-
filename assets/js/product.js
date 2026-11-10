@@ -15,12 +15,33 @@
     var apply = function () { img.src = it.src; img.alt = it.title; img.classList.toggle('mock', it.mock); img.classList.remove('out'); };
     clearTimeout(timer); if (reduce) { apply(); return; } img.classList.add('out'); timer = setTimeout(apply, 150);
   }
+  var count = null, swipedAt = 0;
   function select(i) {
     var b = thumbs[i]; if (!b) return; cur = i;
     thumbs.forEach(function (x) { var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+    if (count) count.textContent = (i + 1) + ' / ' + thumbs.length;
     swap(b); if (b.scrollIntoView && b.parentNode.scrollWidth > b.parentNode.clientWidth) b.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
   }
   thumbs.forEach(function (b, i) { b.addEventListener('click', function () { select(i); }); });
+
+  /* ---------- faire défiler les photos : flèches sur l'image principale, glissement du doigt, compteur ---------- */
+  function step(k) { if (thumbs.length > 1) select((cur + k + thumbs.length) % thumbs.length); }
+  function swipe(el, go) {   // glissement horizontal net (pas un défilement vertical de la page)
+    var x0 = null, y0 = 0;
+    el.addEventListener('touchstart', function (e) { var t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; }, { passive: true });
+    el.addEventListener('touchend', function (e) {
+      if (x0 === null) return; var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) { swipedAt = Date.now(); go(dx < 0 ? 1 : -1); }
+    }, { passive: true });
+  }
+  var gmain = gal ? gal.querySelector('.main') : null;
+  if (gmain && thumbs.length > 1) {
+    [['g-nav g-prev', 'Image précédente', '‹', -1], ['g-nav g-next', 'Image suivante', '›', 1]].forEach(function (a) {
+      var b = btn(a[0], a[1], a[2]); b.addEventListener('click', function (e) { e.preventDefault(); step(a[3]); }); gmain.appendChild(b);
+    });
+    count = d.createElement('span'); count.className = 'g-count'; count.setAttribute('aria-hidden', 'true'); count.textContent = (cur + 1) + ' / ' + thumbs.length; gmain.appendChild(count);
+    swipe(gmain, step);
+  }
 
   /* ---------- le visuel suit les options (pliage, orientation…) ---------- */
   var vis = null; try { var vel = d.getElementById('pvis'); vis = vel ? JSON.parse(vel.textContent) : null; } catch (e) { vis = null; }
@@ -69,13 +90,14 @@
       t.textContent = it.title; c.textContent = list.length > 1 ? (i + 1) + ' / ' + list.length : ''; pv.hidden = nx.hidden = list.length < 2;
     }
     el.go = function (k) { if (list.length > 1) show(i + k); };
+    swipe(s, function (k) { el.go(k); });
     x.addEventListener('click', closeLb); pv.addEventListener('click', function () { show(i - 1); }); nx.addEventListener('click', function () { show(i + 1); });
-    el.addEventListener('click', function (e) { if (e.target === el || e.target === s) closeLb(); });
+    el.addEventListener('click', function (e) { if (Date.now() - swipedAt < 450) return; if (e.target === el || e.target === s) closeLb(); });
     d.body.appendChild(el); lb = el; root.classList.add('lb-lock'); d.addEventListener('keydown', onKey, true);
     im.src = list[i].src; im.alt = list[i].title; t.textContent = list[i].title; c.textContent = list.length > 1 ? (i + 1) + ' / ' + list.length : ''; pv.hidden = nx.hidden = list.length < 2;
     requestAnimationFrame(function () { el.classList.add('in'); x.focus(); });
   }
-  if (gal) gal.addEventListener('click', function (e) { if (e.target.closest('[data-zoom]')) openLb(); });
+  if (gal) gal.addEventListener('click', function (e) { if (Date.now() - swipedAt < 450) return; if (e.target.closest('[data-zoom]')) openLb(); });
 
   /* ---------- options repliables : libellé, valeur choisie, flèche ---------- */
   if (form) {

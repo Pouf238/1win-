@@ -216,8 +216,12 @@ module.exports = async function (X) {
     const php = "define('ROOT', '" + ROOT.replace(/\\/g, '/') + "'); require ROOT . '/_app/lib/core.php'; require ROOT . '/_app/lib/art.php'; " +
       "$v = product_visuals(['slug' => 'depliants', 'groups_json' => json_encode([['key' => 'pliage', 'choices' => [['key' => '2v'], ['key' => '3v'], ['key' => 'acc']]]])], ['pliage' => '2v', 'orientation' => 'carre']); echo $v ? implode(',', array_column($v['images'], 'name')) . '|' . $v['current'] : 'none';";
     let noOr = ''; try { noOr = require('child_process').execFileSync('php', ['-r', php], { encoding: 'utf8' }); } catch (e) { noOr = 'erreur'; }
-    const guard = noOr === 'depliant-2v-portrait,depliant-3v-roule,depliant-3v-accordeon|depliant-2v-portrait';
-    return { pass: svgOk && thumbs === 5 && mapOk && orient && page && untouched && jsOk && guard, note: `svg=${svgOk} miniatures=${thumbs}/5 table=${mapOk} orientation=${orient} page=${page} autres=${untouched} js=${jsOk} sans-orientation=${guard ? 'ok' : noOr}` };
+    const guard = noOr === 'depliant-2v-portrait,depliant-3v-roule,depliant-3v-roule-exterieur,depliant-3v-roule-ouvert,depliant-3v-accordeon|depliant-2v-portrait';
+    // photos supplémentaires du propriétaire (10 nov. 2026) : autres vues des formats, à faire défiler ; le visuel « portrait » est bien un portrait (plus haut que large)
+    const extras = ['depliant-2v-paysage-ferme', 'depliant-2v-carre-ouvert', 'depliant-3v-roule-exterieur', 'depliant-3v-roule-ouvert'].filter(n => b.includes('data-key="' + n + '"')).length;
+    const pf = fs.readFileSync(path.join(ROOT, 'assets/img/produits/depliant-2v-portrait.webp')); const riff = pf.subarray(0, 4).toString() === 'RIFF' && pf.subarray(8, 12).toString() === 'WEBP';
+    const nav = /g-nav/.test(js) && /touchstart/.test(js) && /g-count/.test(js);
+    return { pass: svgOk && thumbs === 5 && extras === 4 && riff && mapOk && orient && page && untouched && jsOk && nav && guard, note: `svg=${svgOk} miniatures=${thumbs}/5 vues+=${extras}/4 table=${mapOk} orientation=${orient} page=${page} autres=${untouched} js=${jsOk} défilement=${nav} sans-orientation=${guard ? 'ok' : noOr}` };
   });
   await t('D-11', 'araignée 3D de l\'accueil : fichiers servis, modèle sans compression WebAssembly, script sans eval, CSP inchangée, chargeur discret (ordinateur, mouvement réduit, mémoire du choix), seulement sur l\'accueil, crédits CC BY, serveur réglé pour .glb', async () => {
     fh('setfeatures', '{}'); const home = await new Client().r('GET', '/'); const b = home.body;
@@ -244,6 +248,23 @@ module.exports = async function (X) {
     const keep = /#1F7A8C/.test(h) && /Symo Print/.test(h.replace(/<[^>]+>/g, ' ')) && /WhatsApp :/.test(h) && /<h1[^>]*>Votre devis est prêt<\/h1>/.test(h) && !/<script|<link|@import/i.test(h);
     const before = h.indexOf('<img') < h.indexOf('Symo Print') && h.indexOf('<img') > 0;
     return { pass: imgOk && pngOk && keep && before, note: `img=${imgOk} png=${pngOk} gabarit=${keep} ordre=${before} src=${src}` };
+  });
+  await t('D-13', 'photos : chaque photo de catégorie (accueil, menus, « Trouvez le produit ») appartient VRAIMENT à un produit de cette catégorie (plus de calendrier sur « Cartes de visite ») ; scripts de catalogue et de galeries rejouables (APPLIQUÉ puis rien à refaire) ; dos de sachet dans la galerie ; galerie défilable sur la fiche', async () => {
+    const run = (f) => { try { return require('child_process').execFileSync('php', [path.join(ROOT, '_app/cli', f), '--apply'], { encoding: 'utf8' }); } catch (e) { return 'erreur ' + String(e.stderr || e.message).slice(0, 120); } };
+    const c1 = run('catalogue-objets-2026-11.php'), g1 = run('photos-galeries-2026-11.php'), g2 = run('photos-galeries-2026-11.php');
+    const scripts = /APPLIQUÉ/.test(c1) && /APPLIQUÉ/.test(g1) && /galerie complétée : cookies-en-sachet/.test(g1) && /APPLIQUÉ/.test(g2) && !/complétée|ajoutée|allumé \(/.test(g2);
+    const php = "define('ROOT', '" + ROOT.replace(/\\/g, '/') + "'); require ROOT . '/_app/bootstrap.php'; $t = []; foreach (DB::all('SELECT id,parent_id,slug FROM categories') as $c) $t[$c['id']] = $c; $own = [];" +
+      "foreach (DB::all('SELECT slug,image,gallery,category_id FROM products WHERE active=1') as $p) { $c = $t[$p['category_id']] ?? null; $cs = [$c['slug'] ?? '', ($c && $c['parent_id']) ? ($t[$c['parent_id']]['slug'] ?? '') : ''];" +
+      " foreach (array_filter(array_merge([(string) $p['image']], jd($p['gallery']), VISUAL_OWNERS[$p['slug']] ?? [])) as $n) $own[$n][] = $cs; }" +
+      "$bad = []; foreach (CAT_PHOTOS as $cat => $n) { if (!is_file(ROOT . \"/assets/img/produits/$n.webp\")) { $bad[] = \"$cat:$n absente\"; continue; } if (empty($own[$n])) { $bad[] = \"$cat:$n sans produit\"; continue; } foreach ($own[$n] as $cs) if (!in_array($cat, $cs, true)) $bad[] = \"$cat:$n appartient à \" . $cs[0]; }" +
+      "foreach (['cartes', 'brochures-catalogues', 'roll-up-kakemono', 'stickers', 'etiquettes', 'vinyles'] as $k) if (isset(CAT_PHOTOS[$k])) $bad[] = \"$k : photo imposée sans produit photographié\"; echo implode(' | ', $bad);";
+    let bad = ''; try { bad = require('child_process').execFileSync('php', ['-r', php], { encoding: 'utf8' }).trim(); } catch (e) { bad = 'erreur ' + String(e.stderr || e.message).slice(0, 160); }
+    fh('setfeatures', '{"catalog.gallery":true}');
+    const pg = (await new Client().r('GET', '/p/cookies-en-sachet')).body; const backOk = /data-img="\/assets\/img\/produits\/cookie-sachet-dos\.webp/.test(pg) && (pg.match(/<div class="thumbs"[\s\S]*?<\/div>/) || [''])[0].split('data-img=').length - 1 >= 4;
+    const home = (await new Client().r('GET', '/')).body; const find = home.slice(home.indexOf('class="px-find"'), home.indexOf('</ul>', home.indexOf('class="px-find"')));
+    const cartes = (find.match(/<a href="\/c\/cartes">[\s\S]*?<\/a>/) || [''])[0]; const noCal = cartes !== '' && !/calendrier/.test(cartes);
+    fh('setfeatures', '{}');
+    return { pass: scripts && bad === '' && backOk && noCal, note: `scripts=${scripts} incohérences=${bad || 'aucune'} dos=${backOk} cartes-sans-calendrier=${noCal}` };
   });
   fh('setfeatures', '{}');
 };

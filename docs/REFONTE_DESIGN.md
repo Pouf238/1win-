@@ -21,6 +21,14 @@
 > - **Catégories** : vignettes des rubriques en photos (plus de dessins).
 > - Tests : D-01 réécrit (structure, services sans `<img>`, aucune photo d'atelier sur l'accueil) ; 75/75, sécurité 119/119, plateforme 17/17.
 
+> **Contrôle des photos (10 nov. 2026, local, NON déployé)** — remarque du propriétaire : « un calendrier comme une carte de visite » et « d'autres images envoyées en plusieurs fois, pour que le client puisse défiler et voir les formats ».
+> - **Photos de catégories corrigées** (`CAT_PHOTOS`, `_app/lib/art.php`) : supprimées les correspondances fausses — Cartes de visite (montrait un calendrier), Brochures (un cahier), Roll-up (une bannière suspendue), Autocollants/Stickers/Étiquettes (des confiseries), Vinyles (une bâche). Ces rubriques n'ont aucune photo réelle : la maquette du bon produit est affichée. Règle : une catégorie ne montre que la photo d'un produit qu'elle contient ; garde-fou automatique **D-13**.
+> - **Toutes les fiches vérifiées une à une** (48 fiches avec photos) : chaque photo correspond à son produit.
+> - **9 photos envoyées et pas encore utilisées, ajoutées** (retrouvées en comparant les 138 envois au site) : dépliants — le visuel « portrait » était en réalité un paysage (remplacé par la vraie photo portrait) + 4 autres vues (paysage fermé, carré ouvert, 3 volets extérieur et intérieur), affichées juste après le visuel de leur format (`PRODUCT_VISUALS['depliants']['extra']`) ; confiserie — dos des sachets (cookies, dragées, dextrose, gélifiés). Non reprises : logos et icônes, captures d'écran d'interface, doublons.
+> - **Faire défiler les photos** (`assets/js/product.js`, `pro.css`) : flèches ‹ › sur l'image principale, compteur « 2 / 9 », glissement du doigt sur téléphone (aussi dans l'agrandissement) ; l'image principale montre désormais le produit EN ENTIER (elle était coupée en haut et en bas).
+> - **Production** : l'interrupteur « Galerie de photos » y est ÉTEINT (d'où « une seule photo par produit ») et la fiche Dépliants n'a pas l'option Orientation. Le script `_app/cli/photos-galeries-2026-11.php --apply` (aperçu sans `--apply`, rejouable, ne supprime rien, ne touche à aucun prix) ajoute les dos de sachet, l'option Orientation (identique à l'installation neuve) et allume l'interrupteur (consigné « via cli »). À lancer une fois après l'envoi des fichiers, comme le script catalogue.
+> - Tests : 76/76 (D-10 étendu, D-13 nouveau), sécurité 119/119, plateforme 17/17.
+
 ## Ce qui est conservé (charte strictement inchangée)
 Couleurs `#1F7A8C` (bleu pétrole), `#F4A62A` (orange), blanc, gris clair ; polices Montserrat (titres) et Inter (texte) ; logo Symo Print (même dessin). Seules des **teintes dérivées** de ces couleurs sont utilisées (fond crème = teinte claire de l'orange). Aucune route, aucun formulaire, aucune fonction n'a été supprimé ou modifié ; l'administration n'est pas touchée (elle garde `app.css` seul).
 
