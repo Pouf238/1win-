@@ -14,6 +14,13 @@
 > - Tests : V-01 à V-04 et D-01 réécrits pour la nouvelle structure ; 75/75, sécurité 119/119, plateforme 17/17.
 > - Retour arrière : remettre `css/modern.css` dans `_app/views/layout/main.php` et restaurer `home.php` depuis `ef913e2`.
 
+> **Refonte « pro », 2e version (10 nov. 2026, locale, NON déployée)** — demandes du propriétaire : « enlève les images de nos services » et « un site beau et aussi pro qu'onlineprinters.fr » (inspiration seulement, rien de copié : ni logo, ni textes, ni charte).
+> - **Photos d'ateliers retirées partout** : cartes « Nos services » de l'accueil (désormais icône + texte), en-têtes des pages de contenu (`page.php`), FAQ, catalogue/recherche (`list.php`). Elles ne restent que sur /credits-photos (page conservée, lien retiré du pied de page).
+> - **Style global (`assets/css/pro.css`)** : typographie Inter partout (préchargement de Montserrat retiré, préchargement d'Inter corrigé sans `?v=`), barre d'avantages blanche, en-tête bleu foncé avec recherche blanche et lien « Aide », menu sable sur une ligne avec chevrons, « Tous nos produits » en premier et « Devis gratuit » à droite (« Services » reste dans le tiroir mobile), sous-menus en photos (`cat_photo`), boutons rectangulaires, cartes produit plates (bouton « Configurer » en contour), en-têtes de pages sable, pied de page clair en 4 colonnes (newsletter avec flèche, moyens de paiement) et barre légale foncée, bandeau « Un projet ? » sobre.
+> - **Accueil (`home.php`)** : mosaïque (grande case T-shirts, objets, « Pourquoi choisir Symo Print », confiserie, grand format, salons, calendriers de l'année suivante), meilleures ventes en tuiles photo (seulement des produits ayant une vraie photo, `product_photo()`), variété de produits, services sans photo, nouveautés, « Trouvez le produit » (5 colonnes + « Tout le catalogue »), avis si présents. Retirés : « Produits populaires », parcours en 4 étapes.
+> - **Catégories** : vignettes des rubriques en photos (plus de dessins).
+> - Tests : D-01 réécrit (structure, services sans `<img>`, aucune photo d'atelier sur l'accueil) ; 75/75, sécurité 119/119, plateforme 17/17.
+
 ## Ce qui est conservé (charte strictement inchangée)
 Couleurs `#1F7A8C` (bleu pétrole), `#F4A62A` (orange), blanc, gris clair ; polices Montserrat (titres) et Inter (texte) ; logo Symo Print (même dessin). Seules des **teintes dérivées** de ces couleurs sont utilisées (fond crème = teinte claire de l'orange). Aucune route, aucun formulaire, aucune fonction n'a été supprimé ou modifié ; l'administration n'est pas touchée (elle garde `app.css` seul).
 

@@ -51,13 +51,18 @@ function photo(string $slot, array $o = []): string {
     return sprintf('<img class="photo %s" src="%s" srcset="%s %dw, %s %dw" sizes="%s" alt="%s" width="%d" height="%d"%s decoding="async">',
         e($o['cls'] ?? ''), $u1, $u1, $w1, $u2, $w2, e($o['sizes'] ?? '(min-width:900px) 34vw, 92vw'), e($alt), $d[0], $d[1], !empty($o['eager']) ? ' fetchpriority="high"' : ' loading="lazy"');
 }
-/** Visuel d'un produit : photo si disponible, sinon maquette de marque du type de produit. */
-function product_img(array $p, string $cls = ''): string {
-    // photo principale, sinon première photo de la galerie (refonte du 10 nov. 2026 : moins de maquettes dessinées)
+/** Nom du fichier photo d'un produit (photo principale, sinon 1re photo de la galerie), ou '' s'il n'en a pas. */
+function product_photo(array $p): string {
     foreach (array_merge([(string) ($p['image'] ?? '')], array_map('strval', (array) (json_decode((string) ($p['gallery'] ?? ''), true) ?: []))) as $n) {
-        $n = basename(preg_replace('/\.webp$/', '', $n)); if ($n === '') continue;
-        if (is_file(ROOT . '/assets/img/produits/' . $n . '.webp')) return '<img src="' . e(asset('img/produits/' . $n . '.webp')) . '" alt="' . e($p['name']) . '" loading="lazy" decoding="async" class="' . e($cls) . '">';
+        $n = basename(preg_replace('/\.webp$/', '', $n));
+        if ($n !== '' && is_file(ROOT . '/assets/img/produits/' . $n . '.webp')) return $n;
     }
+    return '';
+}
+/** Visuel d'un produit : photo principale, sinon première photo de la galerie, sinon maquette de marque du type de produit. */
+function product_img(array $p, string $cls = ''): string {
+    $n = product_photo($p);
+    if ($n !== '') return '<img src="' . e(asset('img/produits/' . $n . '.webp')) . '" alt="' . e($p['name']) . '" loading="lazy" decoding="async" class="' . e($cls) . '">';
     return mock((string) ($p['icon'] ?? 'flyer'), (string) $p['name'], $cls);
 }
 /** Produits à photo pour la vitrine animée de l'accueil : 3 à 5 produits actifs dont le fichier image existe (sinon la section est masquée). */

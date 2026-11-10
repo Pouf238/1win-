@@ -18,8 +18,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <meta property="og:type" content="website"><meta property="og:site_name" content="<?= e($name) ?>"><meta property="og:locale" content="fr_FR"><meta property="og:title" content="<?= e($title) ?>"><meta property="og:description" content="<?= e(mb_substr($desc, 0, 200)) ?>"><meta property="og:url" content="<?= e($canon) ?>"><meta property="og:image" content="<?= e($ogimg) ?>">
 <meta name="twitter:card" content="summary_large_image">
 <?= site_icons() ?>
-<link rel="preload" href="<?= e(asset('fonts/montserrat-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="<?= e(asset('fonts/inter-latin-wght-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/pro.css')) ?>">
@@ -41,22 +40,23 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
   </form>
   <div class="hact">
     <a href="<?= $u ? '/compte' : '/compte/connexion' ?>"><?= ic('user') ?><span><?= $u ? e(explode(' ', trim($u['name'] ?: 'Compte'))[0]) : 'Connexion' ?></span></a>
+    <a href="/faq"><?= ic('help') ?><span>Aide</span></a>
     <a href="/compte/favoris"><?= ic('heart') ?><span>Favoris</span></a>
     <?php if (feature('orders')): ?><a href="/panier" aria-label="Panier, <?= $cartN ?> article(s)"><?= ic('cart') ?><span>Panier</span><i class="cnt" data-cart-count data-n="<?= $cartN ?>"><?= $cartN ?: '' ?></i></a><?php endif; ?>
   </div>
 </div></div>
 <nav class="navbar" id="navbar" aria-label="Catalogue"><div class="dr-top"><a class="dr-logo" href="/" aria-label="<?= e($name) ?>, accueil"><img src="<?= e(asset('img/brand/logo.svg')) ?>" alt="" width="112" height="34"></a><button class="dr-close" type="button" data-nav-close aria-label="Fermer le menu"><?= ic('close') ?></button></div><div class="wrap">
-  <div class="nl mob-only"><a class="all-p" href="/catalogue">Tous nos produits</a></div>
+  <div class="nl nl-all"><a class="all-p" href="/catalogue">Tous nos produits</a></div>
   <?php foreach ($tree as $c): ?>
   <div class="nl"><a href="/c/<?= e($c['slug']) ?>"><?= e($c['name']) ?></a>
     <?php if ($c['children']): ?><button class="tg" type="button" aria-expanded="false" aria-label="Sous-catégories de <?= e($c['name']) ?>" data-sub><?= ic('arrow') ?></button>
       <ul class="sub"><?php foreach ($c['children'] as $s): ?><li><a href="/c/<?= e($s['slug']) ?>"><?= e($s['name']) ?></a></li><?php endforeach; ?><li><a class="sub-all" href="/c/<?= e($c['slug']) ?>">Voir tout : <?= e($c['name']) ?></a></li></ul>
       <div class="mega"><h4><?= e($c['name']) ?></h4>
-      <div class="mg-cards"><?php foreach (array_slice($c['children'], 0, 4) as $s): ?><a class="mc" href="/c/<?= e($s['slug']) ?>"><span class="mi"><?= mock((string) ($s['icon'] ?: $c['icon'])) ?></span><b><?= e($s['name']) ?></b></a><?php endforeach; ?></div>
+      <div class="mg-cards"><?php foreach (array_slice($c['children'], 0, 4) as $s): ?><a class="mc" href="/c/<?= e($s['slug']) ?>"><span class="mi"><?= cat_photo(['icon' => ($s['icon'] ?: $c['icon'])] + $s) ?></span><b><?= e($s['name']) ?></b></a><?php endforeach; ?></div>
       <?php if (count($c['children']) > 4): ?><div class="mg-list"><?php foreach (array_slice($c['children'], 4) as $s): ?><a href="/c/<?= e($s['slug']) ?>"><?= e($s['name']) ?></a><?php endforeach; ?></div><?php endif; ?>
       <a class="all" href="/c/<?= e($c['slug']) ?>">Voir tout : <?= e($c['name']) ?> →</a></div><?php endif; ?></div>
   <?php endforeach; ?>
-  <?php if (feature('quotes')): ?><div class="nl"><a href="/devis">Devis gratuit</a></div><?php endif; ?>
+  <?php if (feature('quotes')): ?><div class="nl nl-devis"><a href="/devis"><?= ic('file') ?>Devis gratuit</a></div><?php endif; ?>
   <div class="nl hot"><a href="/nos-services">Services</a></div>
   <div class="dr-sep mob-only" aria-hidden="true"></div>
   <div class="nl mob-only"><a class="dr-i" href="/faq"><?= ic('list') ?>Aide et questions fréquentes</a></div>
@@ -74,20 +74,20 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <?php if (empty($meta['no_prefoot'])): ?><section class="prefoot" aria-label="Contact"><div class="wrap"><div class="pf-in"><div><span class="eyebrow">Un projet d'impression ?</span><h2>Parlons de votre prochain support.</h2><p>Décrivez votre besoin : notre équipe vous répond rapidement sur WhatsApp ou par e-mail, avec un conseil et un prix clair.</p></div>
   <div class="pf-act"><?php if (feature('quotes')): ?><a class="btn btn-a btn-lg" href="/devis">Demander un devis <?= ic('arrow') ?></a><?php endif; ?><a class="btn btn-lg btn-ghost" href="<?= e(wa_link('Bonjour Symo Print, j\'ai un projet d\'impression.')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp</a></div></div></div></section><?php endif; ?>
 <footer class="footer">
-<div class="fnews"><div class="wrap"><div><h2>Restez informé</h2><p>Nouveautés, promotions et conseils d'impression, directement dans votre boîte mail.</p></div>
-  <form action="/newsletter" method="post"><?= csrf_field() ?><div class="hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div><label class="sr" for="nl">Votre e-mail</label><input id="nl" type="email" name="email" placeholder="Votre adresse e-mail" required><button class="btn btn-a" type="submit">S'inscrire</button></form></div></div>
-<div class="wrap">
-  <div><img src="<?= e(asset('img/brand/logo-light.svg')) ?>" alt="<?= e($name) ?>" width="140" height="43" loading="lazy"><p><?= e(shop('tagline')) ?>. Impression et personnalisation sur tout type de support, à Abidjan et dans toute la Côte d'Ivoire.</p>
-    <?php if (feature('payments')): ?><div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Moov Money</span><span>Wave</span></div><?php endif; ?></div>
-  <div><h4>Catalogue</h4><ul><?php foreach ($tree as $c): ?><li><a href="/c/<?= e($c['slug']) ?>"><?= e($c['name']) ?></a></li><?php endforeach; ?></ul></div>
-  <div><h4>Informations</h4><ul><?php if (feature('quotes')): ?><li><a href="/devis">Demander un devis</a></li><?php endif; ?><?php if (feature('tracking.lookup')): ?><li><a href="/suivi">Suivre ma commande</a></li><?php endif; ?><li><a href="/nos-services">Nos services</a></li><li><a href="/guide-fichiers">Guide des fichiers</a></li><li><a href="/guide-papiers">Papiers et matériaux</a></li><li><a href="/faq">Questions fréquentes</a></li><li><a href="/livraison">Livraison</a></li><li><a href="/remboursement">Remboursement</a></li><li><a href="/a-propos">À propos</a></li></ul></div>
-  <div><h4>Nous contacter</h4><ul class="ct">
+<div class="wrap fgrid">
+  <div class="fbrand"><img src="<?= e(asset('img/brand/logo.svg')) ?>" alt="<?= e($name) ?>" width="140" height="43" loading="lazy"><p><?= e(shop('tagline')) ?>. Impression et personnalisation sur tout type de support, à Abidjan et dans toute la Côte d'Ivoire.</p>
+    <ul class="ct">
     <li><?= ic('wa') ?><a href="<?= e(wa_link()) ?>">WhatsApp : <?= e(shop('phone2')) ?></a></li><li><?= ic('phone') ?><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= e(shop('phone')) ?></a></li>
     <?php if (shop('email')): ?><li><?= ic('mail') ?><a href="mailto:<?= e(shop('email')) ?>"><?= e(shop('email')) ?></a></li><?php endif; ?>
     <li><?= ic('pin') ?><span><?= e(shop('address')) ?><br><?= e(shop('city')) ?>, <?= e(shop('country')) ?></span></li>
     <?php if (shop('hours')): ?><li><?= ic('clock') ?><span><?= e(shop('hours')) ?></span></li><?php endif; ?></ul></div>
+  <div><h4>Catalogue</h4><ul><?php foreach ($tree as $c): ?><li><a href="/c/<?= e($c['slug']) ?>"><?= e($c['name']) ?></a></li><?php endforeach; ?><li><a href="/catalogue">Tous nos produits</a></li></ul></div>
+  <div><h4>Informations</h4><ul><?php if (feature('quotes')): ?><li><a href="/devis">Demander un devis</a></li><?php endif; ?><?php if (feature('tracking.lookup')): ?><li><a href="/suivi">Suivre ma commande</a></li><?php endif; ?><li><a href="/nos-services">Nos services</a></li><li><a href="/guide-fichiers">Guide des fichiers</a></li><li><a href="/guide-papiers">Papiers et matériaux</a></li><li><a href="/faq">Questions fréquentes</a></li><li><a href="/livraison">Livraison</a></li><li><a href="/remboursement">Remboursement</a></li><li><a href="/a-propos">À propos</a></li><li><a href="/contact">Contact</a></li></ul></div>
+  <div class="fnews"><h4>Restez informé</h4><p>Nouveautés, promotions et conseils d'impression, directement dans votre boîte mail.</p>
+    <form action="/newsletter" method="post"><?= csrf_field() ?><div class="hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div><label class="sr" for="nl">Votre e-mail</label><input id="nl" type="email" name="email" placeholder="Votre adresse e-mail" required><button class="btn btn-a" type="submit" aria-label="S'inscrire à la newsletter"><?= ic('arrow') ?></button></form>
+    <?php if (feature('payments')): ?><h4 class="fpay">Moyens de paiement</h4><div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Moov Money</span><span>Wave</span></div><?php endif; ?></div>
 </div>
-<div class="legal"><div class="wrap"><span>© <?= date('Y') ?> <?= e($name) ?>. Tous droits réservés.</span><span><a href="/credits-photos">Crédits photos</a> · <a href="/cgv">CGV</a> · <a href="/mentions-legales">Mentions légales</a> · <a href="/confidentialite">Confidentialité</a></span></div></div>
+<div class="legal"><div class="wrap"><span>© <?= date('Y') ?> <?= e($name) ?>. Tous droits réservés.</span><span><a href="/cgv">CGV</a> · <a href="/mentions-legales">Mentions légales</a> · <a href="/confidentialite">Confidentialité</a></span></div></div>
 </footer>
 <a class="wa" href="<?= e(wa_link('Bonjour Symo Print, j\'ai une question sur ma commande.')) ?>" rel="noopener" aria-label="Discuter sur WhatsApp"><?= ic('wa') ?><span>WhatsApp</span></a>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
