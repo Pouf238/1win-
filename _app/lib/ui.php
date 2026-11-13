@@ -5,7 +5,7 @@ const ICONS = [
     'heart' => '<path d="M12 21s-8-5.5-8-11a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 10c0 5.500-8 11-8 11z"/>', 'cart' => '<path d="M3 4h2l2.4 10.5a2 2 0 002 1.500h7.500a2 2 0 002-1.500L20 8H6"/><circle cx="10" cy="20" r="1.500"/><circle cx="17" cy="20" r="1.500"/>',
     'phone' => '<path d="M5 4h4l2 5-2.500 1.500a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A15 15 0 013 6a2 2 0 012-2z"/>', 'mail' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
     'pin' => '<path d="M12 21s7-6.200 7-11a7 7 0 00-14 0c0 4.800 7 11 7 11z"/><circle cx="12" cy="10" r="2.500"/>', 'truck' => '<path d="M2.500 6h11v10h-11zM13.500 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
-    'shield' => '<path d="M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/><path d="M8.500 12l2.500 2.500 4.500-5"/>', 'check' => '<path d="M5 12.500l4.500 4.500L19 7.500"/>', 'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 'help' => '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 16.8h.01"/>',
+    'shield' => '<path d="M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/><path d="M8.500 12l2.500 2.500 4.500-5"/>', 'check' => '<path d="M5 12.500l4.500 4.500L19 7.500"/>', 'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 'share' => '<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7l7.4-4.3M8.3 13.3l7.4 4.3"/>', 'print' => '<path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="1.6"/><path d="M7 14h10v6.5H7z"/>', 'help' => '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 16.8h.01"/>',
     'menu' => '<path d="M4 7h16M4 12h16M4 17h16"/>', 'close' => '<path d="M6 6l12 12M18 6L6 18"/>', 'plus' => '<path d="M12 5v14M5 12h14"/>', 'arrow' => '<path d="M5 12h14M13 6l6 6-6 6"/>',
     'file' => '<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/>', 'upload' => '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>',
     'star' => '<path d="M12 3l2.600 5.600 6.100.7-4.500 4.200 1.200 6L12 16.500 6.600 19.500l1.200-6L3.300 9.300l6.100-.7z"/>', 'box' => '<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
@@ -45,3 +45,61 @@ function select_opts(array $opts, $cur): string { $h = ''; foreach ($opts as $v 
 
 /** « pour 50 pièces » : quantité correspondant au prix « à partir de ». */
 function pfor(array $p): string { $x = Pricing::parse($p); $q = $x['qty']; $n = (int) min($q['presets'] ?: [$q['min']]); if ($p['pricing_model'] === 'area' || $n <= 1) return ''; return '<div class="muted" style="font-size:12px">pour ' . number_format($n, 0, ',', ' ') . ' ' . e($q['unit']) . '</div>'; }
+
+// ================================================================ Lot « défi » (nov. 2026) : index A-Z, centre d'aide, guides de catégorie, produits vus récemment
+/** Lettre d'index (A-Z, sinon #) d'un nom : accents et majuscules ignorés. */
+function az_letter(string $name): string {
+    $t = strtr(mb_strtoupper(mb_substr(trim($name), 0, 1)), ['É' => 'E', 'È' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'À' => 'A', 'Â' => 'A', 'Ä' => 'A', 'Î' => 'I', 'Ï' => 'I', 'Ô' => 'O', 'Ö' => 'O', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ç' => 'C', 'Œ' => 'O']);
+    return preg_match('/^[A-Z]$/', $t) ? $t : '#';
+}
+/** Thèmes du centre d'aide : une question est rangée par mots-clés (aucune colonne en base à maintenir). L'ordre des thèmes fixe l'affichage. */
+const HELP_THEMES = [
+    'commande'  => ['Commande', 'cart', '/commande|command|annul|modifi|suiv/iu'],
+    'paiement'  => ['Paiement', 'tag', '/paiement|payer|prix|tarif|factur|mobile money|wave|orange/iu'],
+    'livraison' => ['Livraison et délais', 'truck', '/livr|délai|delai|retrait|expédi|abidjan/iu'],
+    'fichiers'  => ['Fichiers et création', 'file', '/fichier|visuel|bat\b|maquette|création|creer|créer|format|pdf/iu'],
+    'compte'    => ['Compte client et devis', 'user', '/compte|mot de passe|devis|connexion|inscri/iu'],
+];
+function help_theme(string $question): string {
+    // priorité au premier mot-clé rencontré dans la question (« Comment suivre ma commande » → commande ; « Quels sont les délais » → livraison)
+    $best = 'autres'; $pos = PHP_INT_MAX;
+    foreach (HELP_THEMES as $k => [, , $re]) if (preg_match($re, $question, $m, PREG_OFFSET_CAPTURE) && $m[0][1] < $pos) { $pos = $m[0][1]; $best = $k; }
+    return $best;
+}
+/** Dimensions lues dans un libellé d'option « A5 (14,8 × 21 cm) » → [nom, largeur mm, hauteur mm] ou null. */
+function format_dims(string $label): ?array {
+    if (!preg_match('/^(.*?)\s*\(\s*(\d+(?:[.,]\d+)?)\s*[×x]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)\b/u', $label, $m)) return null;
+    $k = ['mm' => 1, 'cm' => 10, 'm' => 1000][$m[4]]; $w = (float) str_replace(',', '.', $m[2]) * $k; $h = (float) str_replace(',', '.', $m[3]) * $k;
+    return ($w > 0 && $h > 0) ? [trim($m[1]) ?: $label, $w, $h] : null;
+}
+/**
+ * Guides d'une catégorie, calculés UNIQUEMENT depuis les vraies options et le vrai moteur de prix des produits fournis (rien d'inventé) :
+ * formats les plus demandés (dessinés à l'échelle) et papiers comparés (prix pour la quantité par défaut). Vide si la catégorie ne s'y prête pas.
+ */
+function category_guides(array $products): array {
+    $out = ['formats' => [], 'papers' => [], 'product' => null];
+    foreach ($products as $p) {
+        if (price_on_request($p)) continue; $x = Pricing::parse($p); $def = Pricing::defaults($p);
+        foreach ($x['groups'] as $g) {
+            if (($g['key'] ?? '') === 'format' && !$out['formats']) {
+                foreach ($g['choices'] ?? [] as $c) if ($d = format_dims((string) $c['label'])) $out['formats'][] = ['key' => $c['key'], 'name' => $d[0], 'w' => $d[1], 'h' => $d[2], 'badge' => $c['badge'] ?? '', 'slug' => $p['slug'], 'product' => $p['name']];
+                if (count($out['formats']) < 3) $out['formats'] = [];
+            }
+            if (($g['key'] ?? '') === 'papier' && !$out['papers'] && count($g['choices'] ?? []) >= 2) {
+                foreach (array_slice($g['choices'], 0, 4) as $c) { $cfg = $def; $cfg['opts']['papier'] = $c['key']; $q = Pricing::quote($p, $cfg); if (!$q['ok']) continue;
+                    $out['papers'][] = ['key' => $c['key'], 'label' => $c['label'], 'badge' => $c['badge'] ?? '', 'total' => $q['total'], 'qty' => $q['qty'], 'unit' => $x['qty']['unit'], 'slug' => $p['slug'], 'product' => $p['name']]; }
+                if (count($out['papers']) < 2) $out['papers'] = [];
+            }
+        }
+        if ($out['formats'] && $out['papers']) break;
+    }
+    return $out;
+}
+/** Produits vus récemment (session du visiteur, 8 au plus ; aucun cookie tiers, rien d'enregistré en base). */
+function recent_seen(int $id): void { $r = array_values(array_filter((array) ($_SESSION['seen'] ?? []), fn($x) => (int) $x !== $id)); array_unshift($r, $id); $_SESSION['seen'] = array_slice($r, 0, 8); }
+function recent_products(int $except = 0, int $max = 4): array {
+    $ids = array_values(array_filter(array_map('intval', (array) ($_SESSION['seen'] ?? [])), fn($x) => $x > 0 && $x !== $except)); if (!$ids) return [];
+    $rows = []; foreach (DB::all('SELECT * FROM products WHERE active=1 AND id IN (' . DB::in($ids) . ')', $ids) as $r) $rows[(int) $r['id']] = $r;
+    $out = []; foreach ($ids as $i) if (isset($rows[$i])) $out[] = $rows[$i]; return array_slice($out, 0, $max);
+}
+

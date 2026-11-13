@@ -266,5 +266,20 @@ module.exports = async function (X) {
     fh('setfeatures', '{}');
     return { pass: scripts && bad === '' && backOk && noCal, note: `scripts=${scripts} incohérences=${bad || 'aucune'} dos=${backOk} cartes-sans-calendrier=${noCal}` };
   });
+  await t('D-14', 'lot « défi » : page « Tous nos produits de A à Z » (index cliquable, chaque produit actif listé, liens valides), centre d\'aide (recherche, thèmes, guides, contact, données FAQ structurées), guides de catégorie calculés par le vrai moteur de prix, outils de fiche (partager, imprimer, vus récemment), bandeau d\'annonce absent tant qu\'aucun texte n\'est saisi', async () => {
+    fh('setfeatures', '{}'); const c = new Client();
+    const az = await c.r('GET', '/produits-a-z'); const nProd = parseInt(sh('count', 'products', 'active=1'), 10);
+    const azLinks = [...az.body.matchAll(/<li><a href="(\/p\/[a-z0-9-]+)">/g)].map(m => m[1]); const azOk = az.status === 200 && azLinks.length === nProd && /class="az-idx"/.test(az.body) && /<a href="#az-A">A<\/a>/.test(az.body) && (await new Client().r('GET', azLinks[0])).status === 200;
+    const help = await c.r('GET', '/faq'); const helpOk = help.status === 200 && /data-help-search/.test(help.body) && (help.body.match(/data-help-theme/g) || []).length >= 3 && /"@type":"FAQPage"/.test(help.body) && /js\/help\.js/.test(help.body) && /id="aide-contact"/.test(help.body) && (help.body.match(/<h1[\s>]/g) || []).length === 1;
+    const cat = await c.r('GET', '/c/flyers-depliants'); const price = (cat.body.match(/class="cg-price"><small>à partir de<\/small> <strong>([^<]+)</) || [])[1] || '';
+    const php = "define('ROOT', '" + ROOT.replace(/\\/g, '/') + "'); require ROOT . '/_app/bootstrap.php'; $p = DB::row('SELECT * FROM products WHERE slug=?', ['flyers']); $d = Pricing::defaults($p); $q = Pricing::quote($p, $d); echo money($q['total']);";
+    let expect = ''; try { expect = require('child_process').execFileSync('php', ['-r', php], { encoding: 'utf8' }).trim(); } catch (e) { expect = 'erreur'; }
+    const catOk = cat.status === 200 && /class="cg-formats"/.test(cat.body) && /class="cg-papers"/.test(cat.body) && price !== '' && price === expect && /aria-current="page"/.test(cat.body);
+    const filtered = await c.r('GET', '/c/flyers-depliants?sort=name'); const noGuideWhenFiltered = !/class="cg-formats"/.test(filtered.body);
+    const p1 = await c.r('GET', '/p/flyers'); const p2 = await c.r('GET', '/p/depliants');
+    const prodOk = /data-share/.test(p1.body) && /data-print/.test(p1.body) && !/id="vus-h"/.test(p1.body) && /id="vus-h"/.test(p2.body) && /href="\/p\/flyers"/.test(p2.body.slice(p2.body.indexOf('id="vus-h"')));
+    const home = await new Client().r('GET', '/'); const annOff = !/class="announce"/.test(home.body);
+    return { pass: azOk && helpOk && catOk && noGuideWhenFiltered && prodOk && annOff, note: `a-z=${azOk} (${azLinks.length}/${nProd}) aide=${helpOk} catégorie=${catOk} (${price} / ${expect}) filtré=${noGuideWhenFiltered} fiche=${prodOk} annonce-absente=${annOff}` };
+  });
   fh('setfeatures', '{}');
 };

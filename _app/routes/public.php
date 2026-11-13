@@ -35,6 +35,16 @@ route('GET', '/catalogue', function () {
         ['title' => 'Catalogue : tous nos produits d\'impression', 'desc' => "Tout le catalogue d'impression Symo Print à Abidjan : flyers, cartes de visite, bâches, roll-up, t-shirts, objets publicitaires. Prix en FCFA."]);
 });
 
+route('GET', '/produits-a-z', function () {
+    // tous les produits et rubriques, rangés par première lettre (accents ignorés)
+    $items = [];
+    foreach (DB::all('SELECT name, slug FROM products WHERE active=1') as $r) $items[] = ['name' => $r['name'], 'url' => '/p/' . $r['slug'], 'cat' => false];
+    foreach (DB::all('SELECT name, slug FROM categories WHERE active=1') as $r) $items[] = ['name' => $r['name'], 'url' => '/c/' . $r['slug'], 'cat' => true];
+    usort($items, fn($a, $b) => strcoll(mb_strtolower(strtr($a['name'], ['É' => 'E', 'é' => 'e', 'è' => 'e', 'ê' => 'e', 'à' => 'a', 'â' => 'a', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ç' => 'c'])), mb_strtolower(strtr($b['name'], ['É' => 'E', 'é' => 'e', 'è' => 'e', 'ê' => 'e', 'à' => 'a', 'â' => 'a', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ç' => 'c']))));
+    $groups = []; foreach ($items as $it) $groups[az_letter($it['name'])][] = $it; ksort($groups);
+    page('shop/az', compact('groups'), ['title' => 'Tous nos produits de A à Z', 'desc' => "La liste complète des produits et rubriques Symo Print, classés par ordre alphabétique."]);
+});
+
 route('GET', '/c/{slug}', function ($a) {
     $c = DB::row('SELECT * FROM categories WHERE slug=? AND active=1', [$a['slug']]); if (!$c) abort(404);
     $parent = $c['parent_id'] ? DB::find('categories', (int) $c['parent_id']) : null;
@@ -44,7 +54,13 @@ route('GET', '/c/{slug}', function ($a) {
     [$w, $p] = filter_sql(); [$rows, $total, $pg, $pages] = product_list('category_id IN (' . DB::in($ids) . ') AND ' . $w, [...$ids, ...$p], get('sort'), (int) get('page', 1));
     $crumbs = [['Catalogue', '/catalogue']]; if ($parent) $crumbs[] = [$parent['name'], '/c/' . $parent['slug']]; $crumbs[] = [$c['name'], ''];
     $ld = [['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($x, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $x[0]], $crumbs, array_keys($crumbs))]];
-    page('shop/list', ['title' => $c['name'], 'intro' => $c['short_desc'] ?: $c['description'], 'crumbs' => $crumbs, 'tiles' => $subs, 'rows' => $rows, 'total' => $total, 'pg' => $pg, 'pages' => $pages, 'cat' => $c, 'subs' => $subs, 'sub' => $sub, 'base' => '/c/' . $c['slug']],
+    // colonne de rubriques : celles de la catégorie, ou ses rubriques sœurs quand on est déjà dans une rubrique
+    $side = $subs ? ['title' => $c['name'], 'url' => '/c/' . $c['slug'], 'items' => $subs, 'current' => ''] : ($parent ? ['title' => $parent['name'], 'url' => '/c/' . $parent['slug'], 'items' => DB::all('SELECT * FROM categories WHERE parent_id=? AND active=1 ORDER BY sort, name', [$parent['id']]), 'current' => $c['slug']] : null);
+    // guides de choix (formats, papiers) : seulement sur la 1re page non filtrée, calculés depuis les vrais produits de la catégorie
+    $plain = $pg === 1 && !$sub && get('sort') === '' && get('max') === '' && !get('promo') && !get('new') && !get('best');
+    $guides = $plain ? category_guides(DB::all('SELECT * FROM products WHERE active=1 AND category_id IN (' . DB::in($ids) . ') ORDER BY bestseller DESC, featured DESC, sort, name LIMIT 12', $ids)) : null;
+    $faqs = $plain ? DB::all('SELECT * FROM faqs WHERE active=1 ORDER BY sort, id LIMIT 4') : [];
+    page('shop/list', ['title' => $c['name'], 'intro' => $c['short_desc'] ?: $c['description'], 'crumbs' => $crumbs, 'tiles' => $subs, 'rows' => $rows, 'total' => $total, 'pg' => $pg, 'pages' => $pages, 'cat' => $c, 'subs' => $subs, 'sub' => $sub, 'base' => '/c/' . $c['slug'], 'side' => $side, 'guides' => $guides, 'faqs' => $faqs],
         ['title' => $c['seo_title'] ?: $c['name'], 'desc' => $c['seo_desc'] ?: $c['short_desc'], 'jsonld' => $ld]);
 });
 
@@ -76,7 +92,8 @@ route('GET', '/p/{slug}', function ($a) {
             'image' => $img ? [abs_url($img)] : [abs_url('assets/img/og.png')], ] + (price_on_request($p) ? [] : ['offers' => ['@type' => 'Offer', 'priceCurrency' => 'XOF', 'price' => (int) $p['price_from'], 'availability' => 'https://schema.org/InStock', 'url' => abs_url('/p/' . $p['slug']), 'seller' => ['@type' => 'Organization', 'name' => shop('shop_name')]]]),
         ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($c2, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $c2[0]], $crumbs, array_keys($crumbs))]];
     $gal = array_values(array_filter(array_merge([$p['image']], feature('catalog.gallery') ? jd($p['gallery']) : [])));
-    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée', 'desc' => $p['seo_desc'] ?: $p['short_desc'], 'jsonld' => $ld, 'mobbar' => feature('customization') && !price_on_request($p), 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', 'og_image' => $img]);
+    $seen = recent_products((int) $p['id']); recent_seen((int) $p['id']);
+    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal', 'seen'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée', 'desc' => $p['seo_desc'] ?: $p['short_desc'], 'jsonld' => $ld, 'mobbar' => feature('customization') && !price_on_request($p), 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', 'og_image' => $img]);
 });
 
 // ---------------- API : prix (calcul serveur), fichiers, favoris
@@ -130,7 +147,8 @@ route('GET', '/credits-photos', function () {
 route('GET', '/faq', function () {
     $faqs = DB::all('SELECT * FROM faqs WHERE active=1 ORDER BY sort, id');
     $ld = [['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => array_map(fn($f) => ['@type' => 'Question', 'name' => $f['question'], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => strip_tags($f['answer'])]], $faqs)]];
-    page('shop/faq', compact('faqs'), ['title' => 'Questions fréquentes', 'desc' => 'Réponses aux questions fréquentes : commande, paiement, fichiers, délais, livraison, devis.', 'jsonld' => $ld]);
+    $themes = []; foreach ($faqs as $f) $themes[help_theme((string) $f['question'])][] = $f;
+    page('shop/faq', compact('faqs', 'themes'), ['scripts' => ['js/help.js'], 'title' => 'Aide et questions fréquentes', 'desc' => 'Réponses aux questions fréquentes : commande, paiement, fichiers, délais, livraison, devis.', 'jsonld' => $ld]);
 });
 route('GET', '/contact', fn() => page('shop/contact', [], ['title' => 'Contact', 'desc' => 'Contactez Symo Print à Abidjan : WhatsApp, téléphone, adresse. Réponse rapide.']));
 route('POST', '/contact', function () {
@@ -147,7 +165,7 @@ route('GET', '/robots.txt', function () {
     header('Content-Type: text/plain; charset=utf-8'); echo "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /compte\nDisallow: /panier\nDisallow: /commande\nDisallow: /api\nDisallow: /recherche\n\nSitemap: " . abs_url('/sitemap.xml') . "\n"; exit;
 });
 route('GET', '/sitemap.xml', function () {
-    header('Content-Type: application/xml; charset=utf-8'); $u = [['/', '1.0'], ['/catalogue', '0.9'], ['/devis', '0.8'], ['/contact', '0.5'], ['/faq', '0.5'], ['/a-propos', '0.4'], ['/nos-services', '0.6']];
+    header('Content-Type: application/xml; charset=utf-8'); $u = [['/', '1.0'], ['/catalogue', '0.9'], ['/produits-a-z', '0.6'], ['/devis', '0.8'], ['/contact', '0.5'], ['/faq', '0.5'], ['/a-propos', '0.4'], ['/nos-services', '0.6']];
     foreach (DB::all('SELECT slug FROM categories WHERE active=1') as $c) $u[] = ['/c/' . $c['slug'], '0.8']; foreach (DB::all('SELECT slug FROM products WHERE active=1') as $p) $u[] = ['/p/' . $p['slug'], '0.7'];
     echo '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'; foreach ($u as [$l, $pr]) echo '<url><loc>' . e(abs_url($l)) . '</loc><priority>' . $pr . '</priority></url>'; echo '</urlset>'; exit;
 });

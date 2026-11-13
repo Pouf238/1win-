@@ -43,6 +43,12 @@
     swipe(gmain, step);
   }
 
+  /* ---------- outils de la fiche : partager (feuille de partage du téléphone, sinon lien WhatsApp), imprimer, accès rapide aux onglets ---------- */
+  var sh = d.querySelector('[data-share]');
+  if (sh && navigator.share) sh.addEventListener('click', function (e) { e.preventDefault(); navigator.share({ title: sh.getAttribute('data-share-title'), url: sh.getAttribute('data-share-url') }).catch(function () {}); });
+  var pr = d.querySelector('[data-print]'); if (pr) pr.addEventListener('click', function () { window.print(); });
+  [].slice.call(d.querySelectorAll('[data-tab-go]')).forEach(function (a) { a.addEventListener('click', function () { var b = d.querySelector('[data-tab="' + a.getAttribute('data-tab-go') + '"]'); if (b) b.click(); }); });
+
   /* ---------- le visuel suit les options (pliage, orientation…) ---------- */
   var vis = null; try { var vel = d.getElementById('pvis'); vis = vel ? JSON.parse(vel.textContent) : null; } catch (e) { vis = null; }
   function chosen(g) { var el = form.querySelector('input[name="opt[' + g + ']"]:checked'); return el ? el.value : ''; }
