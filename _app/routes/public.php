@@ -76,7 +76,7 @@ route('GET', '/p/{slug}', function ($a) {
             'image' => $img ? [abs_url($img)] : [abs_url('assets/img/og.png')], ] + (price_on_request($p) ? [] : ['offers' => ['@type' => 'Offer', 'priceCurrency' => 'XOF', 'price' => (int) $p['price_from'], 'availability' => 'https://schema.org/InStock', 'url' => abs_url('/p/' . $p['slug']), 'seller' => ['@type' => 'Organization', 'name' => shop('shop_name')]]]),
         ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($c2, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $c2[0]], $crumbs, array_keys($crumbs))]];
     $gal = array_values(array_filter(array_merge([$p['image']], feature('catalog.gallery') ? jd($p['gallery']) : [])));
-    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée', 'desc' => $p['seo_desc'] ?: $p['short_desc'], 'jsonld' => $ld, 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', 'og_image' => $img]);
+    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée', 'desc' => $p['seo_desc'] ?: $p['short_desc'], 'jsonld' => $ld, 'mobbar' => feature('customization') && !price_on_request($p), 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', 'og_image' => $img]);
 });
 
 // ---------------- API : prix (calcul serveur), fichiers, favoris

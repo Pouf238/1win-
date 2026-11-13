@@ -76,5 +76,6 @@
     SP.api('/panier/ajouter', payload()).then(function (r) { if (r.ok) { SP.setCart(r.count); location.href = '/panier'; } else { btn.disabled = false; alert(r.error || "Impossible d'ajouter au panier."); } });
   }
   $('#b-add').addEventListener('click', function () { addCart(this); }); $('#m-add').addEventListener('click', function () { addCart(this); });
+  var mq = document.getElementById('m-quote'); if (mq) mq.addEventListener('click', function (e) { e.preventDefault(); var bq = $('#b-quote'); if (bq && !bq.disabled) bq.click(); });
   $('#b-quote').addEventListener('click', function () { if (!guard()) return; var b = this; b.disabled = true; SP.api('/devis/depuis-produit', payload()).then(function (r) { if (r.ok) location.href = r.url; else { b.disabled = false; alert(r.error || 'Erreur.'); } }); });
 })();

@@ -85,4 +85,4 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
 
 <?php if ($related): ?><section class="mb"><h2>Produits similaires</h2><div class="grid g4"><?php foreach ($related as $r) echo pcard($r); ?></div></section><?php endif; ?>
 </div>
-<?php if ($cz): ?><div class="mob-bar noprint"><strong id="m-total"><?= money($q['total']) ?></strong><button class="btn btn-a" type="button" id="m-add" <?= ($sale ?? 'ok') === 'ok' ? '' : 'hidden disabled' ?>><?= ic('cart') ?> Ajouter au panier</button></div><?php endif; ?>
+<?php if ($cz): ?><div class="mob-bar noprint"><strong id="m-total"><?= money($q['total']) ?></strong><button class="btn btn-a" type="button" id="m-add" <?= ($sale ?? 'ok') === 'ok' ? '' : 'hidden disabled' ?>><?= ic('cart') ?> Ajouter au panier</button><?php if (($sale ?? 'ok') === 'quote' && feature('quotes')): ?><a class="btn btn-a" href="#b-quote" id="m-quote"><?= ic('file') ?> Générer un devis</a><?php endif; ?></div><?php endif; ?>

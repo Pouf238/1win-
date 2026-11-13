@@ -25,7 +25,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <?php foreach ($meta['jsonld'] as $j): ?><script type="application/ld+json"><?= jsafe($j) ?></script>
 <?php endforeach; ?>
 </head>
-<body class="<?= e($meta['body'] ?? '') ?>" data-csrf="<?= e(csrf_token()) ?>">
+<body class="<?= e($meta['body'] ?? '') ?><?= !empty($meta['mobbar']) ? ' has-mobbar' : '' ?>" data-csrf="<?= e(csrf_token()) ?>">
 <a class="skip" href="#main">Aller au contenu</a>
 <div class="topbar"><div class="wrap">
   <ul class="usps"><li><?= ic('check') ?>Devis rapide, WhatsApp ou e-mail</li><li><?= ic('check') ?>Fichier vérifié, BAT validé</li><li><?= ic('check') ?>Livraison en Côte d'Ivoire</li><?php if (feature('payments')): ?><li><?= ic('check') ?>Paiement Mobile Money</li><?php endif; ?></ul>
@@ -57,7 +57,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
       <a class="all" href="/c/<?= e($c['slug']) ?>">Voir tout : <?= e($c['name']) ?> →</a></div><?php endif; ?></div>
   <?php endforeach; ?>
   <?php if (feature('quotes')): ?><div class="nl nl-devis"><a href="/devis"><?= ic('file') ?>Devis gratuit</a></div><?php endif; ?>
-  <div class="nl hot"><a href="/nos-services">Services</a></div>
+  <div class="nl nl-svc"><a href="/nos-services">Services</a></div>
   <div class="dr-sep mob-only" aria-hidden="true"></div>
   <div class="nl mob-only"><a class="dr-i" href="/faq"><?= ic('list') ?>Aide et questions fréquentes</a></div>
   <?php if (feature('orders')): ?><div class="nl mob-only"><a class="dr-i" href="/panier"><?= ic('cart') ?>Panier<?= $cartN ? ' (' . $cartN . ')' : '' ?></a></div><?php endif; ?>

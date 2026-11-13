@@ -60,7 +60,7 @@ h1,h2,h3,h4{font-family:var(--hd);letter-spacing:-.012em}
   .header .navbar{background:var(--sand);border-bottom:0}
   .navbar .wrap{flex-wrap:wrap;align-items:center;gap:0}
   .navbar .nl>a{align-items:center;font-family:var(--bd);font-weight:400;font-size:14px;color:var(--pxink);padding:15px 10px;letter-spacing:0}
-  .navbar .nl.hot{display:none}
+  .navbar .nl.nl-svc{display:none}
   .navbar .nl.nl-devis{margin-left:auto}
   .navbar .nl.nl-devis>a{gap:7px;padding-right:0;color:var(--p);font-weight:600}
   .navbar .nl.nl-devis .ic{width:17px;height:17px;stroke-width:2}
@@ -362,3 +362,69 @@ main h1{font-weight:700}
 .gallery .main .gz img,.gallery .main>img{width:100%;height:100%;max-height:100%;object-fit:contain;padding:22px}
 .gallery .main .gz img.mock,.gallery .main>img.mock{padding:6%}
 @media (max-width:680px){.gallery .main .gz img,.gallery .main>img{padding:12px}}
+
+/* =================== CHASSE AUX DÉFAUTS (13 nov. 2026) — remarques du propriétaire sur téléphone =================== */
+/* 1. Newsletter : le champ e-mail était écrasé (29 px) par le bouton « largeur 100 % » du téléphone ; champ pleine largeur, bouton à côté */
+.fnews form{display:flex!important;flex-direction:row!important;flex-wrap:nowrap;gap:0;width:100%}
+.fnews input[type=email]{flex:1 1 auto!important;width:auto!important;min-width:0}
+.fnews form .btn,.fnews .btn{flex:0 0 52px!important;width:52px!important;min-width:52px}
+.fnews .hp{display:none}
+
+/* 2. Zone « Glissez votre fichier » : elle s'affichait en ligne, icône et textes empilés n'importe comment */
+.drop{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;border:1.5px dashed #C9C2B4;background:var(--sand);border-radius:var(--pxr);padding:22px 18px;min-height:0}
+.drop .ic{width:28px;height:28px;color:var(--p);margin:0 0 4px}
+.drop strong{display:block;font-size:15px;font-weight:600;color:var(--pxink)}
+.drop small{display:block;font-size:13px;color:var(--pxmut)}
+.drop:hover,.drop.over{background:#EEF4F5;border-color:var(--p)}
+
+/* 3. Options de la fiche : libellé choisi ne doit pas couper le titre (« Sans v… ») */
+.og-t .og-v{flex:0 1 46%;max-width:46%}
+@media (max-width:680px){.og-t{flex-wrap:wrap;row-gap:2px}.og-t .og-v{flex:1 1 100%;max-width:none;text-align:left;font-size:13.5px;white-space:normal;order:3;padding-left:0}.og-t .og-c{margin-left:auto}}
+
+/* 4. Texte coupé : titre de « Trouvez le produit » et libellés des petites cases */
+.px-head{flex-wrap:wrap}
+.px-head>a{white-space:normal;text-align:right}
+@media (max-width:680px){.px-head{display:block}.px-head h2{margin-bottom:6px}.px-head>a{display:inline-block;text-align:left}}
+.px-find b{overflow-wrap:anywhere}
+
+/* 5. Pages de catégories sur téléphone : tuiles de rubriques compactes (2 par ligne, photo + nom), pas de bloc vide sous chaque photo */
+.cats{gap:12px}
+@media (max-width:860px){.cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px}.cats .cat-tile{padding-bottom:10px}.cats .cat-tile .ct-im{aspect-ratio:4/3;margin-bottom:6px}.cats .cat-tile h3{font-size:13.5px}.cats .cat-tile p{display:none}}
+@media (max-width:1100px){.filters{display:none}.shop{padding-top:8px}}
+
+/* 6. Étiquettes trop petites (« Nouveau », « Best-seller », « Le + demandé ») : lisibles, sans crier */
+.tag,.pcard .tags .tag{font-size:11.5px;letter-spacing:.04em}
+.px-new,.bd{font-size:12px!important}
+.demo-tag{font-size:12px}
+
+/* 7. Zones cliquables : au moins 40 px de haut sur téléphone (liste des rubriques, liens du pied de page, « Afficher tout ») */
+@media (max-width:680px){
+  .footer li{margin-bottom:0}.footer li a,.footer .ct li{display:block;padding:8px 0;min-height:40px}
+  .footer .ct li{display:flex;align-items:flex-start}
+  .px-head>a{padding:8px 0;min-height:40px}
+  .filters ul a{display:block;padding:10px 12px}
+  .crumbs a{padding:6px 0;display:inline-block}
+}
+
+/* 8. Fiche produit sur téléphone : image moins haute, flèches et compteur visibles, miniatures bien espacées */
+@media (max-width:680px){.gallery .main{aspect-ratio:1/1}.thumbs{gap:8px;padding:8px 2px 6px}.thumbs button{width:72px;height:60px}}
+
+/* 9. Barre de prix fixe en bas sur téléphone : elle ne doit pas recouvrir le bouton WhatsApp ni cacher du contenu */
+@media (max-width:1100px){.mob-bar{padding:10px 90px 10px 16px;border-top:1px solid var(--pxline);box-shadow:0 -6px 20px -12px rgba(15,35,40,.4)}.mob-bar strong{font-size:17px}.mob-bar .btn{white-space:nowrap}body.has-mobbar{padding-bottom:70px}}
+
+/* 10. En-tête des pages sur téléphone : moins haut, texte pleine largeur */
+@media (max-width:680px){.phead{padding-bottom:18px}.phead .ph-in{grid-template-columns:1fr}.phead .ph-vis{display:none}.phead h1{font-size:24px}.phead p{font-size:15px}}
+
+/* 11. Bandeau « Un projet ? » et pied de page sur téléphone : boutons pleine largeur, plus de petits écarts */
+@media (max-width:680px){.pf-act{display:grid;grid-template-columns:1fr;gap:10px}.pf-act .btn{width:100%}.prefoot{margin-top:28px!important}.footer{margin-top:32px}}
+
+/* 12. Tableaux de prix : lisibles sans scroller en largeur */
+@media (max-width:680px){.qtable{font-size:13px}.qtable td,.qtable th{padding:8px 4px}}
+
+/* 13. Compteur de la galerie et loupe ne se chevauchent plus sur téléphone */
+@media (max-width:680px){.gzi{width:36px;height:36px;right:10px;bottom:10px}.g-count{left:10px;bottom:10px}}
+/* 14. Barre de prix du téléphone : prix + bouton (panier ou devis) ; bouton WhatsApp remonté pour ne rien cacher ; sans barre, il reste bas à droite */
+@media (max-width:1100px){.mob-bar{padding:10px 16px;justify-content:space-between}.mob-bar .btn{flex:0 1 auto;padding:11px 16px;font-size:14.5px}.mob-bar #m-quote{color:#241a05}body.has-mobbar .wa{bottom:84px}.wa{bottom:16px;right:14px}}
+@media (max-width:680px){.wa{padding:0;width:52px;height:52px;justify-content:center}.wa span{display:none}.wa .ic{width:24px;height:24px}body.has-mobbar .wa{bottom:80px}}
+/* 15. Liens texte dans les paragraphes : zone tactile confortable sur téléphone */
+@media (max-width:680px){.prose a,.desc a,.pdesc a,.tab-pane a,.forgot,.acard a:not(.btn),.err a:not(.btn){display:inline-block;padding:6px 0}}
