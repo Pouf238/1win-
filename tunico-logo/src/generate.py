@@ -109,6 +109,21 @@ def symbol_plastron(navy, gold):
     return collar + neck + b + "".join(teeth), (80, 210)
 
 
+def symbol_icon(navy, gold):
+    """Version icône (petites tailles) : traits épais, 3 grands losanges. Repère 0..120 x 0..200."""
+    sw = 7
+    g = [f'<path d="M6 8 Q38 12 40 60 L40 192 L80 192 L80 60 Q82 12 114 8" fill="none" stroke="{navy}" '
+         f'stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round"/>',
+         f'<path d="M40 60 Q60 76 80 60" fill="none" stroke="{navy}" stroke-width="{sw}" stroke-linecap="round"/>']
+    for i, cy in enumerate((98, 135, 172)):
+        if i == 1:
+            g.append(f'<path d="{diamond(60, cy, 12, 16)}" fill="none" stroke="{gold}" stroke-width="4"/>')
+            g.append(f'<path d="{diamond(60, cy, 4.5, 6)}" fill="{gold}"/>')
+        else:
+            g.append(f'<path d="{diamond(60, cy, 13, 17)}" fill="{gold}"/>')
+    return "\n".join(g), (120, 200)
+
+
 def symbol_tunic(navy, gold):
     """Variante 2 : silhouette de tunique au trait + plastron brodé. Repère 0..200 x 0..210."""
     outline = ("M72 14 Q100 46 128 14 L168 28 Q184 70 198 112 L176 120 L160 80 "
@@ -178,9 +193,9 @@ def logo_main(bg, ink, gold, slogan_ink, title):
 
 def symbol_square(bg, ink, gold, title):
     W = H = 1200
-    sym, (sw, sh) = symbol_plastron(ink, gold)
+    sym, (sw, sh) = symbol_icon(ink, gold)
     # tient dans le cercle de recadrage Facebook (zone utile ~ 60 % du diamètre)
-    scale = 700 / sh
+    scale = 640 / sh
     body = place(sym, sw, sh, W / 2 - sw * scale / 2, H / 2 - sh * scale / 2 + 8, scale)
     return svg_doc(W, H, bg, body, title)
 
