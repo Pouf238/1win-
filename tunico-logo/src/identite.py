@@ -12,6 +12,7 @@ NAVY, GOLD, CREAM, WHITE = "#1B2A4A", "#C9A24A", "#FAF7F0", "#FFFFFF"
 WORD_FONT, WORD_TRACK = "GildaDisplay", 0.20
 # corrections optiques (en em) : le T a des flancs ouverts, le C/O sont ronds
 WORD_PAIRS = {"TU": -0.035, "UN": 0.0, "NI": 0.005, "IC": 0.0, "CO": -0.015}
+NAME = "TUNICO"
 TAG_FONT, TAG_TRACK = "Jost500", 0.34
 TAGLINE = "L’ÉLÉGANCE DES DIASPORAS"
 
@@ -58,7 +59,7 @@ def stacked(W, H, bg, ink, tag_ink, sh, pl, title, word_size=132):
     top = (H - total) / 2
     out = [mark(W / 2 - MARK_W * s / 2, top, s, sh, pl)]
     base = top + mark_h + gap1 + cap
-    t, _ = text_at(WORD_FONT, "TUNICO", word_size, W / 2, base, tracking=WORD_TRACK, pairs=WORD_PAIRS, fill=ink)
+    t, _ = text_at(WORD_FONT, NAME, word_size, W / 2, base, tracking=WORD_TRACK, pairs=WORD_PAIRS, fill=ink)
     out.append(t)
     t, _ = text_at(TAG_FONT, TAGLINE, tag_size, W / 2, base + gap2 + tcap, tracking=TAG_TRACK, fill=tag_ink)
     out.append(t)
@@ -69,7 +70,7 @@ def horizontal(W, H, bg, ink, tag_ink, sh, pl, title, word_size=112):
     cap = cap_height(WORD_FONT, word_size)
     tag_size = word_size * 0.16
     tcap = cap_height(TAG_FONT, tag_size)
-    _, ww = text_at(WORD_FONT, "TUNICO", word_size, 0, 0, tracking=WORD_TRACK, pairs=WORD_PAIRS)
+    _, ww = text_at(WORD_FONT, NAME, word_size, 0, 0, tracking=WORD_TRACK, pairs=WORD_PAIRS)
     # le slogan est justifié sur la largeur du nom
     _, tw0 = text_at(TAG_FONT, TAGLINE, tag_size, 0, 0, tracking=0)
     track = TAG_TRACK
@@ -83,7 +84,7 @@ def horizontal(W, H, bg, ink, tag_ink, sh, pl, title, word_size=112):
     out = [mark(x0, top, s, sh, pl)]
     tx = x0 + mw + gap
     btop = (H - block_h) / 2
-    t, _ = text_at(WORD_FONT, "TUNICO", word_size, tx, btop + cap, anchor="start",
+    t, _ = text_at(WORD_FONT, NAME, word_size, tx, btop + cap, anchor="start",
                    tracking=WORD_TRACK, pairs=WORD_PAIRS, fill=ink)
     out.append(t)
     t, _ = text_at(TAG_FONT, TAGLINE, tag_size, tx, btop + block_h, anchor="start", tracking=track, fill=tag_ink)
@@ -98,7 +99,7 @@ def square(bg, sh, pl, title, W=1200):
 
 
 def wordmark(W, H, bg, ink, title):
-    t, _ = text_at(WORD_FONT, "TUNICO", 150, W / 2, H / 2 + cap_height(WORD_FONT, 150) / 2,
+    t, _ = text_at(WORD_FONT, NAME, 150, W / 2, H / 2 + cap_height(WORD_FONT, 150) / 2,
                    tracking=WORD_TRACK, pairs=WORD_PAIRS, fill=ink)
     return doc(W, H, bg, t, title)
 
