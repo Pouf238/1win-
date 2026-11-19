@@ -13,7 +13,7 @@ WORD_FONT, WORD_TRACK = "GildaDisplay", 0.20
 # corrections optiques (en em) : le T a des flancs ouverts, le C/O sont ronds
 WORD_PAIRS = {"TU": -0.035, "UN": 0.0, "NI": 0.005, "IC": 0.0, "CO": -0.015}
 TAG_FONT, TAG_TRACK = "Jost500", 0.34
-TAGLINE = "ÉLÉGANCE IVOIRIENNE"
+TAGLINE = "L’ÉLÉGANCE DES DIASPORAS"
 
 # --- Symbole -----------------------------------------------------------------
 A, B, G = 14, 19, 2.5           # demi-largeur, demi-hauteur, joint entre losanges

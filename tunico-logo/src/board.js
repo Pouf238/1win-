@@ -33,7 +33,7 @@ const html = `<html><head><style>
 <div class="sw" style="background:#FAF7F0;border:1px solid #e3dccb"><b>Crème</b>#FAF7F0 · RVB 250 247 240</div></div></div>
 <div class="sec"><div class="lab">TYPOGRAPHIE</div><div class="g2">
 <div><p class="big">TUNICO</p><p class="ab">Gilda Display — logotype et titres</p></div>
-<div><p style="font:28px JostM;letter-spacing:.3em;margin:18px 0 0">ÉLÉGANCE IVOIRIENNE</p><p style="margin:8px 0 0;font-size:18px">Jost — slogan, textes et site web</p></div></div></div>
+<div><p style="font:28px JostM;letter-spacing:.3em;margin:18px 0 0">L’ÉLÉGANCE DES DIASPORAS</p><p style="margin:8px 0 0;font-size:18px">Jost — slogan, textes et site web</p></div></div></div>
 </body></html>`;
 (async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1600, height: 900 } });
   await p.setContent(html); await p.waitForTimeout(300);
