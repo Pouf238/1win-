@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" width="1200" height="1200">
+<title>TUNICO — symbole sur marine</title>
+<rect width="1200" height="1200" fill="#1B2A4A"/>
+<g transform="translate(466.67 258.00) scale(3.3333)"><path d="M2 4 Q24 8 26 48 L26 206 M78 4 Q56 8 54 48 L54 206 M26 206 L54 206" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 48 Q40 60 54 48" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/><path d="M40.00 66.00 L48.50 78.00 L40.00 90.00 L31.50 78.00 Z" fill="#C9A24A"/>
+<circle cx="40" cy="91.50" r="1.5" fill="#C9A24A"/>
+<path d="M40.00 93.00 L48.50 105.00 L40.00 117.00 L31.50 105.00 Z" fill="none" stroke="#C9A24A" stroke-width="1.6"/>
+<path d="M40.00 101.16 L42.72 105.00 L40.00 108.84 L37.28 105.00 Z" fill="#C9A24A"/>
+<circle cx="40" cy="118.50" r="1.5" fill="#C9A24A"/>
+<path d="M40.00 120.00 L48.50 132.00 L40.00 144.00 L31.50 132.00 Z" fill="#C9A24A"/>
+<circle cx="40" cy="145.50" r="1.5" fill="#C9A24A"/>
+<path d="M40.00 147.00 L48.50 159.00 L40.00 171.00 L31.50 159.00 Z" fill="none" stroke="#C9A24A" stroke-width="1.6"/>
+<path d="M40.00 155.16 L42.72 159.00 L40.00 162.84 L37.28 159.00 Z" fill="#C9A24A"/>
+<circle cx="40" cy="172.50" r="1.5" fill="#C9A24A"/>
+<path d="M40.00 174.00 L48.50 186.00 L40.00 198.00 L31.50 186.00 Z" fill="#C9A24A"/><path d="M26 74.5 L30 78 L26 81.5 Z M54 74.5 L50 78 L54 81.5 Z" fill="#FFFFFF"/><path d="M26 101.5 L30 105 L26 108.5 Z M54 101.5 L50 105 L54 108.5 Z" fill="#FFFFFF"/><path d="M26 128.5 L30 132 L26 135.5 Z M54 128.5 L50 132 L54 135.5 Z" fill="#FFFFFF"/><path d="M26 155.5 L30 159 L26 162.5 Z M54 155.5 L50 159 L54 162.5 Z" fill="#FFFFFF"/><path d="M26 182.5 L30 186 L26 189.5 Z M54 182.5 L50 186 L54 189.5 Z" fill="#FFFFFF"/></g>
+</svg>
