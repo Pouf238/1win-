@@ -23,6 +23,7 @@ switch ($cmd) {
         mkuser('newstaff@test.local', 'Staff-Test-2026-xyz!', 'Newstaff', $newRoles ? 'support' : 'staff');
         echo "seed ok (" . ($newRoles ? 'rôles v2' : 'rôles v1') . ")\n"; break;
     case 'resetlimits': DB::q('DELETE FROM ratelimits'); echo "ok\n"; break;
+    case 'clearpending': DB::q('DELETE FROM files WHERE order_id=0 AND quote_id=0'); echo "ok\n"; break;   // envois en attente (quota par panier/compte)
     case 'count': $t = preg_replace('/\W/', '', $argv[2]); echo (int) DB::val("SELECT COUNT(*) FROM $t" . (!empty($argv[3]) ? ' WHERE ' . $argv[3] : '')), "\n"; break;
     case 'role': echo DB::val('SELECT role FROM users WHERE email=?', [$argv[2]]), "\n"; break;
     case 'order': $o = DB::row('SELECT ref,status,payment_status,subtotal,discount,shipping,total,user_id FROM orders WHERE ref=?', [$argv[2]]); echo json_encode($o ?: new stdClass()), "\n"; break;

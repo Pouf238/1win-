@@ -34,7 +34,8 @@ route('GET', '/admin/notifications', function () {
     adm('notifications', ['rows' => DB::all("SELECT id, event, to_address, subject, status, error, created_at, order_id, quote_id FROM notifications WHERE $w ORDER BY id DESC LIMIT 200", $st ? [$st] : []), 'counts' => DB::all("SELECT status, COUNT(*) n FROM notifications WHERE channel='email' AND created_at>? GROUP BY status", [date('Y-m-d H:i:s', time() - 7 * 86400)]), 'driver' => (string) cfg('mail_driver', 'mail')], 'Notifications envoyées', 'notifs');
 });
 route('POST', '/admin/notifications/{id}/renvoyer', function ($a) {
-    require_perm('settings'); $n = DB::find('notifications', (int) $a['id']); if (!$n || $n['channel'] !== 'email' || !in_array($n['status'], ['failed', 'skipped'], true)) abort(404);   // un message déjà parti ou encore en file ne se renvoie pas rate_limit('notifresend', 30, 3600);
+    require_perm('settings'); $n = DB::find('notifications', (int) $a['id']); if (!$n || $n['channel'] !== 'email' || !in_array($n['status'], ['failed', 'skipped'], true)) abort(404);   // un message déjà parti ou encore en file ne se renvoie pas
+    rate_limit('notifresend', 30, 3600);   // (audit du 20 nov. 2026 : cette limite était restée dans le commentaire, donc inactive)
     $r = notify_deliver($n['event'], $n['to_address'], $n['subject'], (string) $n['body'], ['order_id' => $n['order_id'], 'quote_id' => $n['quote_id'], 'user_id' => $n['user_id']], [], ['force' => true]);
     audit('notification_resent', $n['event'], ['to' => mask_email((string) $n['to_address']), 'result' => $r['status']], 'info'); flash($r['ok'] ? 'ok' : 'error', notify_say($r, 'à ' . mask_email((string) $n['to_address']))); redirect('/admin/notifications');
 });

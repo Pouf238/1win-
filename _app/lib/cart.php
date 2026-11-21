@@ -11,16 +11,21 @@ class Cart {
         $_COOKIE['sp_cart'] = $t; if (headers_sent()) return;
         setcookie('sp_cart', $t, ['expires' => time() + 86400 * 90, 'path' => '/', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https', 'httponly' => true, 'samesite' => 'Lax']);
     }
+    /** Panier courant. La ligne n'est créée en base qu'au premier enregistrement (ajout d'un article…) : une simple visite n'écrit rien
+     *  (audit du 20 nov. 2026 : chaque page vue sans cookie créait une ligne, ce qui permettait de remplir la base avec un robot). */
     static function row(): array {
         if (self::$row) return self::$row; $t = self::token();
         $r = DB::row('SELECT * FROM carts WHERE token=?', [$t]);
-        if (!$r) { DB::ins('carts', ['token' => $t, 'user_id' => user()['id'] ?? 0, 'data' => '[]', 'promo_code' => '', 'updated_at' => now()]); $r = DB::row('SELECT * FROM carts WHERE token=?', [$t]); }
-        return self::$row = $r;
+        return self::$row = $r ?: ['id' => 0, 'token' => $t, 'user_id' => user()['id'] ?? 0, 'data' => '[]', 'promo_code' => ''];
     }
+    /** Le visiteur a-t-il déjà un panier (cookie valide ou compte) ? Sans panier, rien à lire : on n'en crée pas pour afficher un compteur à 0. */
+    static function exists(): bool { return preg_match('/^[a-f0-9]{40}$/', (string) ($_COOKIE['sp_cart'] ?? '')) === 1 || user() !== null; }
     static function raw(): array { return jd(self::row()['data']); }
     private static function save(array $items, ?string $promo = null): void {
         $r = self::row(); $d = ['data' => je(array_values($items)), 'updated_at' => now(), 'user_id' => user()['id'] ?? $r['user_id']];
-        if ($promo !== null) $d['promo_code'] = $promo; DB::upd('carts', (int) $r['id'], $d); self::$row = null;
+        if ($promo !== null) $d['promo_code'] = $promo;
+        if (!(int) $r['id']) { if (!$items && ($promo ?? '') === '') { self::$row = null; return; } try { DB::ins('carts', $d + ['token' => $r['token'], 'promo_code' => $promo ?? '']); } catch (PDOException $e) { $id = (int) DB::val('SELECT id FROM carts WHERE token=?', [$r['token']]); if ($id) DB::upd('carts', $id, $d); } }
+        else DB::upd('carts', (int) $r['id'], $d); self::$row = null;
     }
     static function add(int $pid, array $cfg, array $fileIds, string $note = ''): string {
         $items = self::raw(); $id = bin2hex(random_bytes(6));
@@ -29,7 +34,7 @@ class Cart {
     static function update(string $id, array $cfgPatch): void { $items = self::raw(); foreach ($items as &$it) if ($it['id'] === $id) $it['cfg'] = array_replace($it['cfg'], $cfgPatch); self::save($items); }
     static function remove(string $id): void { self::save(array_filter(self::raw(), fn($i) => $i['id'] !== $id)); }
     static function clear(): void { self::save([], ''); }
-    static function count(): int { $n = 0; foreach (self::raw() as $i) $n++; return $n; }
+    static function count(): int { if (!self::exists()) return 0; $n = 0; foreach (self::raw() as $i) $n++; return $n; }
     static function promo(): string { return (string) self::row()['promo_code']; }
     static function set_promo(string $c): void { self::save(self::raw(), strtoupper(trim($c))); }
     /** Articles enrichis (produit + prix recalculé). */

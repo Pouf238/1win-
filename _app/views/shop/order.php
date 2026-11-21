@@ -1,6 +1,6 @@
 <?php
 /** @var array $o $items $files $events $pm */
-$tq = ($t = $_GET['t'] ?? '') ? '?t=' . rawurlencode($t) : ''; $isOwnerView = user() && (int) $o['user_id'] === (int) user()['id']; $tq = $isOwnerView ? '' : '?t=' . rawurlencode($o['access_token']);
+$isOwnerView = user() && (int) $o['user_id'] === (int) user()['id']; $tq = $isOwnerView ? '' : '?t=' . rawurlencode($o['access_token']);
 $moneyMethods = ['mobile_money'];
 $steps = ['pending_payment', 'paid', 'files_received', 'checking', 'bat_pending', 'bat_approved', 'production', 'shipped', 'delivered'];
 ?>

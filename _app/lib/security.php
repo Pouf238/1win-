@@ -67,6 +67,15 @@ function pw_pwned(string $pw): ?bool {
     foreach (preg_split('/\r?\n/', $body) as $line) { [$s, $n] = array_pad(explode(':', trim($line), 2), 2, '0'); if (strcasecmp($s, $suf) === 0) return (int) $n > 0; }
     return false;
 }
+/** Nom saisi par un visiteur (nom, société) : il est repris dans les e-mails officiels envoyés à l'adresse indiquée.
+ *  On retire les liens et adresses de sites (sinon n'importe qui pourrait faire envoyer par Symo Print un message « payez sur www.site-pirate… »
+ *  à une adresse quelconque), les caractères de balisage, et on limite la longueur (audit du 20 nov. 2026). */
+function clean_name($s, int $max = 80): string {
+    $s = is_string($s) ? $s : '';
+    $s = preg_replace('~(?:[a-z][a-z0-9+.-]*:)?//\S*|\bwww\.\S*|\b[\p{L}\p{N}_-]+(?:\.[\p{L}\p{N}_-]+)*\.(?:com|net|org|info|biz|xyz|top|site|online|link|click|live|ru|cn|io|co|me|ly|gl|app|dev|shop|store|ci|fr|tk|ml|ga|cf|gq|pw|cc|su|in|us|uk|eu)\b\S*~iu', ' ', $s) ?? '';
+    $s = preg_replace('/[<>"{}\[\]\\\\|^`@\x00-\x1F\x7F]+/u', ' ', $s) ?? '';
+    return mb_substr(trim(preg_replace('/\s+/u', ' ', $s) ?? ''), 0, $max);
+}
 function valid_email(string $e): bool { return strlen($e) <= 190 && filter_var($e, FILTER_VALIDATE_EMAIL) && !preg_match('/[\s,;<>"\'\\\\]/', $e); }
 
 // ================================================================ TOTP (RFC 6238) et codes de secours

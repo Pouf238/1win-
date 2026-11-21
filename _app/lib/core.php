@@ -23,8 +23,9 @@ function slugify(string $s): string {
     $s = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $s) ?: $s; $s = strtolower(preg_replace('/[^A-Za-z0-9]+/', '-', $s));
     return trim($s, '-') ?: 'x';
 }
-function post(string $k, $d = '') { $v = $_POST[$k] ?? $d; return is_string($v) ? trim($v) : $v; }
-function get(string $k, $d = '') { $v = $_GET[$k] ?? $d; return is_string($v) ? trim($v) : $v; }
+/** Champ de formulaire / d'adresse. Un tableau envoyé à la place d'un texte (« email[]=… ») est ignoré : on renvoie la valeur par défaut au lieu de provoquer une erreur serveur (audit du 20 nov. 2026). */
+function post(string $k, $d = '') { $v = $_POST[$k] ?? $d; if (is_array($v) && !is_array($d)) return $d; return is_string($v) ? trim($v) : $v; }
+function get(string $k, $d = '') { $v = $_GET[$k] ?? $d; if (is_array($v) && !is_array($d)) return $d; return is_string($v) ? trim($v) : $v; }
 function is_post(): bool { return ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'; }
 function wants_json(): bool { return stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false || ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'fetch'; }
 function body_json(): array { static $b = null; if ($b === null) { $b = json_decode(file_get_contents('php://input') ?: '', true); if (!is_array($b)) $b = []; } return $b; }

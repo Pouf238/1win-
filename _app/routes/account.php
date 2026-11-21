@@ -34,9 +34,9 @@ route('POST', '/compte/connexion', function () {
 });
 route('GET', '/compte/inscription', function () { if (user()) redirect('/compte'); page('account/register', [], ['title' => 'Créer un compte', 'noindex' => true]); });
 route('POST', '/compte/inscription', function () {
-    $em = strtolower(post('email')); $n = mb_substr(post('name'), 0, 150); $ph = mb_substr(post('phone'), 0, 40); $pw = (string) ($_POST['password'] ?? ''); $err = [];
+    $em = strtolower(post('email')); $n = clean_name(post('name'), 150); $ph = mb_substr(post('phone'), 0, 40); $pw = (string) ($_POST['password'] ?? ''); $err = [];
     if (!empty($_POST['website'])) redirect('/');
-    rate_limit('reg', 10, 3600);
+    rate_limit('reg', 10, 3600); rate_limit('reg-day', 20, 86400);
     if ($n === '') $err[] = 'Votre nom est requis.'; if (!valid_email($em)) $err[] = 'E-mail invalide.'; elseif ($m = pw_policy($pw, $em)) $err[] = $m;
     if ($err) { flash('error', implode(' ', $err)); redirect('/compte/inscription'); }
     $verify = Settings::get('email_verification', '1') === '1';
@@ -46,7 +46,7 @@ route('POST', '/compte/inscription', function () {
         Mail::send($em, 'Vous avez déjà un compte', Mail::layout('Vous avez déjà un compte', '<p>Quelqu\'un (peut-être vous) a tenté de créer un compte avec cette adresse, qui est déjà inscrite.</p>' . Mail::button('Me connecter', abs_url('/compte/connexion')) . '<p style="color:#5b6c72;font-size:13px">Mot de passe oublié ? Utilisez « Mot de passe oublié » sur la page de connexion. Si ce n\'était pas vous, ignorez ce message.</p>'));
         audit('register_existing', mask_email($em), [], 'info', 0);
     } else {
-        $id = DB::ins('users', ['email' => $em, 'password_hash' => pw_hash($pw), 'name' => $n, 'phone' => $ph, 'company' => mb_substr(post('company'), 0, 150), 'role' => 'customer', 'email_verified' => $verify ? 0 : 1, 'pw_changed_at' => now()]);
+        $id = DB::ins('users', ['email' => $em, 'password_hash' => pw_hash($pw), 'name' => $n, 'phone' => $ph, 'company' => clean_name(post('company'), 150), 'role' => 'customer', 'email_verified' => $verify ? 0 : 1, 'pw_changed_at' => now()]);
         audit('register', mask_email($em), [], 'info', $id);
         if ($verify) send_verification(DB::find('users', $id));
         else { login_user(DB::find('users', $id)); flash('ok', 'Compte créé. Bienvenue !'); redirect(safe_next() ?: '/compte'); }
@@ -59,7 +59,7 @@ route('GET', '/compte/verifier/{token}', function ($a) {
     flash('error', 'Lien invalide ou expiré. Demandez un nouvel e-mail de confirmation.'); redirect('/compte/connexion');
 });
 route('POST', '/compte/renvoyer-verification', function () {
-    $em = strtolower(post('email')); rate_limit('resend', 10, 3600);
+    $em = strtolower(post('email')); rate_limit('resend', 10, 3600); rate_limit('resend-day', 20, 86400);
     if (valid_email($em) && !throttle('resend-mail:' . sha1($em), 2, 3600)) { $u = DB::row("SELECT * FROM users WHERE email=? AND active=1 AND email_verified=0 AND role='customer'", [$em]); if ($u) send_verification($u); }
     flash('ok', 'Si un compte en attente de confirmation existe avec cette adresse, un nouvel e-mail vient d\'être envoyé.'); redirect('/compte/connexion');
 });
@@ -69,7 +69,7 @@ route('POST', '/compte/deconnexion-toutes', function () {
 });
 route('GET', '/compte/mot-de-passe-oublie', fn() => page('account/forgot', [], ['title' => 'Mot de passe oublié', 'noindex' => true]));
 route('POST', '/compte/mot-de-passe-oublie', function () {
-    $em = strtolower(post('email')); rate_limit('fg', 10, 3600);
+    $em = strtolower(post('email')); rate_limit('fg', 10, 3600); rate_limit('fg-day', 20, 86400);
     if (valid_email($em) && !throttle('fg-mail:' . sha1($em), 3, 3600)) {
         $u = DB::row('SELECT * FROM users WHERE email=? AND active=1', [$em]);
         if ($u) { $tok = token_issue((int) $u['id'], 'reset', 1800); audit('reset_requested', mask_email($em), [], 'info', (int) $u['id']);
@@ -110,7 +110,7 @@ route('POST', '/compte/adresses', function () {
 route('POST', '/compte/adresses/{id}/supprimer', function ($a) { $u = require_login(); DB::q('DELETE FROM addresses WHERE id=? AND user_id=?', [(int) $a['id'], $u['id']]); flash('ok', 'Adresse supprimée.'); redirect('/compte/adresses'); });
 route('GET', '/compte/profil', function () { $u = require_login(); acc_page('profile', 'profile', compact('u'), 'Mon profil'); });
 route('POST', '/compte/profil', function () {
-    $u = require_login(); $d = ['name' => mb_substr(post('name'), 0, 150), 'phone' => mb_substr(post('phone'), 0, 40), 'company' => mb_substr(post('company'), 0, 150)];   // liste blanche : aucun autre champ (rôle, e-mail, actif…) n'est accepté
+    $u = require_login(); $d = ['name' => clean_name(post('name'), 150), 'phone' => mb_substr(post('phone'), 0, 40), 'company' => clean_name(post('company'), 150)];   // liste blanche : aucun autre champ (rôle, e-mail, actif…) n'est accepté
     $np = (string) ($_POST['new_password'] ?? ''); $changed = false;
     if ($np !== '') {
         rate_limit('pwchg', 10, 900, (string) $u['id']);

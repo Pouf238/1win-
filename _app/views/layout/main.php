@@ -27,7 +27,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 </head>
 <body class="<?= e($meta['body'] ?? '') ?><?= !empty($meta['mobbar']) ? ' has-mobbar' : '' ?>" data-csrf="<?= e(csrf_token()) ?>">
 <a class="skip" href="#main">Aller au contenu</a>
-<?php $ann = mb_substr(trim((string) shop('announce_text')), 0, 160); $annUrl = trim((string) shop('announce_link')); if ($ann !== ''): ?><div class="announce" role="note"><div class="wrap"><?php if ($annUrl !== '' && $annUrl[0] === '/' && ($annUrl[1] ?? '') !== '/'): ?><a href="<?= e($annUrl) ?>"><?= e($ann) ?> <?= ic('arrow') ?></a><?php else: ?><span><?= e($ann) ?></span><?php endif; ?></div></div><?php endif; ?>
+<?php $ann = mb_substr(trim((string) shop('announce_text')), 0, 160); $annUrl = safe_path(trim((string) shop('announce_link')), ''); if ($ann !== ''): ?><div class="announce" role="note"><div class="wrap"><?php if ($annUrl !== ''): ?><a href="<?= e($annUrl) ?>"><?= e($ann) ?> <?= ic('arrow') ?></a><?php else: ?><span><?= e($ann) ?></span><?php endif; ?></div></div><?php endif; ?>
 <div class="topbar"><div class="wrap">
   <ul class="usps"><li><?= ic('check') ?>Devis rapide, WhatsApp ou e-mail</li><li><?= ic('check') ?>Fichier vérifié, BAT validé</li><li><?= ic('check') ?>Livraison en Côte d'Ivoire</li><?php if (feature('payments')): ?><li><?= ic('check') ?>Paiement Mobile Money</li><?php endif; ?></ul>
   <div class="r"><a href="<?= e(wa_link('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp <?= e(shop('phone2')) ?></a><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>

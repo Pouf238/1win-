@@ -81,6 +81,19 @@ function notify_duplicate(string $event, string $to, string $subject, string $ht
 /** Protection contre l'inondation d'une adresse (un tiers qui déclencherait des e-mails vers la boîte d'une victime). */
 function notify_flooded(string $to): bool { try { return (int) DB::val("SELECT COUNT(*) FROM notifications WHERE channel='email' AND to_address=? AND status IN ('queued','sending','sent') AND created_at>?", [mb_substr($to, 0, 190), date('Y-m-d H:i:s', time() - 3600)]) >= notify_limits()['mail_per_recipient_hour']; } catch (Throwable $e) { return false; } }
 
+/** Messages que N'IMPORTE QUEL visiteur peut déclencher sans compte (accusé de réception de devis, lien de suivi) et alertes internes à l'équipe.
+ *  Audit du 20 nov. 2026 : avec un plafond de 100 e-mails par jour, quelques adresses IP suffisaient à l'épuiser (chaque demande de devis = 2 e-mails),
+ *  bloquant les vrais messages (devis envoyés, confirmations de commande). On réserve donc la capacité :
+ *  - accusés de réception et liens de suivi : au plus 40 % du plafond quotidien, toutes adresses confondues ;
+ *  - alertes internes d'un même type : au plus 30 par heure (les demandes restent toutes visibles dans l'administration). */
+const NOTIFY_PUBLIC = ['quote_received', 'tracking_link'];
+function notify_public_overrun(string $event): bool {
+    try {
+        if (in_array($event, NOTIFY_PUBLIC, true)) { $cap = max(10, (int) floor(notify_limits()['mail_daily_cap'] * 0.4)); return (int) DB::val("SELECT COUNT(*) FROM notifications WHERE channel='email' AND event IN ('" . implode("','", NOTIFY_PUBLIC) . "') AND status IN ('queued','sending','sent') AND created_at>?", [date('Y-m-d H:i:s', time() - 86400)]) >= $cap; }
+        if (str_ends_with($event, '_admin')) return (int) DB::val("SELECT COUNT(*) FROM notifications WHERE channel='email' AND event=? AND status IN ('queued','sending','sent') AND created_at>?", [$event, date('Y-m-d H:i:s', time() - 3600)]) >= 30;
+    } catch (Throwable $e) { }
+    return false;
+}
 /** Enregistre la notification dans le journal et tente l'envoi. Retourne ['ok' => bool, 'status' => sent|failed|skipped|queued, 'error' => string].
  *  Ordre : fonction activée ? → adresse valide ? → doublon ? → inondation ? → plafond ? (sinon mise en file) → envoi. $opt['force'] contourne l'anti-doublon (renvoi demandé par l'équipe). */
 function notify_deliver(string $event, string $to, string $subject, string $html, array $ctx = [], array $attach = [], array $opt = []): array {
@@ -91,6 +104,7 @@ function notify_deliver(string $event, string $to, string $subject, string $html
     elseif (!filter_var($to, FILTER_VALIDATE_EMAIL)) { $status = 'skipped'; $err = $to === '' ? 'aucune adresse e-mail' : 'adresse e-mail invalide'; }
     elseif (empty($opt['force']) && notify_duplicate($event, $to, $subject, $html, $ctx)) { $status = 'skipped'; $err = 'doublon évité : le même message vient déjà d\'être envoyé'; }
     elseif ($need !== null && notify_flooded($to)) { $status = 'skipped'; $err = 'protection : trop de messages vers cette adresse en une heure'; }
+    elseif (empty($opt['force']) && notify_public_overrun($event)) { $status = 'skipped'; $err = 'protection : trop de messages déclenchés par des visiteurs (réserve d\'e-mails préservée pour les commandes et les devis envoyés par l\'équipe ; tout reste visible dans l\'administration)'; }
     elseif (!notify_capacity(notify_priority($event))) {
         if ($attach) { $status = 'failed'; $err = 'plafond quotidien d\'e-mails atteint (message avec pièce jointe : à renvoyer plus tard)'; }
         else { $status = 'queued'; $err = 'plafond quotidien d\'e-mails atteint : le message partira automatiquement dès que possible'; }

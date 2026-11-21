@@ -154,8 +154,8 @@ route('GET', '/contact', fn() => page('shop/contact', [], ['title' => 'Contact',
 route('POST', '/contact', function () {
     $ts = (int) post('ts'); $ok = empty($_POST['website']) && time() - intdiv($ts, 1000) >= 3;
     if (!$ok) { flash('error', 'Formulaire envoyé trop vite. Réessayez.'); redirect('/contact'); }
-    if (throttle('ct:' . client_ip(), 5, 3600)) { flash('error', 'Trop de messages. Réessayez plus tard ou écrivez-nous sur WhatsApp.'); redirect('/contact'); }
-    $n = post('name'); $em = post('email'); $ph = post('phone'); $msg = post('message');
+    if (throttle('ct:' . client_ip(), 5, 3600) || throttle('ct-day:' . client_ip(), 15, 86400)) { flash('error', 'Trop de messages. Réessayez plus tard ou écrivez-nous sur WhatsApp.'); redirect('/contact'); }
+    $n = clean_name(post('name'), 150); $em = post('email'); $ph = post('phone'); $msg = post('message');
     if ($n === '' || $msg === '' || (!filter_var($em, FILTER_VALIDATE_EMAIL) && $ph === '')) { flash('error', 'Merci de renseigner votre nom, un message et un e-mail ou un téléphone.'); redirect('/contact'); }
     DB::ins('messages', ['name' => mb_substr($n, 0, 150), 'email' => mb_substr($em, 0, 190), 'phone' => mb_substr($ph, 0, 40), 'message' => mb_substr($msg, 0, 3000), 'status' => 'new']);
     notify_staff('contact_admin', 'Nouveau message de ' . $n, '<p><b>' . e($n) . '</b><br>' . e($em) . ' · ' . e($ph) . '</p><p>' . nl2br(e(mb_substr($msg, 0, 3000))) . '</p>');

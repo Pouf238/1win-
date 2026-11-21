@@ -71,7 +71,7 @@ route('POST', '/panier/ajouter', function () {
     $q = Pricing::quote($p, Pricing::read_cfg($in['cfg'] ?? [])); if (!$q['ok']) json_out(['ok' => false, 'error' => implode(' ', $q['errors'])], 422);
     $tok = Cart::token(); $fids = [];
     foreach ((array) ($in['files'] ?? []) as $fid) { $f = DB::find('files', (int) $fid); if ($f && $f['owner_token'] === $tok && !$f['order_id']) $fids[] = (int) $fid; }
-    Cart::add((int) $p['id'], $q['cfg'], $fids, (string) ($in['note'] ?? '')); unset($_SESSION['edit_cfg'][$p['id']]);
+    Cart::add((int) $p['id'], $q['cfg'], $fids, is_string($in['note'] ?? null) ? $in['note'] : ''); unset($_SESSION['edit_cfg'][$p['id']]);
     json_out(['ok' => true, 'count' => Cart::count()]);
 });
 route('POST', '/panier/maj', function () {
@@ -110,10 +110,10 @@ route('POST', '/commande', function () {
     if (!user() && !feature('guest_checkout')) { flash('info', 'Connectez-vous pour passer commande.'); redirect('/compte/connexion'); }   // commande sans compte désactivée
     $items = Cart::items(); if (!$items) redirect('/panier'); $_SESSION['old'] = $_POST;
     foreach ($items as $it) if (!$it['quote'] || !$it['quote']['ok'] || product_sale_mode($it['product']) !== 'ok') { flash('error', 'Un article de votre panier n\'est plus disponible à la vente en ligne : retirez-le ou demandez un devis.'); redirect('/panier'); }
-    $u = user(); $name = post('name'); $email = strtolower(post('email')); $phone = post('phone'); $err = [];
+    $u = user(); $name = clean_name(post('name'), 150); $email = strtolower(post('email')); $phone = mb_substr(post('phone'), 0, 40); $err = [];
     if ($name === '') $err[] = 'Votre nom est requis.'; if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $err[] = 'Une adresse e-mail valide est requise.'; if (strlen(preg_replace('/\D/', '', $phone)) < 8) $err[] = 'Un numéro de téléphone valide est requis (WhatsApp de préférence).';
     $method = post('delivery_method') === 'pickup' ? 'pickup' : 'delivery'; $sub0 = Cart::totals($items); $ship = shipping_for($method, (int) post('zone'), $sub0['subtotal'] - $sub0['discount']);
-    if (!$ship['ok']) $err[] = 'Choisissez un mode de livraison.'; $addr = ['name' => post('ship_name') ?: $name, 'phone' => post('ship_phone') ?: $phone, 'city' => post('city') ?: 'Abidjan', 'commune' => post('commune'), 'address' => post('address'), 'notes' => post('addr_notes')];
+    if (!$ship['ok']) $err[] = 'Choisissez un mode de livraison.'; $addr = ['name' => clean_name(post('ship_name'), 150) ?: $name, 'phone' => mb_substr(post('ship_phone'), 0, 40) ?: $phone, 'city' => mb_substr(post('city'), 0, 100) ?: 'Abidjan', 'commune' => mb_substr(post('commune'), 0, 100), 'address' => mb_substr(post('address'), 0, 500), 'notes' => mb_substr(post('addr_notes'), 0, 500)];
     if ($method === 'delivery' && (trim($addr['address']) === '')) $err[] = 'Indiquez votre adresse de livraison (quartier, repère).';
     $pm = null; foreach (payment_methods() as $m) if ($m['key'] === post('payment')) $pm = $m; if (!$pm) $err[] = 'Choisissez un mode de paiement.'; if (!post('cgv')) $err[] = 'Vous devez accepter les conditions générales de vente.';
     $createAcc = !$u && post('create_account') && post('password') !== ''; if ($createAcc && ($m = pw_policy((string) $_POST['password'], $email))) $err[] = $m;
@@ -124,14 +124,14 @@ route('POST', '/commande', function () {
         flash('info', 'Si cette adresse peut être utilisée, un e-mail de confirmation vous a été envoyé pour activer votre compte.');
     }
     $t = Cart::totals($items, $ship['fee']); $ref = new_ref('SP', 'orders'); $token = bin2hex(random_bytes(16));
-    $bill = ['name' => $name, 'company' => post('company'), 'phone' => $phone, 'city' => $addr['city'], 'commune' => $addr['commune'], 'address' => $addr['address']];
+    $bill = ['name' => $name, 'company' => clean_name(post('company'), 150), 'phone' => $phone, 'city' => $addr['city'], 'commune' => $addr['commune'], 'address' => $addr['address']];
     $oid = DB::ins('orders', ['ref' => $ref, 'user_id' => $u['id'] ?? 0, 'email' => mb_substr($email, 0, 190), 'phone' => $phone, 'name' => $name, 'status' => 'pending_payment', 'payment_method' => $pm['key'], 'payment_status' => 'pending', 'subtotal' => $t['subtotal'], 'discount' => $t['discount'], 'shipping' => $ship['fee'], 'tax' => $t['tax'], 'total' => $t['total'], 'currency' => 'XOF',
-        'promo_code' => $t['promo']['ok'] ? $t['promo']['code'] : '', 'delivery_method' => $method, 'delivery_zone' => $method === 'pickup' ? '' : $ship['label'], 'billing' => je($bill), 'shipping_addr' => je($addr), 'notes' => post('notes'), 'access_token' => $token]);
+        'promo_code' => $t['promo']['ok'] ? $t['promo']['code'] : '', 'delivery_method' => $method, 'delivery_zone' => $method === 'pickup' ? '' : $ship['label'], 'billing' => je($bill), 'shipping_addr' => je($addr), 'notes' => mb_substr(post('notes'), 0, 2000), 'access_token' => $token]);
     $hasFiles = false;
     foreach ($items as $it) {
         $q = $it['quote']; $iid = DB::ins('order_items', ['order_id' => $oid, 'product_id' => $it['pid'], 'name' => $it['product']['name'], 'config' => je($q['cfg']), 'summary' => je($q['summary']), 'qty' => $q['qty'], 'unit_price' => $q['unit_price'], 'total' => $q['total'], 'delay_label' => $q['delay']['label'], 'est_date' => $q['delay']['from'] . ' – ' . $q['delay']['to']]);
         foreach ($it['files'] as $fid) { DB::q('UPDATE files SET order_id=?, item_id=?, user_id=? WHERE id=? AND owner_token=?', [$oid, $iid, $u['id'] ?? 0, $fid, Cart::token()]); $hasFiles = true; }
-        if ($it['note']) DB::q('UPDATE orders SET notes=? WHERE id=?', [trim(post('notes') . "\n[" . $it['product']['name'] . '] ' . $it['note']), $oid]);
+        if ($it['note']) DB::q('UPDATE orders SET notes=? WHERE id=?', [trim(mb_substr(post('notes'), 0, 2000) . "\n[" . $it['product']['name'] . '] ' . $it['note']), $oid]);
     }
     if ($t['promo']['ok']) DB::q('UPDATE promo_codes SET uses=uses+1 WHERE code=?', [$t['promo']['code']]);
     DB::ins('order_events', ['order_id' => $oid, 'status' => 'pending_payment', 'note' => 'Commande passée en ligne', 'user_id' => $u['id'] ?? 0]);
@@ -161,18 +161,21 @@ route('POST', '/commande/{ref}/paiement', function ($a) {
 route('POST', '/commande/{ref}/fichier', function ($a) {
     $o = order_by_ref($a['ref']); if (!$o || !order_access($o)) abort(404); $n = 0;
     $list = $_FILES['files'] ?? null; if (!$list) { flash('error', 'Aucun fichier sélectionné.'); redirect(order_url($o)); }
-    $cnt = is_array($list['name']) ? count($list['name']) : 1; if (throttle('upo:' . client_ip(), 40, 3600)) { flash('error', 'Trop de fichiers. Réessayez plus tard.'); redirect(order_url($o)); }
+    $itemId = (int) post('item_id'); if ($itemId && !DB::val('SELECT COUNT(*) FROM order_items WHERE id=? AND order_id=?', [$itemId, $o['id']])) $itemId = 0;   // l'article doit appartenir à CETTE commande
+    $cnt = is_array($list['name']) ? min(count($list['name']), 10) : 1; if (throttle('upo:' . client_ip(), 40, 3600)) { flash('error', 'Trop de fichiers. Réessayez plus tard.'); redirect(order_url($o)); }
     for ($i = 0; $i < $cnt; $i++) { $f = ['name' => is_array($list['name']) ? $list['name'][$i] : $list['name'], 'tmp_name' => is_array($list['name']) ? $list['tmp_name'][$i] : $list['tmp_name'], 'size' => is_array($list['name']) ? $list['size'][$i] : $list['size'], 'error' => is_array($list['name']) ? $list['error'][$i] : $list['error']]; if ($f['error'] === UPLOAD_ERR_NO_FILE) continue;
-        try { Files::save($f, 'order-' . $o['id'], 'client', ['order_id' => $o['id'], 'item_id' => (int) post('item_id'), 'user_id' => $o['user_id']]); $n++; } catch (RuntimeException $e) { flash('error', $f['name'] . ' : ' . $e->getMessage()); } }
+        try { Files::save($f, 'order-' . $o['id'], 'client', ['order_id' => $o['id'], 'item_id' => $itemId, 'user_id' => $o['user_id']]); $n++; } catch (RuntimeException $e) { flash('error', $f['name'] . ' : ' . $e->getMessage()); } }
     if ($n) { DB::ins('order_events', ['order_id' => $o['id'], 'status' => 'files_received', 'note' => $n . ' fichier(s) envoyé(s) par le client']); if (in_array($o['status'], ['pending_payment', 'paid'], true)) DB::q('UPDATE orders SET updated_at=? WHERE id=?', [now(), $o['id']]); notify_staff('files_admin', 'Fichiers reçus : ' . $o['ref'], '<p>' . $n . ' fichier(s) ajouté(s) à la commande ' . e($o['ref']) . '.</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Voir</a></p>'); flash('ok', $n . ' fichier(s) envoyé(s). Nous les vérifions très vite.'); }
     redirect(order_url($o));
 });
 route('POST', '/commande/{ref}/bat', function ($a) {
     $o = order_by_ref($a['ref']); if (!$o || !order_access($o)) abort(404); $it = DB::row('SELECT * FROM order_items WHERE id=? AND order_id=?', [(int) post('item'), $o['id']]); if (!$it) abort(404);
-    $ok = post('action') === 'approve'; DB::upd('order_items', (int) $it['id'], ['bat_status' => $ok ? 'approved' : 'changes', 'bat_comment' => post('comment')]);
-    $left = (int) DB::val("SELECT COUNT(*) FROM order_items WHERE order_id=? AND bat_status='pending'", [$o['id']]); DB::ins('order_events', ['order_id' => $o['id'], 'status' => $ok ? 'bat_approved' : 'bat_pending', 'note' => ($ok ? 'BAT validé' : 'Modification demandée') . ' pour « ' . $it['name'] . ' »' . (post('comment') ? ' : ' . post('comment') : '')]);
-    if ($ok && !$left) DB::upd('orders', (int) $o['id'], ['status' => 'bat_approved', 'updated_at' => now()]);
-    notify_staff('bat_admin', ($ok ? 'BAT validé' : 'BAT : modification demandée') . ' : ' . $o['ref'], '<p>' . e($it['name']) . ($ok ? ' : le client a validé le BAT.' : ' : le client demande une modification : ' . e(post('comment'))) . '</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Ouvrir</a></p>');
+    // audit du 20 nov. 2026 : on ne répond qu'à un BAT réellement envoyé par l'équipe et encore en attente (sinon un client pouvait faire passer une commande NON PAYÉE en « BAT validé »)
+    if ($it['bat_status'] !== 'pending' || !DB::val("SELECT COUNT(*) FROM files WHERE order_id=? AND item_id=? AND kind='bat'", [$o['id'], $it['id']]) || in_array($o['status'], ['cancelled', 'delivered', 'shipped'], true)) { flash('info', "Aucun bon à tirer n'est en attente de votre validation pour cet article."); redirect(order_url($o)); }
+    $ok = post('action') === 'approve'; $comment = mb_substr(post('comment'), 0, 2000); DB::upd('order_items', (int) $it['id'], ['bat_status' => $ok ? 'approved' : 'changes', 'bat_comment' => $comment]);
+    $left = (int) DB::val("SELECT COUNT(*) FROM order_items WHERE order_id=? AND bat_status='pending'", [$o['id']]); DB::ins('order_events', ['order_id' => $o['id'], 'status' => $ok ? 'bat_approved' : 'bat_pending', 'note' => ($ok ? 'BAT validé' : 'Modification demandée') . ' pour « ' . $it['name'] . ' »' . ($comment !== '' ? ' : ' . $comment : '')]);
+    if ($ok && !$left && $o['status'] === 'bat_pending') DB::upd('orders', (int) $o['id'], ['status' => 'bat_approved', 'updated_at' => now()]);
+    notify_staff('bat_admin', ($ok ? 'BAT validé' : 'BAT : modification demandée') . ' : ' . $o['ref'], '<p>' . e($it['name']) . ($ok ? ' : le client a validé le BAT.' : ' : le client demande une modification : ' . e($comment)) . '</p><p><a href="' . e(abs_url('/admin/commandes/' . $o['id'])) . '">Ouvrir</a></p>');
     flash('ok', $ok ? 'BAT validé : votre commande peut partir en production.' : 'Votre demande de modification a été transmise.'); redirect(order_url($o));
 });
 route('POST', '/commande/{ref}/recommander', function ($a) {
@@ -192,7 +195,7 @@ route('POST', '/devis/depuis-produit', function () {
     $in = body_json(); $p = DB::row('SELECT * FROM products WHERE id=? AND active=1', [(int) ($in['product_id'] ?? 0)]); if (!$p) json_out(['ok' => false, 'error' => 'Produit introuvable.'], 404);
     if (product_sale_mode($p) === 'unavailable') json_out(['ok' => false, 'error' => 'Ce produit est momentanément indisponible.'], 422);
     $q = Pricing::quote($p, Pricing::read_cfg($in['cfg'] ?? [])); if (!$q['ok']) json_out(['ok' => false, 'error' => implode(' ', $q['errors'])], 422);
-    $_SESSION['quote_items'][] = ['pid' => (int) $p['id'], 'name' => $p['name'], 'cfg' => $q['cfg'], 'summary' => $q['summary'], 'qty' => $q['qty'], 'est' => $q['total'], 'note' => (string) ($in['note'] ?? ''), 'files' => array_map('intval', (array) ($in['files'] ?? []))];
+    $_SESSION['quote_items'][] = ['pid' => (int) $p['id'], 'name' => $p['name'], 'cfg' => $q['cfg'], 'summary' => $q['summary'], 'qty' => $q['qty'], 'est' => $q['total'], 'note' => is_string($in['note'] ?? null) ? mb_substr($in['note'], 0, 500) : '', 'files' => array_map('intval', array_slice((array) ($in['files'] ?? []), 0, 20))];
     json_out(['ok' => true, 'url' => '/devis']);
 });
 route('GET', '/devis', function () {
@@ -202,12 +205,12 @@ route('GET', '/devis', function () {
 route('POST', '/devis/retirer', function () { $i = (int) post('i'); if (isset($_SESSION['quote_items'][$i])) { unset($_SESSION['quote_items'][$i]); $_SESSION['quote_items'] = array_values($_SESSION['quote_items']); } redirect('/devis'); });
 route('POST', '/devis', function () {
     $ts = (int) post('ts'); if (!empty($_POST['website']) || time() - intdiv($ts, 1000) < 3) { flash('error', 'Formulaire envoyé trop vite. Réessayez.'); redirect('/devis'); }
-    if (throttle('dv:' . client_ip(), 8, 3600)) { flash('error', 'Trop de demandes. Réessayez plus tard ou écrivez-nous sur WhatsApp.'); redirect('/devis'); }
-    $name = post('name'); $email = strtolower(post('email')); $phone = post('phone'); $msg = post('message'); $items = $_SESSION['quote_items'] ?? []; $free = post('free_product');
+    if (throttle('dv:' . client_ip(), 8, 3600) || throttle('dv-day:' . client_ip(), 20, 86400)) { flash('error', 'Trop de demandes. Réessayez plus tard ou écrivez-nous sur WhatsApp.'); redirect('/devis'); }
+    $name = clean_name(post('name'), 150); $email = strtolower(post('email')); $phone = post('phone'); $msg = post('message'); $items = $_SESSION['quote_items'] ?? []; $free = post('free_product');
     if ($name === '' || (!filter_var($email, FILTER_VALIDATE_EMAIL) && strlen(preg_replace('/\D/', '', $phone)) < 8)) { flash('error', 'Indiquez votre nom et un e-mail ou un numéro de téléphone valide.'); redirect('/devis'); }
     if (!$items && $msg === '' && $free === '') { flash('error', 'Décrivez votre projet ou choisissez un produit.'); redirect('/devis'); }
     $u = user(); $ref = new_ref('DV', 'quotes'); $tok = bin2hex(random_bytes(16)); [$svc, $details] = quote_collect_details();
-    $qid = DB::ins('quotes', ['ref' => $ref, 'user_id' => $u['id'] ?? 0, 'name' => mb_substr($name, 0, 150), 'email' => mb_substr($email, 0, 190), 'phone' => mb_substr($phone, 0, 40), 'company' => mb_substr(post('company'), 0, 150), 'message' => mb_substr($msg, 0, 3000), 'status' => 'new', 'qlines' => '[]', 'access_token' => $tok, 'service_type' => $svc, 'details' => je($details), 'desired_date' => quote_desired_date()]);
+    $qid = DB::ins('quotes', ['ref' => $ref, 'user_id' => $u['id'] ?? 0, 'name' => mb_substr($name, 0, 150), 'email' => mb_substr($email, 0, 190), 'phone' => mb_substr($phone, 0, 40), 'company' => clean_name(post('company'), 150), 'message' => mb_substr($msg, 0, 3000), 'status' => 'new', 'qlines' => '[]', 'access_token' => $tok, 'service_type' => $svc, 'details' => je($details), 'desired_date' => quote_desired_date()]);
     foreach ($items as $it) DB::ins('quote_items', ['quote_id' => $qid, 'product_id' => $it['pid'], 'name' => $it['name'], 'config' => je($it['cfg']), 'summary' => je($it['summary']), 'qty' => $it['qty'], 'est_price' => $it['est']]);
     if ($free !== '') DB::ins('quote_items', ['quote_id' => $qid, 'product_id' => 0, 'name' => mb_substr($free, 0, 190), 'config' => '{}', 'summary' => '[]', 'qty' => max(1, (int) post('free_qty', 1)), 'est_price' => 0]);
     foreach ($items as $it) foreach ($it['files'] as $fid) DB::q('UPDATE files SET quote_id=?, user_id=? WHERE id=? AND owner_token=?', [$qid, $u['id'] ?? 0, $fid, Cart::token()]);
@@ -236,7 +239,7 @@ route('POST', '/devis/{ref}/reponse', function ($a) {
 // ================================================================ retrouver une commande / un devis (invité ou connecté)
 route('GET', '/suivi', fn() => page('shop/track', [], ['title' => 'Retrouver ma commande ou mon devis', 'desc' => 'Retrouvez le suivi de votre commande ou de votre devis Symo Print avec votre référence et votre adresse e-mail.', 'noindex' => true]));
 route('POST', '/suivi', function () {
-    rate_limit('track', 8, 3600); if (!empty($_POST['website'])) redirect('/suivi');
+    rate_limit('track', 8, 3600); rate_limit('track-day', 20, 86400); if (!empty($_POST['website'])) redirect('/suivi');
     $ref = strtoupper(preg_replace('/[^A-Za-z0-9-]/', '', post('ref'))); $em = strtolower(post('email')); $generic = "Si une commande ou un devis correspond à ces informations, un e-mail contenant votre lien de suivi sécurisé vient d'être envoyé à l'adresse enregistrée. Pensez à vérifier vos courriers indésirables. Sans réponse, contactez-nous sur WhatsApp avec votre référence.";
     if ($ref === '' || !valid_email($em) || throttle('track-pair:' . sha1($ref . '|' . $em), 3, 3600)) { flash('info', $generic); redirect('/suivi'); }
     if (str_starts_with($ref, 'DV-')) { $q = DB::row('SELECT * FROM quotes WHERE ref=?', [$ref]); if ($q && strtolower((string) $q['email']) === $em) notify('tracking_link', $q['email'], ['name' => $q['name'], 'ref' => $q['ref'], 'link' => abs_url('/devis/' . $q['ref'] . '?t=' . $q['access_token'])], ['quote_id' => (int) $q['id']]); }

@@ -44,7 +44,7 @@ class Pricing {
         if ($p['pricing_model'] === 'area') {
             $w = (float) ($cfg['w'] ?? $def['w']); $h = (float) ($cfg['h'] ?? $def['h']);
             foreach (['w' => 'Largeur', 'h' => 'Hauteur'] as $d => $lab) {
-                $lim = $pr[$d]; $v = $d === 'w' ? $w : $h;
+                $lim = $pr[$d]; $v = $d === 'w' ? $w : $h; if (!is_finite($v)) $v = (float) $lim['def'];
                 if ($v < $lim['min'] || $v > $lim['max']) { $err[] = "$lab : entre {$lim['min']} et {$lim['max']} cm."; $v = min(max($v, $lim['min']), $lim['max']); }
                 if ($d === 'w') $w = $v; else $h = $v;
             }
@@ -64,12 +64,18 @@ class Pricing {
         $extra = 0;
         foreach ($x['groups'] as $g) {
             $gk = $g['key']; if (!self::visible($g, $sel)) continue; $type = $g['type'] ?? 'radio';
-            if ($type === 'text') { $tv = trim((string) ($optSel[$gk] ?? '')); if ($tv !== '') { $textVals[$gk] = mb_substr($tv, 0, 300); $summary[] = [$g['label'], $textVals[$gk]]; } continue; }
-            $keys = $sel[$gk] ?? null; $keys = is_array($keys) ? $keys : ($keys === null || $keys === '' ? [] : [$keys]);
+            if ($type === 'text') { $tv = is_string($optSel[$gk] ?? null) ? trim($optSel[$gk]) : ''; if ($tv !== '') { $textVals[$gk] = mb_substr($tv, 0, 300); $summary[] = [$g['label'], $textVals[$gk]]; } continue; }
+            // Sélection : UN seul choix pour une option à choix unique ; pour les cases à cocher, chaque choix au plus une fois.
+            // (audit du 20 nov. 2026 : une même remise envoyée plusieurs fois, ex. « qualité éco −15 % » × 6, faisait chuter le prix)
+            $keys = $sel[$gk] ?? null;
+            if ($type === 'checkbox') $keys = is_array($keys) ? array_values(array_unique(array_map('strval', array_filter($keys, 'is_scalar')))) : ($keys === null || $keys === '' || !is_scalar($keys) ? [] : [(string) $keys]);
+            elseif (is_array($keys)) { $err[] = 'Option invalide : ' . $g['label']; continue; }
+            else $keys = $keys === null || $keys === '' || !is_scalar($keys) ? [] : [(string) $keys];
+            if (count($keys) > count((array) ($g['choices'] ?? []))) { $err[] = 'Option invalide : ' . $g['label']; continue; }
             if (!$keys && !empty($g['required'])) { $err[] = 'Choisissez : ' . $g['label']; continue; }
             $labels = [];
             foreach ($keys as $ck) {
-                $ch = null; foreach ($g['choices'] as $c) if ($c['key'] === $ck) $ch = $c;
+                $ch = null; foreach ($g['choices'] as $c) if ((string) $c['key'] === $ck) $ch = $c;
                 if (!$ch) { $err[] = 'Option invalide : ' . $g['label']; continue; }
                 $labels[] = $ch['label']; $mode = $ch['price']['mode'] ?? 'fixed'; $val = (float) ($ch['price']['value'] ?? 0); $amt = 0;
                 if ($mode === 'fixed') $amt = $val; elseif ($mode === 'per_unit') $amt = $val * $qty; elseif ($mode === 'percent') $amt = $base * $val / 100; elseif ($mode === 'per_m2') $amt = $val * max($area, 1) * $qty;
@@ -78,13 +84,13 @@ class Pricing {
             }
             if ($labels) $summary[] = [$g['label'], implode(', ', $labels)];
         }
-        $subtotal = $base + $extra; $min = (int) ($pr['min_total'] ?? 0);
+        $subtotal = max(0, $base + $extra); $min = (int) ($pr['min_total'] ?? 0);   // jamais de prix négatif, quelles que soient les remises d'options
         if ($subtotal < $min) { $lines[] = ['Ajustement au minimum de commande', $min - $subtotal]; $subtotal = $min; }
         // délai
         $dl = null; foreach ($x['delays'] as $d) if ($d['key'] === ($cfg['delay'] ?? $def['delay'])) $dl = $d; $dl = $dl ?: $x['delays'][0];
         $dAmt = (int) round($subtotal * ((float) ($dl['percent'] ?? 0)) / 100 + (float) ($dl['fixed'] ?? 0));
         if ($dAmt) $lines[] = ['Délai : ' . $dl['label'], $dAmt];
-        $total = round_price($subtotal + $dAmt);
+        $total = max(0, round_price($subtotal + $dAmt));
         $d1 = self::add_workdays(time(), (int) $dl['days'][0]); $d2 = self::add_workdays(time(), (int) ($dl['days'][1] ?? $dl['days'][0]));
         $summary[] = ['Délai de fabrication', $dl['label']];
         return ['ok' => !$err, 'errors' => $err, 'qty' => $qty, 'unit_price' => $qty ? (int) round($total / $qty) : 0, 'base' => $base, 'subtotal' => $subtotal, 'delay_amount' => $dAmt, 'total' => $total, 'lines' => $lines, 'summary' => $summary,
