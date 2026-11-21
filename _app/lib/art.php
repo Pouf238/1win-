@@ -51,14 +51,17 @@ function photo(string $slot, array $o = []): string {
     return sprintf('<img class="photo %s" src="%s" srcset="%s %dw, %s %dw" sizes="%s" alt="%s" width="%d" height="%d"%s decoding="async">',
         e($o['cls'] ?? ''), $u1, $u1, $w1, $u2, $w2, e($o['sizes'] ?? '(min-width:900px) 34vw, 92vw'), e($alt), $d[0], $d[1], !empty($o['eager']) ? ' fetchpriority="high"' : ' loading="lazy"');
 }
-/** Nom du fichier photo d'un produit (photo principale, sinon 1re photo de la galerie), ou '' s'il n'en a pas. */
+/** Nom du fichier photo d'un produit (photo principale, sinon 1re photo de la galerie, sinon visuel 3D de présentation), ou '' s'il n'en a aucun. */
 function product_photo(array $p): string {
     foreach (array_merge([(string) ($p['image'] ?? '')], array_map('strval', (array) (json_decode((string) ($p['gallery'] ?? ''), true) ?: []))) as $n) {
         $n = basename(preg_replace('/\.webp$/', '', $n));
         if ($n !== '' && is_file(ROOT . '/assets/img/produits/' . $n . '.webp')) return $n;
     }
-    return '';
+    return product_render($p);
 }
+/** Visuel 3D de présentation d'un produit sans photo (studio tools/render3d : modélisation originale aux couleurs de la marque, aucune image de tiers) :
+ *  assets/img/produits/r3d-<slug>.webp. Une vraie photo (image ou galerie du produit) passe toujours devant. */
+function product_render(array $p): string { $n = 'r3d-' . basename((string) ($p['slug'] ?? '')); return $n !== 'r3d-' && is_file(ROOT . '/assets/img/produits/' . $n . '.webp') ? $n : ''; }
 /** Visuel d'un produit : photo principale, sinon première photo de la galerie, sinon maquette de marque du type de produit. */
 function product_img(array $p, string $cls = ''): string {
     $n = product_photo($p);
@@ -138,6 +141,9 @@ function cat_photo(array $c, string $sizes = ''): string {
     if ($n === '' || !is_file(ROOT . "/assets/img/produits/$n.webp")) {
         $n = (string) (DB::val("SELECT p.image FROM products p JOIN categories c ON c.id=p.category_id WHERE p.active=1 AND p.image<>'' AND (c.slug=? OR c.parent_id=(SELECT id FROM categories WHERE slug=?)) ORDER BY p.bestseller DESC, p.sort LIMIT 1", [$c['slug'], $c['slug']]) ?: '');
         $n = basename($n);
+    }
+    if ($n === '' || !is_file(ROOT . "/assets/img/produits/$n.webp")) {   // sinon : visuel 3D d'un produit de la catégorie (même règle : uniquement un produit qu'elle contient)
+        foreach (DB::all("SELECT p.slug FROM products p JOIN categories c ON c.id=p.category_id WHERE p.active=1 AND (c.slug=? OR c.parent_id=(SELECT id FROM categories WHERE slug=?)) ORDER BY p.bestseller DESC, p.featured DESC, p.sort, p.name", [$c['slug'], $c['slug']]) as $r) if (($n = product_render($r)) !== '') break;
     }
     if ($n !== '' && is_file(ROOT . "/assets/img/produits/$n.webp")) return '<img src="' . e(asset("img/produits/$n.webp")) . '" alt="" loading="lazy" decoding="async">';
     return mock((string) ($c['icon'] ?? 'flyer'));

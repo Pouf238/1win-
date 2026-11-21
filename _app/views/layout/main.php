@@ -22,6 +22,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/pro.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/futur.css')) ?>">
 <?php foreach ($meta['jsonld'] as $j): ?><script type="application/ld+json"><?= jsafe($j) ?></script>
 <?php endforeach; ?>
 </head>
@@ -76,7 +77,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
   <div class="pf-act"><?php if (feature('quotes')): ?><a class="btn btn-a btn-lg" href="/devis">Demander un devis <?= ic('arrow') ?></a><?php endif; ?><a class="btn btn-lg btn-ghost" href="<?= e(wa_link('Bonjour Symo Print, j\'ai un projet d\'impression.')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp</a></div></div></div></section><?php endif; ?>
 <footer class="footer">
 <div class="wrap fgrid">
-  <div class="fbrand"><img src="<?= e(asset('img/brand/logo.svg')) ?>" alt="<?= e($name) ?>" width="140" height="43" loading="lazy"><p><?= e(shop('tagline')) ?>. Impression et personnalisation sur tout type de support, à Abidjan et dans toute la Côte d'Ivoire.</p>
+  <div class="fbrand"><img src="<?= e(asset('img/brand/logo-light.svg')) ?>" alt="<?= e($name) ?>" width="140" height="43" loading="lazy"><p><?= e(shop('tagline')) ?>. Impression et personnalisation sur tout type de support, à Abidjan et dans toute la Côte d'Ivoire.</p>
     <ul class="ct">
     <li><?= ic('wa') ?><a href="<?= e(wa_link()) ?>">WhatsApp : <?= e(shop('phone2')) ?></a></li><li><?= ic('phone') ?><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= e(shop('phone')) ?></a></li>
     <?php if (shop('email')): ?><li><?= ic('mail') ?><a href="mailto:<?= e(shop('email')) ?>"><?= e(shop('email')) ?></a></li><?php endif; ?>
@@ -93,6 +94,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <a class="wa" href="<?= e(wa_link('Bonjour Symo Print, j\'ai une question sur ma commande.')) ?>" rel="noopener" aria-label="Discuter sur WhatsApp"><?= ic('wa') ?><span>WhatsApp</span></a>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 <script src="<?= e(asset('js/site.js')) ?>" defer></script>
+<script src="<?= e(asset('js/futur.js')) ?>" defer></script>
 <?php if (!empty($meta['scripts'])) foreach ($meta['scripts'] as $s): ?><script src="<?= e(asset($s)) ?>" defer></script><?php endforeach; ?>
 </body>
 </html>

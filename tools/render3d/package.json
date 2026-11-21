@@ -1,0 +1,6 @@
+{
+  "name": "symoprint-render3d",
+  "private": true,
+  "description": "Studio 3D (three.js, rendu sans écran) : visuels des produits sans photo. Outil local, jamais déployé.",
+  "dependencies": { "three": "0.180.0" }
+}
