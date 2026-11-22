@@ -201,3 +201,26 @@
 .ref-code { background: linear-gradient(135deg, var(--brand-100), var(--brand-50)); }
 .ref-code .code { font-family: var(--font-display); }
 .tl-item::before { box-shadow: 0 0 0 4px var(--brand-50); }
+
+/* ==========================================================================
+   Couche LUXE (v3) — app bleu nuit + or
+   ========================================================================== */
+.auth-aside { background: var(--grad-brand); }
+.auth-aside::after { background: radial-gradient(460px 340px at 88% 12%, rgba(203,162,78,.32), transparent 60%); }
+.sidebar { background: color-mix(in srgb, var(--surface) 55%, var(--bg)); border-right-color: var(--border); }
+.side-link.is-active { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+.side-link.is-active::before { background: var(--grad-accent); }
+.side-link .pill { background: var(--grad-accent); color: #1c1403; }
+.topbar h1 { font-family: var(--font-display); }
+.hello h2 { font-family: var(--font-display); }
+.kpi .v { font-family: var(--font-display); color: var(--text); }
+.kpi .top .icon-tile { background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 20%, transparent), color-mix(in srgb, var(--accent) 8%, transparent)); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); }
+.offer-card.recommended { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent), var(--shadow-md); }
+.offer-card .o-price .p { font-family: var(--font-display); background: var(--grad-gold-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.rating { color: var(--accent); }
+.doc-head { background: var(--grad-brand); border-bottom: 2px solid var(--accent); }
+.ref-code { background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: var(--accent); }
+.ref-code .code { color: var(--accent); font-family: var(--font-display); }
+.cover-opt.is-active, .pay-opt.is-active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.msg.me { background: var(--grad-brand); }
+.fab { background: var(--grad-accent); color: #1c1403; }

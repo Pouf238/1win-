@@ -125,3 +125,24 @@
 @media (max-width: 400px) {
   .nav-actions .lang-btn, .nav-actions #langBtn { display: none; }
 }
+
+/* ==========================================================================
+   Couche LUXE (v3) — landing bleu nuit + or
+   ========================================================================== */
+.nav-inner { background: color-mix(in srgb, var(--surface) 70%, transparent); border-color: color-mix(in srgb, var(--accent) 16%, var(--border)); box-shadow: var(--shadow-md), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent); }
+.logo .mark { background: var(--grad-accent); color: #1c1403; box-shadow: var(--shadow-accent); }
+.logo .mark svg { color: #1c1403; }
+.logo b { color: var(--accent); }
+.eyebrow { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+.hero h1 .grad { background: var(--grad-gold-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat .num { background: var(--grad-gold-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.trust { background: color-mix(in srgb, var(--surface) 40%, transparent); border-color: var(--border); }
+.how-step:nth-child(3) .n { background: var(--grad-accent); color: #1c1403; box-shadow: var(--shadow-accent); }
+.phone { border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border)); }
+.cta-band { border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent); }
+.cta-band .btn-accent, .cta-band .btn-primary { background: var(--grad-accent); color: #201603; box-shadow: var(--shadow-accent); }
+.float-badge { border-color: color-mix(in srgb, var(--accent) 22%, var(--border)); }
+/* fix: carte claire du mockup — texte lisible sur fond blanc (thème sombre) */
+.ps-card.light { color: #15213f; }
+.ps-card.light .muted, .ps-card.light .soft { color: #5b6a86; }
+.ps-card.light .ps-big { color: #121a30; }

@@ -1,66 +1,69 @@
 /* ==========================================================================
-   Assur Chap — Design System / Theme tokens  (v2 — premium)
-   Marque : bleu pétrole #1F7A8C · orange #F4A62A
-   Direction : rendu premium (Stripe / Revolut) — typo display, palette
-   enrichie, ombres multi-couches, dégradés de marque.
+   Assur Chap — Design System / Theme tokens  (v3 — Banque de luxe)
+   Identité : bleu nuit (navy) + or · prestige, confiance, haut de gamme.
+   Titres : Playfair Display (serif éditorial) · Corps : Inter.
+   Thème sombre luxe par défaut · variante claire ivoire.
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap');
 
 :root {
-  /* Brand ramp ----------------------------------------------------------- */
-  --brand: #1F7A8C;
-  --brand-600: #1b6c7c;
-  --brand-700: #155767;
-  --brand-800: #104653;
-  --brand-200: #bfe0e6;
-  --brand-100: #d9edf0;
-  --brand-50: #e9f3f5;
-  --accent: #F4A62A;
-  --accent-600: #e2961b;
-  --accent-700: #c47d0c;
-  --accent-100: #fbe6c4;
-  --accent-50: #fdf3e0;
+  /* Surfaces — bleu nuit profond -------------------------------------- */
+  --bg: #0A1026;
+  --bg-alt: #0D1430;
+  --surface: #121B3A;
+  --surface-2: #172148;
+  --border: #233057;
+  --border-strong: #334068;
+  --text: #F4F1E8;          /* ivoire chaud */
+  --text-soft: #BFC6DD;
+  --text-muted: #868FAE;
 
-  /* Gradients ------------------------------------------------------------ */
-  --grad-brand: linear-gradient(135deg, #2a93a6 0%, #1F7A8C 45%, #155767 100%);
-  --grad-accent: linear-gradient(135deg, #f8b94e 0%, #F4A62A 60%, #e2961b 100%);
+  /* Brand — saphir (dominant) ----------------------------------------- */
+  --brand: #6189E8;
+  --brand-600: #4f79e0;
+  --brand-700: #3f66c9;
+  --brand-800: #33539f;
+  --brand-200: #273662;
+  --brand-100: #1e2b50;
+  --brand-50: #182340;
+
+  /* Accent — or (highlights, CTA) ------------------------------------- */
+  --accent: #CBA24E;
+  --accent-600: #b98f3e;
+  --accent-700: #9c7730;
+  --accent-100: #2c2617;
+  --accent-50: #221d10;
+
+  /* Gradients --------------------------------------------------------- */
+  --grad-brand: linear-gradient(135deg, #2f5fb4 0%, #21418a 52%, #182f63 100%);
+  --grad-accent: linear-gradient(135deg, #efd291 0%, #CBA24E 52%, #a8823a 100%);
+  --grad-gold-text: linear-gradient(100deg, #f0d9a0 0%, #CBA24E 55%, #b98f3e 100%);
   --grad-hero:
-    radial-gradient(680px 460px at 86% -10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 62%),
-    radial-gradient(760px 560px at 6% 112%, color-mix(in srgb, var(--brand) 22%, transparent), transparent 60%),
-    radial-gradient(520px 420px at 50% 40%, color-mix(in srgb, var(--brand) 6%, transparent), transparent 70%);
+    radial-gradient(760px 520px at 84% -12%, rgba(203,162,78,.22), transparent 60%),
+    radial-gradient(820px 600px at 4% 112%, rgba(63,102,201,.28), transparent 60%),
+    radial-gradient(560px 460px at 50% 42%, rgba(97,137,232,.10), transparent 72%);
 
-  /* Semantic ------------------------------------------------------------- */
-  --success: #16915f;
-  --success-bg: #e7f6ef;
-  --danger: #d64545;
-  --danger-bg: #fbeaea;
-  --warning: #c47d0c;
-  --warning-bg: #fbf2e2;
-  --info: #2d72b8;
+  /* Semantic ---------------------------------------------------------- */
+  --success: #3ecf8e;
+  --success-bg: #11281f;
+  --danger: #f06d6d;
+  --danger-bg: #2c1414;
+  --warning: #e0b24a;
+  --warning-bg: #2a2210;
+  --info: #6189E8;
 
-  /* Light surfaces ------------------------------------------------------- */
-  --bg: #FFFFFF;
-  --bg-alt: #f4f7f8;
-  --surface: #FFFFFF;
-  --surface-2: #f8fafb;
-  --border: #e7eaed;
-  --border-strong: #d4dadf;
-  --text: #0f1a1d;
-  --text-soft: #46555b;
-  --text-muted: #7a878d;
+  /* Shadows — profondes + halo or discret ----------------------------- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5), 0 3px 10px rgba(0, 0, 0, .4);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, .4), 0 14px 34px rgba(0, 0, 0, .5);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, .5), 0 30px 60px rgba(0, 0, 0, .6);
+  --shadow-xl: 0 16px 32px rgba(0, 0, 0, .55), 0 48px 90px rgba(0, 0, 0, .66);
+  --shadow-brand: 0 10px 26px rgba(26, 52, 110, .6);
+  --shadow-accent: 0 8px 24px rgba(203, 162, 78, .34);
+  --ring: 0 0 0 3px rgba(203, 162, 78, .40);
 
-  /* Premium layered shadows (Stripe-style) ------------------------------- */
-  --shadow-xs: 0 1px 2px rgba(15, 26, 29, .06);
-  --shadow-sm: 0 1px 2px rgba(15, 26, 29, .05), 0 2px 6px rgba(15, 26, 29, .05);
-  --shadow-md: 0 2px 4px rgba(15, 26, 29, .04), 0 8px 20px rgba(15, 26, 29, .08);
-  --shadow-lg: 0 4px 10px rgba(15, 26, 29, .05), 0 24px 48px rgba(15, 26, 29, .14);
-  --shadow-xl: 0 8px 16px rgba(15, 26, 29, .06), 0 40px 80px rgba(15, 26, 29, .18);
-  --shadow-brand: 0 6px 14px rgba(31, 122, 140, .22), 0 12px 30px rgba(31, 122, 140, .20);
-  --shadow-accent: 0 6px 14px rgba(244, 166, 42, .24), 0 12px 28px rgba(244, 166, 42, .20);
-  --ring: 0 0 0 3px color-mix(in srgb, var(--brand) 26%, transparent);
-
-  /* Radius / spacing ----------------------------------------------------- */
+  /* Radius / layout --------------------------------------------------- */
   --r-sm: 10px;
   --r: 14px;
   --r-lg: 20px;
@@ -69,47 +72,52 @@
 
   --maxw: 1140px;
   --font: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
-  --font-display: "Plus Jakarta Sans", var(--font);
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+
+  --hairline: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
-[data-theme="dark"] {
-  --bg: #0a1214;
-  --bg-alt: #0e1a1d;
-  --surface: #11201f;
-  --surface-2: #16292c;
-  --border: #203539;
-  --border-strong: #2c4950;
-  --text: #eef4f5;
-  --text-soft: #b4c4c8;
-  --text-muted: #7e9298;
-  --brand: #3bb0c6;
-  --brand-600: #2f9bb0;
-  --brand-700: #27859a;
-  --brand-200: #1a3d44;
-  --brand-100: #163238;
-  --brand-50: #112a30;
-  --accent: #f7b347;
-  --accent-600: #f0a42d;
-  --accent-100: #3a2c12;
-  --accent-50: #2a210f;
-  --success: #38c38a;
-  --success-bg: #0f2a20;
-  --danger: #ef6b6b;
-  --danger-bg: #2c1414;
-  --warning: #e7a948;
-  --warning-bg: #2b2210;
-  --grad-brand: linear-gradient(135deg, #2f9bb0 0%, #1F7A8C 50%, #104653 100%);
+/* Variante claire — ivoire luxe ------------------------------------------ */
+[data-theme="light"] {
+  --bg: #FAF7EF;
+  --bg-alt: #F2ECDD;
+  --surface: #FFFFFF;
+  --surface-2: #FBF8F0;
+  --border: #e8e1cf;
+  --border-strong: #d9d0b8;
+  --text: #121a30;
+  --text-soft: #48516c;
+  --text-muted: #8a8370;
+  --brand: #284a92;
+  --brand-600: #22407f;
+  --brand-700: #1c3568;
+  --brand-800: #152a53;
+  --brand-200: #c6d2ec;
+  --brand-100: #dde5f5;
+  --brand-50: #eef2fa;
+  --accent: #a67c2b;
+  --accent-600: #8d6823;
+  --accent-700: #74551b;
+  --accent-100: #efe2c0;
+  --accent-50: #f7f0dc;
+  --grad-brand: linear-gradient(135deg, #30539c 0%, #233f78 55%, #1a3061 100%);
+  --grad-accent: linear-gradient(135deg, #dcbd6c 0%, #bd963f 55%, #9c7a2f 100%);
+  --grad-gold-text: linear-gradient(100deg, #b8923f, #9c7730);
   --grad-hero:
-    radial-gradient(680px 460px at 86% -10%, rgba(247,179,71,.14), transparent 62%),
-    radial-gradient(760px 560px at 6% 112%, rgba(59,176,198,.16), transparent 60%);
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 6px rgba(0, 0, 0, .35);
-  --shadow-md: 0 8px 20px rgba(0, 0, 0, .5);
-  --shadow-lg: 0 24px 48px rgba(0, 0, 0, .58);
-  --shadow-xl: 0 40px 80px rgba(0, 0, 0, .62);
-  --shadow-brand: 0 10px 28px rgba(0, 0, 0, .5);
-  --shadow-accent: 0 10px 28px rgba(0, 0, 0, .5);
-  --ring: 0 0 0 3px color-mix(in srgb, var(--brand) 40%, transparent);
+    radial-gradient(760px 520px at 84% -12%, rgba(203,162,78,.20), transparent 60%),
+    radial-gradient(820px 600px at 4% 112%, rgba(40,74,146,.14), transparent 60%);
+  --success: #15905c; --success-bg: #e7f5ee;
+  --danger: #cf4040; --danger-bg: #fbeaea;
+  --warning: #9a6b12; --warning-bg: #f8f0db;
+  --info: #284a92;
+  --shadow-xs: 0 1px 2px rgba(31, 36, 54, .07);
+  --shadow-sm: 0 1px 2px rgba(31, 36, 54, .06), 0 2px 8px rgba(31, 36, 54, .07);
+  --shadow-md: 0 3px 8px rgba(31, 36, 54, .07), 0 12px 30px rgba(31, 36, 54, .12);
+  --shadow-lg: 0 8px 20px rgba(31, 36, 54, .10), 0 30px 60px rgba(31, 36, 54, .16);
+  --shadow-xl: 0 14px 28px rgba(31, 36, 54, .12), 0 48px 90px rgba(31, 36, 54, .20);
+  --shadow-brand: 0 10px 26px rgba(40, 74, 146, .26);
+  --shadow-accent: 0 8px 22px rgba(166, 124, 43, .28);
+  --ring: 0 0 0 3px rgba(166, 124, 43, .32);
 }
 
 /* Reset / base ----------------------------------------------------------- */
@@ -120,32 +128,29 @@ body {
   font-family: var(--font);
   font-size: 16px;
   background: var(--bg);
+  background-image:
+    radial-gradient(900px 600px at 88% -8%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 60%),
+    radial-gradient(1000px 700px at 2% 108%, color-mix(in srgb, var(--brand) 12%, transparent), transparent 62%);
+  background-attachment: fixed;
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "cv05" 1, "cv08" 1, "ss01" 1, "tnum" 0;
+  font-feature-settings: "cv05" 1, "ss01" 1;
   min-height: 100vh;
   transition: background .3s ease, color .3s ease;
 }
 img, svg { display: block; max-width: 100%; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: none; }
-a { color: var(--brand); text-decoration: none; transition: color .15s ease; }
-a:hover { color: var(--brand-700); text-decoration: none; }
-h1, h2, h3, h4 {
-  font-family: var(--font-display);
-  line-height: 1.14;
-  font-weight: 800;
-  letter-spacing: -.025em;
-  color: var(--text);
-}
-h3, h4 { font-weight: 700; }
-::selection { background: color-mix(in srgb, var(--brand) 24%, transparent); color: var(--text); }
+a { color: var(--accent); text-decoration: none; transition: color .15s ease; }
+a:hover { color: var(--accent-600); text-decoration: none; }
+h1, h2 { font-family: var(--font-display); line-height: 1.1; font-weight: 700; letter-spacing: -.015em; color: var(--text); }
+h3, h4 { font-family: var(--font); line-height: 1.22; font-weight: 700; letter-spacing: -.01em; color: var(--text); }
+::selection { background: color-mix(in srgb, var(--accent) 34%, transparent); color: var(--text); }
 :focus-visible { outline: none; box-shadow: var(--ring); border-radius: 8px; }
 
-/* Nice scrollbar (desktop) */
 @media (pointer: fine) {
   * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
   *::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -166,15 +171,17 @@ h3, h4 { font-weight: 700; }
 .nowrap { white-space: nowrap; }
 .mono { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 
-/* Brand text */
 .brand-blue { color: var(--brand); }
 .brand-orange { color: var(--accent); }
 
-/* Reveal-on-scroll (progressive enhancement; visible by default) --------- */
+/* Gold text utility */
+.gold-text { background: var(--grad-gold-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
 .reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s cubic-bezier(.22,.61,.36,1), transform .6s cubic-bezier(.22,.61,.36,1); will-change: opacity, transform; }
 .reveal.in { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
   .reveal { opacity: 1 !important; transform: none !important; }
+  body { background-attachment: scroll; }
 }

@@ -174,3 +174,17 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: .9rem; }
 /* Divider with label */
 .divider { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: .82rem; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+/* ==========================================================================
+   Couche LUXE (v3) — bleu nuit + or
+   ========================================================================== */
+.card { background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 55%, var(--surface)), var(--surface)); }
+.card-hover:hover { border-color: color-mix(in srgb, var(--accent) 38%, var(--border)); box-shadow: var(--shadow-lg), 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent); }
+.btn-accent { color: #201603; font-weight: 700; }
+.btn-accent:hover { box-shadow: 0 10px 26px rgba(203,162,78,.40), 0 18px 44px rgba(203,162,78,.26); }
+.btn-soft { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.btn-soft:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.badge-accent { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 34%, transparent); }
+.icon-tile.accent { background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 24%, transparent), color-mix(in srgb, var(--accent) 10%, transparent)); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 34%, transparent); }
+.chip.is-active { background: var(--grad-brand); border-color: transparent; }
+.input:focus, .select:focus, .textarea:focus { border-color: var(--accent); }

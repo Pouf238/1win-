@@ -59,12 +59,12 @@
 
   /* ---- Theme ---- */
   var Theme = {
-    get: function () { return localStorage.getItem('ac_theme') || 'light'; },
+    get: function () { return localStorage.getItem('ac_theme') || 'dark'; },
     set: function (t) {
       document.documentElement.setAttribute('data-theme', t);
       localStorage.setItem('ac_theme', t);
       var m = document.querySelector('meta[name="theme-color"]');
-      if (m) m.setAttribute('content', t === 'dark' ? '#0c1416' : '#1F7A8C');
+      if (m) m.setAttribute('content', t === 'light' ? '#FAF7EF' : '#0A1026');
     },
     toggle: function () { this.set(this.get() === 'dark' ? 'light' : 'dark'); return this.get(); },
     init: function () { this.set(this.get()); }
