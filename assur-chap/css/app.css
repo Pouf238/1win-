@@ -163,3 +163,41 @@
 .tl-item:last-child { padding-bottom: 0; }
 .tl-item::before { content: ""; position: absolute; left: -22px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--brand); border: 3px solid var(--surface); }
 .tl-item.muted-dot::before { background: var(--border-strong); }
+
+/* ==========================================================================
+   Premium layer (v2) — overrides cohérents marque, sans toucher au HTML
+   ========================================================================== */
+.auth-aside { background: var(--grad-brand); }
+.auth-aside::after { background: radial-gradient(440px 340px at 88% 12%, rgba(244,166,42,.36), transparent 60%), radial-gradient(360px 280px at 6% 100%, rgba(255,255,255,.12), transparent 60%); }
+
+.sidebar { background: color-mix(in srgb, var(--surface) 92%, var(--brand) 2%); }
+.side-link { position: relative; }
+.side-link.is-active { background: linear-gradient(90deg, var(--brand-100), var(--brand-50)); color: var(--brand); font-weight: 600; box-shadow: var(--shadow-xs); }
+.side-link.is-active::before { content: ""; position: absolute; left: -14px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--grad-brand); }
+.side-link .pill { background: var(--grad-accent); color: #3a2706; }
+
+.topbar { background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: saturate(180%) blur(16px); backdrop-filter: saturate(180%) blur(16px); }
+.topbar h1 { font-family: var(--font-display); letter-spacing: -.02em; }
+
+.hello h2 { font-size: 1.7rem; letter-spacing: -.03em; }
+.kpi { transition: transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s, border-color .2s; }
+.kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--brand-200); }
+.kpi .v { font-family: var(--font-display); font-size: 1.7rem; letter-spacing: -.03em; }
+.kpi .top .icon-tile { width: 42px; height: 42px; }
+
+.cc-logo, .offer-card .o-logo { box-shadow: var(--shadow-sm); }
+.veh-ic { background: linear-gradient(145deg, var(--brand-100), var(--brand-50)); border: 1px solid color-mix(in srgb, var(--brand) 12%, transparent); }
+.offer-card.recommended { box-shadow: 0 0 0 1.5px var(--accent), var(--shadow-md); }
+.offer-card .o-price .p { font-family: var(--font-display); background: linear-gradient(120deg, var(--brand), var(--brand-700)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cover-opt.is-active, .pay-opt.is-active { box-shadow: var(--shadow-sm); }
+
+.doc { border-radius: var(--r-xl); box-shadow: var(--shadow-md); }
+.doc-head { background: var(--grad-brand); }
+
+.msg.me { background: var(--grad-brand); }
+.msg.bot { box-shadow: var(--shadow-xs); }
+
+.fab { background: var(--grad-accent); box-shadow: var(--shadow-accent); }
+.ref-code { background: linear-gradient(135deg, var(--brand-100), var(--brand-50)); }
+.ref-code .code { font-family: var(--font-display); }
+.tl-item::before { box-shadow: 0 0 0 4px var(--brand-50); }
