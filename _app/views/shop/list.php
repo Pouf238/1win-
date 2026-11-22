@@ -1,4 +1,4 @@
-<?php $vis = !empty($cat) ? cat_photo($cat) : '';   // catalogue et recherche : bandeau texte seul (plus de photo d'atelier) ?>
+<?php $vis = !empty($cat) ? (cat_scene($cat) ?: cat_photo($cat)) : '';   // catalogue et recherche : bandeau texte seul (plus de photo d'atelier) ?>
 <section class="phead"><div class="wrap"><?= crumbs($crumbs) ?><div class="ph-in<?= $vis ? '' : ' ph-solo' ?>"><div><h1><?= e($title) ?></h1><?php if ($intro): ?><p><?= e(mb_strimwidth(strip_tags($intro), 0, 260, '…')) ?></p><?php endif; ?></div><?php if ($vis): ?><div class="ph-vis" aria-hidden="true"><?= !empty($cat) ? $vis : '<div class="ph-photo cm">' . $vis . '</div>' ?></div><?php endif; ?></div></div></section>
 <div class="wrap">
 <?php if (empty($cat) && empty($search)): ?><p class="az-link"><a href="/produits-a-z"><?= ic('list') ?>Voir tous nos produits de A à Z</a></p><?php endif; ?>

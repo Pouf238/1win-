@@ -21,7 +21,7 @@ $variety = array_merge($cats, isset($bySlug['textiles']) ? [$bySlug['textiles']]
     <div class="px-main-tx"><span class="px-kicker"><?= e(shop('tagline')) ?></span>
       <h1><?= e($b0['title']) ?></h1><p><?= e($b0['subtitle']) ?></p>
       <span class="btn btn-a"><?= e($b0['cta_label']) ?> <?= ic('arrow') ?></span></div>
-    <div class="px-main-im"><?= $img('tshirt-votre-logo', 'T-shirts personnalisés avec votre logo', true) ?></div>
+    <div class="px-main-im"><?php if (is_file(ROOT . '/assets/img/site/scene-gamme.webp')): ?><img class="px-scene" src="<?= e(asset('img/site/scene-gamme.webp')) ?>" alt="Roll-up, flyers, cartes de visite, mug et stickers imprimés aux couleurs de Symo Print" width="1200" height="1200" fetchpriority="high" decoding="async"><?php else: ?><?= $img('tshirt-votre-logo', 'T-shirts personnalisés avec votre logo', true) ?><?php endif; ?></div>
   </a>
   <a class="px-tile px-obj" href="<?= e($link('objets-publicitaires')) ?>"><div class="px-tx"><h2>Objets à votre logo</h2><p>Mugs, gourdes, stylos, sacs…</p><span class="px-go">Découvrir</span></div><?= $img('mug-liege', 'Mug personnalisé') ?></a>
   <div class="px-why"><h2>Pourquoi choisir Symo Print&nbsp;?</h2><ul>

@@ -374,6 +374,24 @@ P['depliants'] = () => {
   return { g: group(at(g, [0, 0, 0], [0, 0, 0])), cam: [0, 14, 1.02] };
 };
 
+
+// ------------------------------------------------------------------ visuels de mise en scène pour le site (accueil, en-têtes de rubrique)
+P['scene-gamme'] = () => {
+  const g = new THREE.Group();
+  g.add(at(rollStand('VOTRE\nMESSAGE', 0), [-0.95, 0, -0.9], [0, 0.35, 0]));
+  const f = M.paper(ART.cardFront(), 0.6), b = M.paper(ART.cardBack(), 0.6);
+  g.add(at(stack(10, 0.85, 0.55, 0.004, f, M.edge()), [0.55, 0, 0.55], [0, -0.35, 0]));
+  g.add(at(sheet(0.85, 0.55, 0.004, b, f), [0.9, 0.05, 0.25], [0.05, -0.8, 0]));
+  g.add(at(stack(18, 1.05, 1.48, 0.003, M.paper(ART.flyer(1), 0.55), M.edge()), [-0.2, 0, 0.6], [0, 0.25, 0]));
+  const mug = P['mugs-ceramique']().g.children[0]; mug.scale.setScalar(0.75); g.add(at(mug, [0.75, 0, -0.55], [0, Math.PI + 0.3, 0]));
+  [[0, 0.22, 0, [1.35, 0.01, 0.75], 0.4], [1, 0.2, 1, [1.15, 0.012, 1.1], -0.3], [3, 0.2, 0, [-0.95, 0.01, 1.05], 0.2]].forEach(([k, r, round, p, rz]) => { const st = sticker(k, r, round); st.position.set(...p); st.rotation.z = rz; g.add(st); });
+  return { g, cam: [4, 22, 0.9] };
+};
+P['scene-impression'] = () => ({ g: group(at(P['brochures']().g, [0, 0, -0.4]), at(P['cartes-de-visite']().g, [1.3, 0, 0.6], [0, -0.3, 0]), at(stack(14, 1.05, 1.48, 0.003, M.paper(ART.flyer(0), 0.55), M.edge()), [-1.4, 0, 0.6], [0, 0.3, 0])), cam: [0, 40, 0.92] });
+P['scene-grand-format'] = () => ({ g: group(at(rollStand('GRAND\nFORMAT', 1), [-0.9, 0, 0], [0, 0.3, 0]), at(flag(true, 'OUVERT', 0), [0.1, 0, -1.3], [0, -0.1, 0]), at(rollStand('VOTRE\nMESSAGE', 0), [1.05, 0, 0.1], [0, -0.35, 0])), cam: [0, 8, 0.95] });
+P['scene-objets'] = () => ({ g: group(at(P['mugs-ceramique']().g, [-0.5, 0, 0]), at(P['cles-usb']().g, [1.2, 0, 0.6], [0, -0.3, 0]), at(P['stickers-personnalises']().g, [-1.2, 0, 0.9], [0, 0.2, 0])), cam: [0, 26, 0.92] });
+P['scene-evenementiel'] = () => ({ g: group(at(P['stand-parapluie']().g, [0, 0, -0.6]), at(P['badges-de-salon']().g, [1.6, 0.02, 1.4], [0, -0.3, 0])), cam: [6, 14, 0.92] });
+
 // ------------------------------------------------------------------ prise de vue
 function shoot(slug) {
   const def = P[slug]; if (!def) throw new Error('produit inconnu : ' + slug);

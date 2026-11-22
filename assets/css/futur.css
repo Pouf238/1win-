@@ -219,3 +219,8 @@ img[src*="/r3d-"]{mix-blend-mode:normal!important}
 
 /* tuiles de l'accueil : fond blanc opaque (les photos à fond blanc s'y fondent sans rectangle visible) */
 .px-tile:not(.px-conf):not(.px-cal),.px-why{background:#fff!important;backdrop-filter:none!important}
+
+/* visuels de mise en scène (fond « aurore » sombre) : accueil et en-têtes des grandes rubriques */
+.px-main-im img.px-scene{object-fit:cover;object-position:center 60%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%);mask-image:linear-gradient(90deg,transparent 0,#000 18%)}
+.phead .ph-vis>img.ph-scene{background:none!important;padding:0!important;max-height:240px!important;aspect-ratio:1;object-fit:cover;border-radius:20px;box-shadow:0 30px 70px -30px rgba(0,0,0,.8),0 0 0 1px rgba(76,201,216,.25)!important;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 62%,transparent 100%);mask-image:radial-gradient(circle at 50% 50%,#000 62%,transparent 100%)}
+@media (max-width:680px){.px-main-im img.px-scene{-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}}

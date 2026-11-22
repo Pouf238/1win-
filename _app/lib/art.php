@@ -148,3 +148,10 @@ function cat_photo(array $c, string $sizes = ''): string {
     if ($n !== '' && is_file(ROOT . "/assets/img/produits/$n.webp")) return '<img src="' . e(asset("img/produits/$n.webp")) . '" alt="" loading="lazy" decoding="async">';
     return mock((string) ($c['icon'] ?? 'flyer'));
 }
+/** Visuel de mise en scène (studio tools/render3d, fond « aurore » sombre) pour l'en-tête d'une grande rubrique ; '' si aucun. */
+const CAT_SCENES = ['impression-commerciale' => 'scene-impression', 'grand-format' => 'scene-grand-format', 'objets-publicitaires' => 'scene-objets', 'communication-evenementielle' => 'scene-evenementiel'];
+function cat_scene(array $c): string {
+    $n = CAT_SCENES[(string) ($c['slug'] ?? '')] ?? ''; if ($n === '' || !is_file(ROOT . "/assets/img/site/$n.webp")) return '';
+    return '<img class="ph-scene" src="' . e(asset("img/site/$n.webp")) . '" alt="" width="1200" height="1200" decoding="async">';
+}
+
