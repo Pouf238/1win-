@@ -10,7 +10,7 @@ if (is_file(APP . '/config.local.php')) { $CFG = array_replace($CFG, (array) req
 if ($__x = getenv('SYMO_CONFIG')) foreach (explode(PATH_SEPARATOR, $__x) as $__f) if (is_file($__f)) $CFG = array_replace($CFG, (array) require $__f);   // plusieurs fichiers possibles (séparés par « : »)
 ini_set('log_errors', '1'); ini_set('error_log', APP . '/storage/logs/php.log');
 ini_set('display_errors', $CFG['debug'] ? '1' : '0'); error_reporting(E_ALL); ini_set('expose_php', '0');
-foreach (['core', 'security', 'db', 'features', 'pricing', 'cart', 'files', 'mail', 'notify', 'art', 'pdf', 'ui'] as $f) require APP . "/lib/$f.php";
+foreach (['core', 'security', 'db', 'features', 'pricing', 'cart', 'files', 'mail', 'notify', 'art', 'pdf', 'ui', 'stats'] as $f) require APP . "/lib/$f.php";
 send_security_headers();
 
 // ---- session : stockage privé hors web, mode strict, cookie HttpOnly + SameSite, durée de vie maîtrisée

@@ -130,7 +130,7 @@ route('POST', '/api/favori', function () {
 });
 route('POST', '/newsletter', function () {
     rate_limit('nl', 20, 3600); $m = strtolower(post('email')); if (!empty($_POST['website']) || !filter_var($m, FILTER_VALIDATE_EMAIL)) { wants_json() ? json_out(['ok' => false, 'error' => 'Adresse e-mail invalide.']) : (flash('error', 'Adresse e-mail invalide.') ?? redirect(back_path('/'))); }
-    if (!DB::val('SELECT COUNT(*) FROM subscribers WHERE email=?', [$m])) DB::ins('subscribers', ['email' => $m]);
+    if (!DB::val('SELECT COUNT(*) FROM subscribers WHERE email=?', [$m])) { DB::ins('subscribers', ['email' => $m]); stats_track('newsletter'); }
     if (wants_json()) json_out(['ok' => true]); flash('ok', 'Merci ! Vous êtes inscrit(e) à notre newsletter.'); redirect('/');
 });
 
@@ -160,10 +160,16 @@ route('POST', '/contact', function () {
     if ($n === '' || $msg === '' || (!filter_var($em, FILTER_VALIDATE_EMAIL) && $ph === '')) { flash('error', 'Merci de renseigner votre nom, un message et un e-mail ou un téléphone.'); redirect('/contact'); }
     DB::ins('messages', ['name' => mb_substr($n, 0, 150), 'email' => mb_substr($em, 0, 190), 'phone' => mb_substr($ph, 0, 40), 'message' => mb_substr($msg, 0, 3000), 'status' => 'new']);
     notify_staff('contact_admin', 'Nouveau message de ' . $n, '<p><b>' . e($n) . '</b><br>' . e($em) . ' · ' . e($ph) . '</p><p>' . nl2br(e(mb_substr($msg, 0, 3000))) . '</p>');
+    stats_track('contact_sent');
     flash('ok', 'Merci ! Votre message a bien été envoyé. Nous vous répondons très vite.'); redirect('/contact');
 });
+route('GET', '/go/whatsapp', function () {
+    $m = mb_substr((string) get('m'), 0, 300); $from = (string) (parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_PATH) ?: '');
+    stats_track('whatsapp', 0, $from !== '' ? $from : 'lien direct');
+    header('Cache-Control: no-store'); header('X-Robots-Tag: noindex'); redirect(wa_link($m));   // destination fixe : wa.me + numéro de la boutique (pas de redirection ouverte)
+});
 route('GET', '/robots.txt', function () {
-    header('Content-Type: text/plain; charset=utf-8'); echo "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /compte\nDisallow: /panier\nDisallow: /commande\nDisallow: /api\nDisallow: /recherche\n\nSitemap: " . abs_url('/sitemap.xml') . "\n"; exit;
+    header('Content-Type: text/plain; charset=utf-8'); echo "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /compte\nDisallow: /panier\nDisallow: /commande\nDisallow: /api\nDisallow: /recherche\nDisallow: /go\n\nSitemap: " . abs_url('/sitemap.xml') . "\n"; exit;
 });
 route('GET', '/sitemap.xml', function () {
     header('Content-Type: application/xml; charset=utf-8'); $u = [['/', '1.0'], ['/catalogue', '0.9'], ['/produits-a-z', '0.6'], ['/devis', '0.8'], ['/contact', '0.5'], ['/faq', '0.5'], ['/a-propos', '0.4'], ['/nos-services', '0.6']];

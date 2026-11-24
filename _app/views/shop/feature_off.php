@@ -5,7 +5,7 @@
   <p>Vos données et vos documents existants sont conservés. Pour toute demande, contactez-nous&nbsp;:</p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:18px 0">
     <?php if (feature('quotes') && $key !== 'quotes'): ?><a class="btn btn-a" href="/devis">Demander un devis</a><?php endif; ?>
-    <a class="btn btn-p" href="<?= e(wa_link('Bonjour Symo Print')) ?>" rel="noopener">WhatsApp</a>
+    <a class="btn btn-p" href="<?= e(wa_go('Bonjour Symo Print')) ?>" rel="noopener">WhatsApp</a>
     <a class="btn btn-o" href="/contact">Nous écrire</a>
   </div>
   <p><a href="/">Retour à l'accueil</a> · <a href="/catalogue">Catalogue</a></p>

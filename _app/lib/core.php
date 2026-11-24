@@ -120,7 +120,7 @@ function abort(int $code, string $msg = ''): void {
 // ---------------------------------------------------------------- vues
 function view(string $tpl, array $d = []): string { extract($d, EXTR_SKIP); ob_start(); include APP . '/views/' . $tpl . '.php'; return ob_get_clean(); }
 function page(string $tpl, array $d = [], array $meta = []): void {
-    $content = view($tpl, $d); $meta += ['title' => '', 'desc' => '', 'noindex' => false, 'jsonld' => [], 'canon' => null, 'og_image' => null, 'cat' => null];
+    $content = view($tpl, $d); if (function_exists('stats_page')) stats_page($tpl, $d); $meta += ['title' => '', 'desc' => '', 'noindex' => false, 'jsonld' => [], 'canon' => null, 'og_image' => null, 'cat' => null];
     if (in_array($tpl, ['admin/login', 'admin/install', 'admin/mfa', 'admin/mfa_setup'], true)) { echo $content; exit; }   // pages autonomes (sans gabarit)
     echo view(str_starts_with($tpl, 'admin/') ? 'layout/admin' : 'layout/main', ['content' => $content, 'meta' => $meta]); exit;
 }

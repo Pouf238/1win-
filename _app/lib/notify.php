@@ -140,6 +140,7 @@ function notify_drain(int $max = 10): int {
 /** Appelée en fin de requête (après l'envoi de la réponse), au plus une fois par minute : vide la file sans ralentir le visiteur. */
 function notify_tick(): void {
     $f = APP . '/storage/.notify-tick'; if (is_file($f) && filemtime($f) > time() - 60) return; @touch($f);
+    if (function_exists('stats_digest_maybe') && (int) date('G') >= 7) stats_digest_maybe();   // résumé de la veille (si la sauvegarde de la nuit ne l'a pas déjà envoyé)
     try { if (!DB::val("SELECT COUNT(*) FROM notifications WHERE channel='email' AND status IN ('queued','sending')")) return; } catch (Throwable $e) { return; }
     if (function_exists('litespeed_finish_request')) @litespeed_finish_request(); elseif (function_exists('fastcgi_finish_request')) @fastcgi_finish_request();
     notify_drain(10);

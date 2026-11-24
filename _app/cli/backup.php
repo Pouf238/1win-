@@ -40,4 +40,5 @@ foreach (['db-*.sql.gz' => $keep, 'uploads-*.zip' => max(3, intdiv($keep, 3))] a
 file_put_contents("$dir/.dernier-succes", date('c') . "\n"); @chmod("$dir/.dernier-succes", 0600);
 if (function_exists('quotes_expire_due')) { $qe = quotes_expire_due(); if ($qe) echo "devis expirés : $qe\n"; }
 if (function_exists('audit_prune')) { try { $pr = audit_prune(); if ($pr) echo "journal d'audit : $pr entrée(s) au-delà de la rétention supprimée(s), chaîne ancrée\n"; } catch (Throwable $e) { fwrite(STDERR, 'purge du journal impossible : ' . $e->getMessage() . "\n"); } }
+if (function_exists('stats_digest_maybe')) stats_digest_maybe();   // résumé des statistiques de la veille, envoyé à la boutique
 if (function_exists('audit')) audit('backup', basename($out), ['tables' => count($tables), 'rows' => $rowsTotal], 'info', 0);

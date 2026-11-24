@@ -264,3 +264,17 @@ route('POST', '/admin/clients/{id}/supprimer', function ($a) {
     DB::q('DELETE FROM addresses WHERE user_id=?', [$u['id']]); DB::q('DELETE FROM favorites WHERE user_id=?', [$u['id']]); DB::q('DELETE FROM carts WHERE user_id=?', [$u['id']]); DB::q('UPDATE quotes SET user_id=0 WHERE user_id=?', [$u['id']]); DB::del('users', (int) $u['id']);
     flash('ok', 'Compte client supprimé.'); redirect('/admin/clients');
 });
+
+// ---------------------------------------------------------------- statistiques du site (mesure d'audience interne et anonyme : lib/stats.php)
+route('GET', '/admin/statistiques', function () {
+    require_perm('reports'); $per = in_array((int) get('p', 30), [1, 7, 30, 90], true) ? (int) get('p', 30) : 30;
+    $to = date('Y-m-d'); $from = date('Y-m-d', strtotime('-' . ($per - 1) . ' days'));
+    $prevTo = date('Y-m-d', strtotime($from . ' -1 day')); $prevFrom = date('Y-m-d', strtotime($prevTo . ' -' . ($per - 1) . ' days'));
+    $ok = DB::tableExists('stat_hits');
+    adm('stats', ['per' => $per, 'r' => $ok ? stats_report($from, $to) : null, 'prev' => $ok ? stats_report($prevFrom, $prevTo) : null, 'today' => $ok ? stats_report($to, $to) : null, 'recent' => $ok ? stats_recent(25) : [],
+        'enabled' => stats_enabled(), 'digest' => Settings::get('stats_digest', '1') === '1', 'mailto' => (string) (shop('notify_email') ?: shop('email'))], 'Statistiques du site', 'stats');
+});
+route('POST', '/admin/statistiques/reglages', function () {
+    require_perm('settings'); Settings::set('stats_enabled', post('enabled') ? '1' : '0'); Settings::set('stats_digest', post('digest') ? '1' : '0');
+    audit('stats_settings', '', ['enabled' => (bool) post('enabled'), 'digest' => (bool) post('digest')], 'info'); flash('ok', 'Réglages des statistiques enregistrés.'); redirect('/admin/statistiques');
+});

@@ -247,6 +247,7 @@ function maintenance(): void {
     try {
         $n = time(); if (function_exists('quotes_expire_due')) quotes_expire_due(); try { DB::q('DELETE FROM notifications WHERE created_at<?', [date('Y-m-d H:i:s', $n - 180 * 86400)]); } catch (Throwable $e) { } DB::q('DELETE FROM ratelimits WHERE expires<?', [$n]); DB::q('DELETE FROM password_resets WHERE expires_at<?', [date('Y-m-d H:i:s', $n - 7 * 86400)]);
         DB::q("DELETE FROM carts WHERE user_id=0 AND updated_at<?", [date('Y-m-d H:i:s', $n - 90 * 86400)]);
+        try { DB::q('DELETE FROM stat_hits WHERE day<?', [date('Y-m-d', $n - 400 * 86400)]); } catch (Throwable $e) { }   // statistiques : 13 mois
         foreach (DB::all('SELECT * FROM files WHERE order_id=0 AND quote_id=0 AND created_at<? LIMIT 200', [date('Y-m-d H:i:s', $n - 30 * 86400)]) as $f) { @unlink(Files::path($f)); DB::del('files', (int) $f['id']); }
     } catch (Throwable $e) { error_log('[symoprint] maintenance : ' . $e->getMessage()); }
 }

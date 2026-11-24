@@ -23,6 +23,8 @@ switch ($cmd) {
         mkuser('newstaff@test.local', 'Staff-Test-2026-xyz!', 'Newstaff', $newRoles ? 'support' : 'staff');
         echo "seed ok (" . ($newRoles ? 'rôles v2' : 'rôles v1') . ")\n"; break;
     case 'resetlimits': DB::q('DELETE FROM ratelimits'); echo "ok\n"; break;
+    case 'statsdigest': if (!empty($argv[2])) @unlink(APP . '/storage/.stats-digest-' . date('Y-m-d', strtotime('yesterday'))); stats_digest_maybe(); echo "ok\n"; break;   // résumé quotidien des statistiques (argument : oublier l'envoi déjà fait)
+    case 'statfill': for ($i = 0; $i < (int) $argv[3]; $i++) DB::ins('stat_hits', ['ts' => now(), 'day' => date('Y-m-d'), 'hour' => 0, 'visitor' => $argv[2], 'kind' => 'page', 'path' => '/remplissage', 'ref' => 0, 'label' => '', 'source' => 'direct', 'device' => 'ordinateur']); echo "ok\n"; break;
     case 'clearpending': DB::q('DELETE FROM files WHERE order_id=0 AND quote_id=0'); echo "ok\n"; break;   // envois en attente (quota par panier/compte)
     case 'count': $t = preg_replace('/\W/', '', $argv[2]); echo (int) DB::val("SELECT COUNT(*) FROM $t" . (!empty($argv[3]) ? ' WHERE ' . $argv[3] : '')), "\n"; break;
     case 'role': echo DB::val('SELECT role FROM users WHERE email=?', [$argv[2]]), "\n"; break;

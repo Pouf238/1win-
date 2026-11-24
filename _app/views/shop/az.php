@@ -7,5 +7,5 @@ $letters = array_merge(range('A', 'Z'), isset($groups['#']) ? ['#'] : []); $n = 
   <section class="az-g" id="az-<?= $l === '#' ? 'autres' : $l ?>" aria-labelledby="azh-<?= $l === '#' ? 'autres' : $l ?>"><h2 id="azh-<?= $l === '#' ? 'autres' : $l ?>"><?= e($l) ?></h2>
     <ul><?php foreach ($items as $it): ?><li><a href="<?= e($it['url']) ?>"><?= e($it['name']) ?></a><?php if ($it['cat']): ?> <small>rubrique</small><?php endif; ?></li><?php endforeach; ?></ul></section>
   <?php endforeach; ?>
-  <p class="az-foot">Vous ne trouvez pas votre produit ? <a href="<?= feature('quotes') ? '/devis' : '/contact' ?>">Demandez un devis sur mesure</a> ou <a href="<?= e(wa_link('Bonjour Symo Print, je cherche un produit : ')) ?>" rel="noopener">écrivez-nous sur WhatsApp</a>.</p>
+  <p class="az-foot">Vous ne trouvez pas votre produit ? <a href="<?= feature('quotes') ? '/devis' : '/contact' ?>">Demandez un devis sur mesure</a> ou <a href="<?= e(wa_go('Bonjour Symo Print, je cherche un produit : ')) ?>" rel="noopener">écrivez-nous sur WhatsApp</a>.</p>
 </div>

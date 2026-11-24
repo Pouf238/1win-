@@ -27,7 +27,7 @@
   <div class="sl tot"><span>Total</span><span><?= money($t['total']) ?></span></div>
   <a class="btn btn-a btn-lg btn-block" style="margin-top:14px" href="/commande">Passer la commande <?= ic('arrow') ?></a>
   <p class="muted" style="font-size:13px;margin:12px 0 0"><?= ic('shield') ?> Paiement Mobile Money, virement ou à la livraison. Votre panier est sauvegardé.</p>
-  <a class="btn btn-g btn-block" style="margin-top:10px" href="<?= e(wa_link('Bonjour Symo Print, j\'ai une question sur mon panier.')) ?>"><?= ic('wa') ?> Besoin d'aide ?</a>
+  <a class="btn btn-g btn-block" style="margin-top:10px" href="<?= e(wa_go('Bonjour Symo Print, j\'ai une question sur mon panier.')) ?>"><?= ic('wa') ?> Besoin d'aide ?</a>
 </aside>
 <?php endif; ?>
 </div>

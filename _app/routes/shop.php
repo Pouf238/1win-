@@ -136,7 +136,7 @@ route('POST', '/commande', function () {
     if ($t['promo']['ok']) DB::q('UPDATE promo_codes SET uses=uses+1 WHERE code=?', [$t['promo']['code']]);
     DB::ins('order_events', ['order_id' => $oid, 'status' => 'pending_payment', 'note' => 'Commande passée en ligne', 'user_id' => $u['id'] ?? 0]);
     if ($hasFiles) DB::ins('order_events', ['order_id' => $oid, 'status' => 'files_received', 'note' => 'Fichiers reçus avec la commande']);
-    Cart::clear(); unset($_SESSION['old']); $o = DB::find('orders', $oid); $oi = order_items($oid);
+    Cart::clear(); unset($_SESSION['old']); $o = DB::find('orders', $oid); $oi = order_items($oid); stats_track('order', (int) $oid, $ref);
     notify('order_created', $email, ['name' => $name, 'ref' => $ref, 'items' => items_summary_html($oi), 'total' => money($o['total']), 'payment' => '<b>' . e($pm['label']) . '</b><br>' . nl2br(e($pm['instructions'])), 'link' => order_url($o, true)], ['order_id' => (int) $oid, 'user_id' => (int) ($u['id'] ?? 0)]);
     notify_staff('order_admin', 'Nouvelle commande ' . $ref . ' : ' . money($o['total']), '<p>' . e($name) . ' · ' . e($phone) . ' · ' . e($email) . '</p>' . items_summary_html($oi) . '<p>Paiement : ' . e($pm['label']) . '</p><p><a href="' . e(abs_url('/admin/commandes/' . $oid)) . '">Ouvrir dans l\'administration</a></p>');
     redirect(order_url($o) . (str_contains(order_url($o), '?') ? '&' : '?') . 'merci=1');
@@ -195,6 +195,7 @@ route('POST', '/devis/depuis-produit', function () {
     $in = body_json(); $p = DB::row('SELECT * FROM products WHERE id=? AND active=1', [(int) ($in['product_id'] ?? 0)]); if (!$p) json_out(['ok' => false, 'error' => 'Produit introuvable.'], 404);
     if (product_sale_mode($p) === 'unavailable') json_out(['ok' => false, 'error' => 'Ce produit est momentanément indisponible.'], 422);
     $q = Pricing::quote($p, Pricing::read_cfg($in['cfg'] ?? [])); if (!$q['ok']) json_out(['ok' => false, 'error' => implode(' ', $q['errors'])], 422);
+    stats_track('quote_item', (int) $p['id'], (string) $p['name']);
     $_SESSION['quote_items'][] = ['pid' => (int) $p['id'], 'name' => $p['name'], 'cfg' => $q['cfg'], 'summary' => $q['summary'], 'qty' => $q['qty'], 'est' => $q['total'], 'note' => is_string($in['note'] ?? null) ? mb_substr($in['note'], 0, 500) : '', 'files' => array_map('intval', array_slice((array) ($in['files'] ?? []), 0, 20))];
     json_out(['ok' => true, 'url' => '/devis']);
 });
@@ -220,6 +221,7 @@ route('POST', '/devis', function () {
     $link = abs_url('/devis/' . $ref . '?t=' . $tok);
     if ($email) notify('quote_received', $email, ['name' => $name, 'ref' => $ref, 'link' => $link], ['quote_id' => (int) $qid, 'user_id' => (int) ($u['id'] ?? 0)]);
     notify_staff('quote_admin', 'Nouvelle demande de devis ' . $ref, '<p>' . e($name) . ' · ' . e($phone) . ' · ' . e($email) . '</p><p>' . nl2br(e($msg)) . '</p>' . ($details ? '<p>' . implode('<br>', array_map(fn($d) => e($d[0]) . ' : <b>' . e($d[1]) . '</b>', $details)) . '</p>' : '') . '<p><a href="' . e(abs_url('/admin/devis/' . $qid)) . '">Ouvrir dans l\'administration</a></p>');
+    stats_track('quote_sent', (int) $qid, $items ? implode(', ', array_column($items, 'name')) : mb_substr($free !== '' ? $free : $svc, 0, 120));
     flash('ok', 'Demande envoyée ! Référence ' . $ref . '. Nous vous répondons très vite.'); redirect('/devis/' . $ref . '?t=' . $tok . '&merci=1');
 });
 function quote_access(array $q): bool { if (is_staff() && can('quotes')) return true; $u = user(); if ($u && (int) $q['user_id'] === (int) $u['id']) return true; return token_access((string) $q['access_token']); }

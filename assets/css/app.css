@@ -242,3 +242,15 @@ p{margin:0 0 1em}ul{margin:0;padding:0;list-style:none}button,input,select,texta
   .vt-stage{aspect-ratio:1}.vt-card{left:19%;width:62%;top:9%}.vt-shadow{left:19%;width:62%;top:75%}
 }
 @media (prefers-reduced-motion:reduce){.vt-name{transition:none}}
+
+/* statistiques du site (admin) */
+.st-per{display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px;flex-wrap:wrap}
+.st-per a{padding:7px 14px;border-radius:99px;font-weight:600;font-size:14px;color:var(--mut);text-decoration:none}
+.st-per a.on{background:var(--p);color:#fff}.st-per a:hover:not(.on){background:var(--p0);color:var(--p9)}
+.stats.st6{grid-template-columns:repeat(3,1fr)}
+.stat .st-up,.stat .st-down{display:inline-block;margin-top:6px;font-weight:700;text-transform:none;letter-spacing:0;font-size:12.5px;padding:2px 8px;border-radius:99px}
+.stat .st-up{background:#E1F4EA;color:#12633d}.stat .st-down{background:#FBE3E3;color:#9b2a2a}
+.stat small.muted{display:block;text-transform:none;letter-spacing:0;font-weight:500;margin-top:4px}
+.st-bar{display:block;height:5px;background:var(--p0);border-radius:99px;margin-top:6px;overflow:hidden}.st-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--p),var(--a));border-radius:99px}
+.chart.st-hours{height:90px;gap:3px}
+@media (max-width:1100px){.stats.st6{grid-template-columns:repeat(2,1fr)}}

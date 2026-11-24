@@ -9,7 +9,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 define('ROOT', dirname(__DIR__, 2)); $opt = getopt('', ['baseline', 'compare']);
 require ROOT . '/_app/bootstrap.php';
 $pdo = DB::$pdo; $my = DB::$driver === 'mysql'; $file = ROOT . '/_app/storage/logs/verify-baseline.json';
-$VOLATILE_TABLES = ['carts', 'ratelimits']; $SKIP_COLS = ['products' => ['views']];
+$VOLATILE_TABLES = ['carts', 'ratelimits', 'stat_hits']; $SKIP_COLS = ['products' => ['views']];
 $tables = $my ? array_column($pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_NUM), 0) : array_column($pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchAll(), 'name'); sort($tables);
 $cols = function (string $t) use ($pdo, $my): array { return $my ? array_column($pdo->query("SHOW COLUMNS FROM `$t`")->fetchAll(PDO::FETCH_NUM), 0) : array_column($pdo->query("PRAGMA table_info(`$t`)")->fetchAll(), 'name'); };
 $digest = function (string $t, array $use, ?int $maxId = null) use ($pdo, $SKIP_COLS): array {

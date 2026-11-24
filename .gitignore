@@ -9,6 +9,7 @@ _app/storage/uploads/*
 _app/storage/sessions/*
 !_app/storage/sessions/.gitkeep
 _app/storage/.notify-tick
+_app/storage/.stats-digest-*
 
 # identifiants d'envoi temporaires (jamais dans le dépôt)
 tools/deploy/tus.env

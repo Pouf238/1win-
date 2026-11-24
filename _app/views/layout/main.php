@@ -31,7 +31,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <?php $ann = mb_substr(trim((string) shop('announce_text')), 0, 160); $annUrl = safe_path(trim((string) shop('announce_link')), ''); if ($ann !== ''): ?><div class="announce" role="note"><div class="wrap"><?php if ($annUrl !== ''): ?><a href="<?= e($annUrl) ?>"><?= e($ann) ?> <?= ic('arrow') ?></a><?php else: ?><span><?= e($ann) ?></span><?php endif; ?></div></div><?php endif; ?>
 <div class="topbar"><div class="wrap">
   <ul class="usps"><li><?= ic('check') ?>Devis rapide, WhatsApp ou e-mail</li><li><?= ic('check') ?>Fichier vérifié, BAT validé</li><li><?= ic('check') ?>Livraison en Côte d'Ivoire</li><?php if (feature('payments')): ?><li><?= ic('check') ?>Paiement Mobile Money</li><?php endif; ?></ul>
-  <div class="r"><a href="<?= e(wa_link('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp <?= e(shop('phone2')) ?></a><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>
+  <div class="r"><a href="<?= e(wa_go('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp <?= e(shop('phone2')) ?></a><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>
 </div></div>
 <header class="header"><div class="hband"><div class="wrap main">
   <button class="burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navbar" data-burger><?= ic('menu') ?></button>
@@ -65,7 +65,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
   <?php if (feature('orders')): ?><div class="nl mob-only"><a class="dr-i" href="/panier"><?= ic('cart') ?>Panier<?= $cartN ? ' (' . $cartN . ')' : '' ?></a></div><?php endif; ?>
   <div class="nl mob-only"><a class="dr-i" href="/compte/favoris"><?= ic('heart') ?>Favoris</a></div>
   <div class="nl mob-only"><a class="dr-i" href="<?= $u ? '/compte' : '/compte/connexion' ?>"><?= ic('user') ?><?= $u ? 'Mon compte' : 'Connexion' ?></a></div>
-  <div class="dr-contact mob-only"><a class="btn btn-a" href="<?= e(wa_link('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp</a><a class="btn btn-o" href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>
+  <div class="dr-contact mob-only"><a class="btn btn-a" href="<?= e(wa_go('Bonjour Symo Print, ')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp</a><a class="btn btn-o" href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= ic('phone') ?><?= e(shop('phone')) ?></a></div>
 </div></nav>
 <div class="scrim" data-nav-close aria-hidden="true"></div>
 </header>
@@ -74,12 +74,12 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <?= $content ?>
 </main>
 <?php if (empty($meta['no_prefoot'])): ?><section class="prefoot" aria-label="Contact"><div class="wrap"><div class="pf-in"><div><span class="eyebrow">Un projet d'impression ?</span><h2>Parlons de votre prochain support.</h2><p>Décrivez votre besoin : notre équipe vous répond rapidement sur WhatsApp ou par e-mail, avec un conseil et un prix clair.</p></div>
-  <div class="pf-act"><?php if (feature('quotes')): ?><a class="btn btn-a btn-lg" href="/devis">Demander un devis <?= ic('arrow') ?></a><?php endif; ?><a class="btn btn-lg btn-ghost" href="<?= e(wa_link('Bonjour Symo Print, j\'ai un projet d\'impression.')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp</a></div></div></div></section><?php endif; ?>
+  <div class="pf-act"><?php if (feature('quotes')): ?><a class="btn btn-a btn-lg" href="/devis">Demander un devis <?= ic('arrow') ?></a><?php endif; ?><a class="btn btn-lg btn-ghost" href="<?= e(wa_go('Bonjour Symo Print, j\'ai un projet d\'impression.')) ?>" rel="noopener"><?= ic('wa') ?>WhatsApp</a></div></div></div></section><?php endif; ?>
 <footer class="footer">
 <div class="wrap fgrid">
   <div class="fbrand"><img src="<?= e(asset('img/brand/logo-light.svg')) ?>" alt="<?= e($name) ?>" width="140" height="43" loading="lazy"><p><?= e(shop('tagline')) ?>. Impression et personnalisation sur tout type de support, à Abidjan et dans toute la Côte d'Ivoire.</p>
     <ul class="ct">
-    <li><?= ic('wa') ?><a href="<?= e(wa_link()) ?>">WhatsApp : <?= e(shop('phone2')) ?></a></li><li><?= ic('phone') ?><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= e(shop('phone')) ?></a></li>
+    <li><?= ic('wa') ?><a href="<?= e(wa_go()) ?>">WhatsApp : <?= e(shop('phone2')) ?></a></li><li><?= ic('phone') ?><a href="tel:<?= e(preg_replace('/\s+/', '', shop('phone'))) ?>"><?= e(shop('phone')) ?></a></li>
     <?php if (shop('email')): ?><li><?= ic('mail') ?><a href="mailto:<?= e(shop('email')) ?>"><?= e(shop('email')) ?></a></li><?php endif; ?>
     <li><?= ic('pin') ?><span><?= e(shop('address')) ?><br><?= e(shop('city')) ?>, <?= e(shop('country')) ?></span></li>
     <?php if (shop('hours')): ?><li><?= ic('clock') ?><span><?= e(shop('hours')) ?></span></li><?php endif; ?></ul></div>
@@ -91,7 +91,7 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 </div>
 <div class="legal"><div class="wrap"><span>© <?= date('Y') ?> <?= e($name) ?>. Tous droits réservés.</span><span><a href="/cgv">CGV</a> · <a href="/mentions-legales">Mentions légales</a> · <a href="/confidentialite">Confidentialité</a></span></div></div>
 </footer>
-<a class="wa" href="<?= e(wa_link('Bonjour Symo Print, j\'ai une question sur ma commande.')) ?>" rel="noopener" aria-label="Discuter sur WhatsApp"><?= ic('wa') ?><span>WhatsApp</span></a>
+<a class="wa" href="<?= e(wa_go('Bonjour Symo Print, j\'ai une question sur ma commande.')) ?>" rel="noopener" aria-label="Discuter sur WhatsApp"><?= ic('wa') ?><span>WhatsApp</span></a>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 <script src="<?= e(asset('js/site.js')) ?>" defer></script>
 <script src="<?= e(asset('js/futur.js')) ?>" defer></script>

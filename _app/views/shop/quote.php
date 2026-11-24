@@ -21,5 +21,5 @@
     <small class="muted">Indiquez au moins un téléphone ou un e-mail. Vos données ne sont utilisées que pour répondre à votre demande.</small><div class="mt"><button class="btn btn-a btn-lg" type="submit"><?= ic('send') ?? '' ?> Envoyer ma demande</button></div></div>
 </div>
 <aside class="summary"><h3>Comment ça marche ?</h3><div class="sl"><span>1. Vous décrivez votre projet</span></div><div class="sl"><span>2. Nous vous envoyons un devis chiffré en FCFA</span></div><div class="sl"><span>3. Vous acceptez en ligne</span></div><div class="sl"><span>4. Production, livraison, suivi</span></div>
-  <a class="btn btn-g btn-block" style="margin-top:14px" href="<?= e(wa_link('Bonjour Symo Print, je souhaite un devis.')) ?>"><?= ic('wa') ?> Plus rapide : WhatsApp</a></aside>
+  <a class="btn btn-g btn-block" style="margin-top:14px" href="<?= e(wa_go('Bonjour Symo Print, je souhaite un devis.')) ?>"><?= ic('wa') ?> Plus rapide : WhatsApp</a></aside>
 </form>

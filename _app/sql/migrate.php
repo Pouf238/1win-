@@ -2,7 +2,7 @@
 // Migrations de schéma. Version courante = settings.schema_version.
 // v1→v3 : historique (sécurité). v4 et suivantes : migrations RÉVERSIBLES (voir migrations()) : chaque version a un « up » et un « down »
 // idempotents, testés (tests/platform/migrations.php). Retour arrière : php tools/migrate.php down <version>.
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 function migrate(): void {
     $try = function (string $sql) { try { DB::schema([$sql]); } catch (Throwable $e) { /* colonne/index déjà présent : sans conséquence */ } };
@@ -73,5 +73,11 @@ function migrations(): array {
                 foreach (['payments', 'payment_events', 'notifications', 'message_templates', 'order_statuses', 'quote_messages'] as $t) { try { DB::$pdo->exec("DROP TABLE IF EXISTS $t"); } catch (Throwable $e) { } }
                 foreach (['quotes' => ['service_type', 'details', 'desired_date'], 'orders' => ['carrier', 'tracking_ref'], 'files' => ['width', 'height', 'warn'], 'products' => ['availability']] as $t => $cols) foreach ($cols as $c) mig_drop_col($t, $c);
             }],
+        5 => ['name' => "mesure d'audience anonyme (statistiques du site)",
+            'up' => function () {
+                DB::schema(["CREATE TABLE IF NOT EXISTS stat_hits (id {ID}, ts DATETIME, day DATE, hour TINYINT DEFAULT 0, visitor VARCHAR(16), kind VARCHAR(12), path VARCHAR(190), ref INT DEFAULT 0, label VARCHAR(120) DEFAULT '', source VARCHAR(40) DEFAULT '', device VARCHAR(12) DEFAULT ''){ENGINE}"]);
+                foreach (['CREATE INDEX idx_stat_day ON stat_hits (day, visitor)', 'CREATE INDEX idx_stat_kind ON stat_hits (kind, day)'] as $q) mig_try($q);
+            },
+            'down' => function () { try { DB::$pdo->exec('DROP TABLE IF EXISTS stat_hits'); } catch (Throwable $e) { } }],
     ];
 }

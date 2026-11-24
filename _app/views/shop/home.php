@@ -55,7 +55,7 @@ $variety = array_merge($cats, isset($bySlug['textiles']) ? [$bySlug['textiles']]
   <div class="px-svc">
     <a class="px-sv" href="/nos-services"><span class="px-sv-ic"><?= ic('palette') ?></span><small>Pas de visuel prêt&nbsp;?</small><b>Notre studio crée votre logo, vos flyers et tous vos supports</b><span class="px-go">Nos services</span></a>
     <a class="px-sv" href="/guide-fichiers"><span class="px-sv-ic"><?= ic('shield') ?></span><small>Zéro mauvaise surprise</small><b>Fichier vérifié et bon à tirer validé avant toute impression</b><span class="px-go">Préparer mon fichier</span></a>
-    <a class="px-sv" href="<?= e(wa_link('Bonjour Symo Print, j\'ai une question.')) ?>" rel="noopener"><span class="px-sv-ic"><?= ic('wa') ?></span><small>Une question&nbsp;? Nous répondons</small><b>Contactez-nous sur WhatsApp, par téléphone ou par e-mail</b><span class="px-go">Écrire sur WhatsApp</span></a>
+    <a class="px-sv" href="<?= e(wa_go('Bonjour Symo Print, j\'ai une question.')) ?>" rel="noopener"><span class="px-sv-ic"><?= ic('wa') ?></span><small>Une question&nbsp;? Nous répondons</small><b>Contactez-nous sur WhatsApp, par téléphone ou par e-mail</b><span class="px-go">Écrire sur WhatsApp</span></a>
   </div>
 </div></section>
 
