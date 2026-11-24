@@ -90,6 +90,7 @@ function route(string $methods, string $pattern, callable $fn): void {
 function dispatch(): void {
     global $ROUTES; $m = $_SERVER['REQUEST_METHOD'] ?? 'GET'; if ($m === 'HEAD') $m = 'GET';
     $path = rawurldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
+    if (function_exists('security_probe')) security_probe($path);   // robots chercheurs de failles, injections : journal + alerte
     $seen = false;
     foreach ($ROUTES as [$rm, $re, $fn, $pat]) {
         if (!preg_match($re, $path, $mm)) continue;

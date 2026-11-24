@@ -20,3 +20,4 @@ tools/spider/node_modules/
 # dépendances du studio 3D (reconstruites par npm install dans tools/render3d)
 tools/render3d/node_modules/
 tools/render3d/out/
+_app/storage/ipgeo/

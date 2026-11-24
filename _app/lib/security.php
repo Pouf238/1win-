@@ -124,7 +124,70 @@ function audit_prune(?int $days = null): int {
 /** Alerte e-mail à la boutique (limitée à 10 par heure et par sujet pour éviter l'inondation). N'écrit pas dans le journal : l'action sensible est déjà journalisée par son propre appel à audit(). */
 function alert_mail(string $subject, string $detail): void {
     if (throttle('alertmail:' . sha1($subject), 10, 3600)) return;
-    if (class_exists('Mail')) Mail::admin('[Sécurité] ' . $subject, '<p>' . e($detail) . '</p><p style="color:#5b6c72;font-size:13px">Compte : ' . e(mask_email((string) (user()['email'] ?? '?'))) . ' · IP : ' . e(client_ip()) . ' · ' . e(now()) . '</p>');
+    if (class_exists('Mail')) Mail::admin('[Sécurité] ' . $subject, '<p>' . e($detail) . '</p><p style="color:#5b6c72;font-size:13px">Compte : ' . e(mask_email((string) (user()['email'] ?? '?'))) . ' · ' . e(fdate(now(), true)) . '</p>' . ip_geo_html(client_ip()));
+}
+
+// ---------------------------------------------------------------- alertes de début d'attaque + localisation APPROXIMATIVE de l'adresse IP
+const COUNTRY_FR = ['CI' => "Côte d'Ivoire", 'FR' => 'France', 'SN' => 'Sénégal', 'ML' => 'Mali', 'BF' => 'Burkina Faso', 'GH' => 'Ghana', 'NG' => 'Nigeria', 'TG' => 'Togo', 'BJ' => 'Bénin', 'CM' => 'Cameroun', 'GN' => 'Guinée', 'LR' => 'Liberia', 'MA' => 'Maroc', 'US' => 'États-Unis', 'GB' => 'Royaume-Uni', 'DE' => 'Allemagne', 'NL' => 'Pays-Bas', 'RU' => 'Russie', 'CN' => 'Chine', 'IN' => 'Inde', 'BR' => 'Brésil', 'SG' => 'Singapour'];
+/** Pays, ville et opérateur APPROXIMATIFS d'une adresse IP (service IPinfo, cache 7 jours). Ce n'est jamais le domicile d'une personne :
+ *  c'est la zone du réseau de l'opérateur. Appelée uniquement pour les événements de sécurité (jamais pour les visiteurs ordinaires). $url : tests. */
+function ip_geo(string $ip, ?string $url = null): array {
+    $r = ['ip' => $ip, 'city' => '', 'region' => '', 'country' => '', 'org' => '', 'loc' => '', 'note' => ''];
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) return ['note' => 'adresse invalide'] + $r;
+    if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return ['note' => 'adresse locale ou privée : aucune localisation possible'] + $r;
+    if ($url === null && (cfg('ip_geo', true) === false || Settings::get('security_geo', '1') !== '1')) return ['note' => 'localisation désactivée dans les réglages'] + $r;
+    $f = APP . '/storage/ipgeo/' . substr(hash_hmac('sha256', $ip, app_key()), 0, 32) . '.json';
+    if ($url === null && is_file($f) && filemtime($f) > time() - 7 * 86400 && is_array($c = json_decode((string) @file_get_contents($f), true))) return $c + $r;
+    $u = str_replace('{ip}', rawurlencode($ip), $url ?? (string) cfg('ip_geo_url', 'https://ipinfo.io/{ip}/json')); $tok = (string) cfg('ipinfo_token', '');
+    if ($url === null && $tok !== '') $u .= (str_contains($u, '?') ? '&' : '?') . 'token=' . rawurlencode($tok);
+    $body = false; $code = 0;
+    if (function_exists('curl_init') && preg_match('#^https?://#i', $u)) { $c = curl_init($u); curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 3, CURLOPT_CONNECTTIMEOUT => 2, CURLOPT_FOLLOWLOCATION => false, CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS, CURLOPT_HTTPHEADER => ['Accept: application/json'], CURLOPT_USERAGENT => 'symoprint-securite']); $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c); }
+    $j = ($body !== false && $code === 200) ? json_decode((string) $body, true) : null;
+    if (!is_array($j) || !empty($j['bogon'])) return ['note' => 'localisation indisponible pour le moment (utilisez le lien ci-dessous)'] + $r;
+    foreach (['city', 'region', 'country', 'org', 'loc'] as $k) $r[$k] = mb_substr(trim(strip_tags((string) ($j[$k] ?? ''))), 0, 80);
+    if (!preg_match('/^-?\d{1,3}\.\d+,-?\d{1,3}\.\d+$/', $r['loc'])) $r['loc'] = '';
+    if (!preg_match('/^[A-Z]{2}$/', $r['country'])) $r['country'] = '';
+    if ($url === null) { if (!is_dir(dirname($f))) @mkdir(dirname($f), 0700, true); @file_put_contents($f, json_encode($r), LOCK_EX); }
+    return $r;
+}
+function country_fr(string $cc): string { if ($cc === '') return ''; if (class_exists('Locale')) { $n = Locale::getDisplayRegion('-' . $cc, 'fr'); if ($n && $n !== $cc) return $n; } return COUNTRY_FR[$cc] ?? $cc; }
+/** Lieu lisible : « Abidjan, Abidjan, Côte d'Ivoire » (doublons retirés). */
+function ip_place(array $g): string { return implode(', ', array_values(array_unique(array_filter([$g['city'], $g['region'], country_fr($g['country'])])))); }
+/** Bloc e-mail : adresse IP, lieu approximatif, opérateur, carte, et ce qu'il faut (ne pas) faire. */
+function ip_geo_html(string $ip, ?string $url = null): string {
+    $g = ip_geo($ip, $url); $place = ip_place($g); $td = '<td style="padding:6px 10px;border-bottom:1px solid #e3e8ea;color:#5b6c72">'; $tv = '<td style="padding:6px 10px;border-bottom:1px solid #e3e8ea">';
+    $rows = '<tr>' . $td . 'Adresse IP</td>' . $tv . '<b>' . e($ip) . '</b></td></tr>';
+    if ($place !== '') $rows .= '<tr>' . $td . 'Localisation approximative</td>' . $tv . '<b>' . e($place) . '</b></td></tr>';
+    if ($g['org'] !== '') $rows .= '<tr>' . $td . 'Opérateur / réseau</td>' . $tv . e($g['org']) . '</td></tr>';
+    if ($g['note'] !== '') $rows .= '<tr>' . $td . 'Localisation</td>' . $tv . e($g['note']) . '</td></tr>';
+    $links = []; if ($g['loc'] !== '') $links[] = '<a href="https://www.google.com/maps?q=' . e($g['loc']) . '">Voir la zone sur la carte</a>';
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) $links[] = '<a href="https://ipinfo.io/' . e(rawurlencode($ip)) . '">Fiche détaillée de l\'adresse IP</a>';
+    return '<table cellspacing="0" style="border-collapse:collapse;font-size:14px;margin:14px 0 6px;width:100%">' . $rows . '</table>' . ($links ? '<p style="margin:6px 0">' . implode(' · ', $links) . '</p>' : '')
+        . '<p style="color:#5b6c72;font-size:12.5px;line-height:1.5">Position <b>approximative</b> de la connexion internet (souvent la ville du central de l\'opérateur), <b>jamais le domicile</b> d\'une personne. Sur internet mobile, beaucoup de gens partagent la même adresse, et un VPN peut la masquer : ne soupçonnez ni ne confrontez personne sur cette seule base. Conservez cet e-mail et le journal de sécurité comme preuves ; en cas d\'attaque réelle, adressez-vous à la PLCC (Plateforme de Lutte Contre la Cybercriminalité), seule habilitée à obtenir l\'identité de l\'abonné auprès de l\'opérateur.</p>';
+}
+/** Début d'attaque probable : e-mail IMMÉDIAT avec la localisation approximative. Une alerte par adresse IP et par type toutes les 6 h,
+ *  20 au plus par jour (au-delà, tout reste dans le journal et le résumé du matin). Ne bloque jamais la requête. */
+function security_watch(string $kind, string $subject, string $detail): void {
+    try {
+        if (Settings::get('security_alerts', '1') !== '1') return;
+        $ip = client_ip(); if (throttle('secwatch:' . $kind . ':' . $ip, 1, 6 * 3600) || throttle('secwatch-day', 20, 86400)) return;
+        $path = mb_substr((string) (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: ''), 0, 120);
+        if (class_exists('Mail')) Mail::admin('[Sécurité] ' . $subject, '<p>' . e($detail) . '</p><p style="color:#5b6c72;font-size:13px">' . e(fdate(now(), true)) . ' · page : ' . e($path) . '</p>' . ip_geo_html($ip)
+            . '<p>Le site a déjà bloqué cette tentative : vous n\'avez rien à faire dans l\'immédiat. Les tentatives suivantes de la même adresse sont notées dans le journal sans nouvel e-mail pendant 6 heures.</p>' . Mail::button('Voir cette adresse dans le journal de sécurité', abs_url('/admin/securite?q=' . rawurlencode($ip))));
+    } catch (Throwable $e) { error_log('[symoprint] alerte de sécurité : ' . $e->getMessage()); }
+}
+const PROBE_PATHS = '#^/(wp-admin|wp-login\.php|wp-content|wp-includes|wp-json|xmlrpc\.php|phpmyadmin|pma|myadmin|mysqladmin|adminer|administrator|cgi-bin|vendor/phpunit|boaform|hnap1|actuator|solr|server-status|\.env|\.git|\.aws|config\.php|setup\.php|install\.php|shell\.php|wso|c99|r57|eval-stdin|sftp-config|backup\.(zip|sql|tar))(?:[/.?]|$)#i';
+const PROBE_INJECT = '#union(\s|\+|/\*.*?\*/)+(all(\s|\+)+)?select|information_schema|\bsleep\s*\(\s*\d|benchmark\s*\(|waitfor\s+delay|(\.\.[/\\\\]){2,}|/etc/passwd|<\s*script|javascript\s*:|onerror\s*=|\$\{jndi:|base64_decode\s*\(|\bor\s+[\'"]?1[\'"]?\s*=\s*[\'"]?1|%00|\x00#i';
+/** Repère les robots qui cherchent des failles (adresses connues) et les tentatives d'injection dans l'adresse. Journal (1 ligne par adresse IP et par heure),
+ *  alerte immédiate pour les injections, et ces requêtes ne comptent pas dans les statistiques. */
+function security_probe(string $path): void {
+    try {
+        $qs = rawurldecode(rawurldecode((string) ($_SERVER['QUERY_STRING'] ?? '')));
+        $kind = preg_match(PROBE_PATHS, $path) ? 'scan' : (preg_match(PROBE_INJECT, $path . ' ' . $qs) ? 'attack_probe' : ''); if ($kind === '') return;
+        $GLOBALS['_security_probe'] = true; $ip = client_ip();
+        if (!throttle('probe-log:' . $kind . ':' . $ip, 1, 3600)) audit($kind, mb_substr($path, 0, 150), ['q' => mb_substr($qs, 0, 200)], 'warn');
+        if ($kind === 'attack_probe') security_watch('probe', "Tentative d'injection de code sur le site", "Une requête contenait du code d'attaque (injection SQL ou script) : « " . mb_substr($path . ($qs !== '' ? '?' . $qs : ''), 0, 200) . " ». Elle n'a eu aucun effet : le site filtre toutes les données reçues.");
+    } catch (Throwable $e) { error_log('[symoprint] détection d\'attaque : ' . $e->getMessage()); }
 }
 /** Code d'activation exigé pour enrôler la double authentification : code personnel (remis par un super administrateur) ou, à défaut, `mfa_setup_code` / `install_token` de la configuration. Vide = aucune exigence (développement/tests). */
 function enroll_code_required(array $u): bool { return !empty($u['enroll_hash']) || (string) (cfg('mfa_setup_code') ?: cfg('install_token')) !== ''; }
@@ -135,7 +198,7 @@ function enroll_code_ok(array $u, string $code): bool {
 function enroll_code_new(): array { $plain = strtoupper(bin2hex(random_bytes(6))); return [substr($plain, 0, 4) . '-' . substr($plain, 4, 4) . '-' . substr($plain, 8, 4), hash('sha256', $plain)]; }
 function security_alert(string $subject, string $detail): void {
     audit('alert', $subject, ['detail' => $detail], 'alert'); error_log('[symoprint][ALERTE] ' . $subject);
-    if (function_exists('shop') && class_exists('Mail')) Mail::admin('[Sécurité] ' . $subject, '<p>' . e($detail) . '</p><p style="color:#5b6c72;font-size:13px">IP : ' . e(client_ip()) . ' · ' . e(now()) . '</p>');
+    if (function_exists('shop') && class_exists('Mail')) Mail::admin('[Sécurité] ' . $subject, '<p>' . e($detail) . '</p><p style="color:#5b6c72;font-size:13px">' . e(fdate(now(), true)) . '</p>' . ip_geo_html(client_ip()));
 }
 
 // ================================================================ rôles et permissions (moindre privilège, contrôlés côté serveur)
@@ -195,7 +258,7 @@ function session_enforce(): void {
     if (empty($_SESSION['uid']) && empty($_SESSION['pending_uid'])) return; $now = time(); $staff = !empty($_SESSION['staff']);
     $idle = !empty($_SESSION['pending_uid']) ? 600 : (int) cfg($staff ? 'idle_staff' : 'idle_customer', $staff ? 1200 : 7200); $abs = (int) cfg($staff ? 'abs_staff' : 'abs_customer', $staff ? 28800 : 172800);
     if ($now - ($_SESSION['last'] ?? $now) > $idle || $now - ($_SESSION['started'] ?? $now) > $abs) { session_kill('expirée'); return; }
-    if ($staff && ($_SESSION['ua'] ?? '') !== substr(sha1($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 16)) { audit('session_ua_mismatch', '', [], 'warn'); session_kill(); return; }
+    if ($staff && ($_SESSION['ua'] ?? '') !== substr(sha1($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 16)) { audit('session_ua_mismatch', '', [], 'warn'); security_watch('session', "Session d'un membre de l'équipe utilisée depuis un autre navigateur", "Une session de l'administration a été présentée par un autre navigateur que celui qui s'était connecté (vol de session possible). Le site l'a fermée immédiatement. Cela arrive aussi après une mise à jour du navigateur : si c'était vous, reconnectez-vous simplement."); session_kill(); return; }
     $_SESSION['last'] = $now;
 }
 function session_init(array $u, bool $mfaOk): void {
@@ -226,7 +289,7 @@ function revoke_sessions(int $uid): void { DB::q('UPDATE users SET session_epoch
 function auth_attempt(string $email, string $pw): array {
     $email = strtolower(trim($email)); $ip = client_ip(); $kIp = 'lf-ip:' . $ip; $kPair = 'lf-pair:' . sha1($email . '|' . $ip); $kAcct = 'lf-acct:' . sha1($email); $gen = 'E-mail ou mot de passe incorrect, ou compte non confirmé.';
     // trois verrous : par IP (bourrage d'identifiants), par couple compte+IP (force brute), par compte toutes IP confondues (attaque distribuée, seuil plus haut pour limiter le déni de service)
-    if (throttle($kIp, 40, 900, true) || throttle($kPair, 5, 900, true) || throttle($kAcct, 25, 900, true)) { if (!throttle('rl-log:' . $kPair, 1, 900)) audit('login_blocked', mask_email($email), [], 'warn'); return ['ok' => false, 'error' => 'Trop de tentatives. Réessayez dans 15 minutes.', 'blocked' => true]; }
+    if (throttle($kIp, 40, 900, true) || throttle($kPair, 5, 900, true) || throttle($kAcct, 25, 900, true)) { if (!throttle('rl-log:' . $kPair, 1, 900)) { audit('login_blocked', mask_email($email), [], 'warn'); security_watch('login', 'Attaque sur les mots de passe : connexion bloquée', "Trop de mots de passe ont été essayés sur le compte " . mask_email($email) . " (ou depuis la même adresse). Le site a bloqué les essais pendant 15 minutes. Cela peut aussi être un client qui a oublié son mot de passe."); } return ['ok' => false, 'error' => 'Trop de tentatives. Réessayez dans 15 minutes.', 'blocked' => true]; }
     $u = strlen($email) <= 190 ? DB::row('SELECT * FROM users WHERE email=? AND active=1', [$email]) : null; $good = false;
     if ($u) { $good = pw_verify($u, $pw); } else pw_dummy($pw);
     $verifyNeeded = $u && $u['role'] === 'customer' && Settings::get('email_verification', '1') === '1' && empty($u['email_verified']);
@@ -248,6 +311,7 @@ function maintenance(): void {
         $n = time(); if (function_exists('quotes_expire_due')) quotes_expire_due(); try { DB::q('DELETE FROM notifications WHERE created_at<?', [date('Y-m-d H:i:s', $n - 180 * 86400)]); } catch (Throwable $e) { } DB::q('DELETE FROM ratelimits WHERE expires<?', [$n]); DB::q('DELETE FROM password_resets WHERE expires_at<?', [date('Y-m-d H:i:s', $n - 7 * 86400)]);
         DB::q("DELETE FROM carts WHERE user_id=0 AND updated_at<?", [date('Y-m-d H:i:s', $n - 90 * 86400)]);
         try { DB::q('DELETE FROM stat_hits WHERE day<?', [date('Y-m-d', $n - 400 * 86400)]); } catch (Throwable $e) { }   // statistiques : 13 mois
+        foreach (glob(APP . '/storage/ipgeo/*.json') ?: [] as $g) if (filemtime($g) < $n - 30 * 86400) @unlink($g);   // localisations d'adresses suspectes : 30 jours
         foreach (DB::all('SELECT * FROM files WHERE order_id=0 AND quote_id=0 AND created_at<? LIMIT 200', [date('Y-m-d H:i:s', $n - 30 * 86400)]) as $f) { @unlink(Files::path($f)); DB::del('files', (int) $f['id']); }
     } catch (Throwable $e) { error_log('[symoprint] maintenance : ' . $e->getMessage()); }
 }
