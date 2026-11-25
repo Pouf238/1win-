@@ -110,7 +110,7 @@ function seed_catalog(): void {
     $topIds = [];
     foreach ($cats as $i => [$slug, $parent, $name, $icon, $desc]) {
         $pid = $parent ? $topIds[$parent - 1] : 0;
-        $id = DB::ins('categories', ['parent_id' => $pid, 'slug' => $slug, 'name' => $name, 'short_desc' => $desc, 'icon' => $icon, 'sort' => $i, 'seo_title' => $name . ' : impression en ligne à Abidjan', 'seo_desc' => $desc ?: "$name : commandez en ligne chez Symo Print, imprimerie à Abidjan. Devis rapide, livraison en Côte d'Ivoire."]);
+        $id = DB::ins('categories', ['parent_id' => $pid, 'slug' => $slug, 'name' => $name, 'short_desc' => $desc, 'icon' => $icon, 'sort' => $i, 'seo_title' => $name . ' : impression en ligne à Abidjan', 'seo_desc' => $desc ?: "$name chez Symo Print, imprimerie à Abidjan : devis gratuit et rapide, prix en FCFA, livraison en Côte d'Ivoire."]);
         if (!$parent) $topIds[] = $id;
     }
     $paper = fn(array $c) => G('papier', 'Papier', 'radio', $c);

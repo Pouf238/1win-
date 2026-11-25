@@ -2,7 +2,7 @@
 /** @var string $content @var array $meta */
 $name = shop('shop_name', 'Symo Print');
 $title = $meta['title'] ? $meta['title'] . ' | ' . $name : $name . ' : imprimerie en ligne à Abidjan, ' . shop('tagline');
-$desc = $meta['desc'] ?: "Symo Print, imprimerie moderne, fiable et professionnelle à Abidjan : flyers, cartes de visite, bâches, roll-up, t-shirts, objets personnalisés. Commandez en ligne en FCFA, livraison en Côte d'Ivoire.";
+$desc = $meta['desc'] ?: "Symo Print, imprimerie moderne, fiable et professionnelle à Abidjan : flyers, cartes de visite, bâches, roll-up, t-shirts, objets personnalisés. " . (feature('orders') ? "Commandez en ligne en FCFA, livraison en Côte d'Ivoire." : "Devis gratuit en ligne ou sur WhatsApp, prix en FCFA, livraison en Côte d'Ivoire.");   // jamais « commandez en ligne » quand la commande en ligne est fermée
 $canon = $meta['canon'] ?? (abs_url((string) (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/')));
 $ogimg = abs_url($meta['og_image'] ?? 'assets/img/og.png');
 $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs());
