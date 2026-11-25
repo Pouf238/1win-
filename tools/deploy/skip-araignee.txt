@@ -1,0 +1,6 @@
+assets/3d/spider-face.webp
+assets/3d/spider-top.webp
+assets/3d/spider.glb
+assets/js/silk-spider.js
+assets/js/spider.js
+.htaccess
