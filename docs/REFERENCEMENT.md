@@ -21,3 +21,9 @@ Google Business Profile, Google Search Console (puis coller la balise dans Régl
 
 ## Tests
 `tests/platform/run.sh` section I : SEO-01 à SEO-04.
+
+## Photos à la marque d'un autre imprimeur (audit du 25 nov. 2026)
+Relecture visuelle des 125 photos de `assets/img/produits/` : 57 portent le logo « onlineprinters » (liste exacte : `PHOTOS_OTHER_BRAND` dans `_app/lib/art.php`).
+Règle appliquée (`product_photo()`) : si la photo principale porte cette marque, on montre le visuel 3D Symo Print du produit s'il existe, sinon une autre photo de la galerie sans cette marque, et seulement en dernier recours la photo d'origine.
+Elles ne sont jamais utilisées pour : vignettes de rubriques (`CAT_PHOTOS`, `cat_photo_name()`), mosaïque et « Meilleures ventes » de l'accueil, section « Fêtes », images d'aperçu de partage. Elles restent visibles dans la galerie des fiches produits (photos fournies par le propriétaire, non supprimées).
+Recommandation au propriétaire : les remplacer progressivement par des photos de ses propres réalisations, ou par des visuels 3D (`tools/render3d`).
