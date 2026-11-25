@@ -204,6 +204,7 @@ route('POST', '/admin/reglages', function () {
     foreach (['rounding' => 5, 'min_order' => 0, 'upload_max_mb' => 50] as $k => $d) Settings::set($k, max(0, (int) post($k, $d)) ?: $d);
     Settings::set('tax_rate', (string) max(0, (float) str_replace(',', '.', post('tax_rate', '18')))); Settings::set('eur_xof_rate', (string) max(1, (float) str_replace(',', '.', post('eur_xof_rate', '655.957'))));
     foreach (['tax_enabled', 'prices_include_tax', 'pickup_enabled'] as $k) Settings::set($k, post($k) ? '1' : '0');
+    foreach (['google_site_verification', 'bing_site_verification'] as $k) if (isset($_POST[$k])) Settings::set($k, site_verification_clean((string) post($k)));   // code seul ou balise complète collée
     $wa = preg_replace('/\D+/', '', post('whatsapp')); if ($wa) Settings::set('whatsapp', $wa);
     $m = []; foreach (payment_methods(false) as $pm) { $k = $pm['key']; $pm['enabled'] = !empty($_POST['pm_on'][$k]) ? 1 : 0; $pm['label'] = trim($_POST['pm_label'][$k] ?? $pm['label']) ?: $pm['label']; $pm['instructions'] = trim($_POST['pm_ins'][$k] ?? $pm['instructions']); if ($pm['type'] === 'gateway') $pm['enabled'] = 0; $m[] = $pm; }
     Settings::set('payment_methods', $m); audit('settings_saved', '', ['keys' => count($_POST)], 'warn'); alert_mail('Réglages de la boutique modifiés', 'Coordonnées de paiement, livraison, TVA ou réglages généraux enregistrés.'); flash('ok', 'Réglages enregistrés.'); redirect('/admin/reglages');

@@ -14,6 +14,12 @@ $pool = []; foreach (array_merge($best, $pop, $new) as $p) $pool[$p['id']] ??= $
 if (count(array_filter($pool, fn($p) => product_photo($p) !== '')) < 5) foreach (DB::all("SELECT * FROM products WHERE active=1 AND (image<>'' OR gallery LIKE '[\"%') ORDER BY bestseller DESC, featured DESC, sort, name LIMIT 30") as $p) $pool[$p['id']] ??= $p;
 $tiles = array_slice(array_values(array_filter($pool, fn($p) => product_photo($p) !== '')), 0, 5);
 $price = fn(array $p) => price_on_request($p) ? 'Sur devis' : 'dès ' . money($p['price_from']);
+// saison des fêtes (1er nov. → 15 janv.) : cadeaux d'entreprise et calendriers RÉELLEMENT au catalogue, avec un visuel
+$md = (int) date('nd'); $fetes = [];
+if ($md >= 1101 || $md <= 115) foreach (['calendriers-muraux', 'calendriers-de-bureau', 'mugs-ceramique', 'stylos-metal', 'bonbons-papillotes', 'tote-bags', 'carnets-blocs', 'mug-base-liege'] as $sl) {
+    $fp = DB::row('SELECT * FROM products WHERE slug=? AND active=1', [$sl]); if ($fp && product_photo($fp) !== '' && count($fetes) < 5) $fetes[] = $fp;
+}
+$fYear = (int) date('Y') + ((int) date('n') >= 11 ? 1 : 0);
 $variety = array_merge($cats, isset($bySlug['textiles']) ? [$bySlug['textiles']] : [], isset($bySlug['confiserie']) ? [$bySlug['confiserie']] : []);
 ?>
 <section class="px-hero" aria-label="À la une"><div class="wrap"><div class="px-mosaic">
@@ -33,8 +39,13 @@ $variety = array_merge($cats, isset($bySlug['textiles']) ? [$bySlug['textiles']]
   <a class="px-tile px-conf" href="<?= e($link('confiserie')) ?>"><div class="px-tx"><span class="px-new">Nouveau</span><h2>Confiserie publicitaire</h2><p>Cookies, bonbons et boîtes de pastilles à vos couleurs : le cadeau qu'on garde sur son bureau.</p><span class="btn btn-o btn-sm">Voir la sélection</span></div><?= $img('cookie-sachet', 'Cookie en sachet personnalisé') ?></a>
   <a class="px-tile px-gf" href="<?= e($link('grand-format')) ?>"><div class="px-tx"><h2>Grand format</h2><p>Bâches, banderoles, kakémonos</p><span class="px-go">Découvrir</span></div><?= $img('bache-barriere-chantier', 'Bâche publicitaire sur barrière') ?></a>
   <a class="px-tile px-ev" href="<?= e($link('communication-evenementielle')) ?>"><div class="px-tx"><h2>Salons et événements</h2><p>Tentes, nappes, stands, PLV</p><span class="px-go">Découvrir</span></div><?= $img('tente-pliante-logo', 'Tente pliante personnalisée') ?></a>
-  <a class="px-tile px-cal" href="<?= e($prodLink('calendriers-muraux', $link('papeterie'))) ?>"><div class="px-tx"><h2>Calendriers <?= (int) date('Y') + 1 ?></h2><p>Muraux, de bureau, à spirale</p><span class="px-go">Découvrir</span></div><?= $img('calendrier-spirale-couverture', 'Calendrier mural personnalisé') ?></a>
+  <a class="px-tile px-cal" href="<?= e($prodLink('calendriers-muraux', $link('papeterie'))) ?>"><div class="px-tx"><h2>Calendriers <?= (int) date('Y') + 1 ?></h2><p>Muraux, de bureau, à spirale</p><span class="px-go">Découvrir</span></div><?php $calP = DB::row("SELECT * FROM products WHERE slug='calendriers-muraux' AND active=1"); $calImg = $calP ? product_photo($calP) : ''; ?><?= $img($calImg !== '' ? $calImg : 'r3d-calendriers-muraux', 'Calendrier mural personnalisé') ?></a>
 </div></div></section>
+
+<?php if (count($fetes) >= 3): ?><section class="px-sec px-fetes" aria-labelledby="fetes-h"><div class="wrap">
+  <div class="px-head"><div><h2 id="fetes-h">Fêtes de fin d'année</h2><p class="px-sub">Calendriers <?= $fYear ?>, cadeaux d'entreprise et douceurs à votre logo : préparez-les dès maintenant pour vos clients et votre équipe.</p></div><a href="<?= e(wa_go("Bonjour Symo Print, je souhaite un devis pour des cadeaux / calendriers de fin d'année.")) ?>" rel="noopener">Devis sur WhatsApp</a></div>
+  <div class="px-bs"><?php foreach ($fetes as $p): ?><a class="px-bst" href="/p/<?= e($p['slug']) ?>"><span class="px-bst-n"><?= e($p['name']) ?></span><span class="px-bst-p"><?= e($price($p)) ?></span><?= $img(product_photo($p), $p['name']) ?></a><?php endforeach; ?></div>
+</div></section><?php endif; ?>
 
 <?php if ($tiles): ?><section class="px-sec"><div class="wrap">
   <div class="px-head"><h2>Meilleures ventes</h2><a href="/catalogue?best=1">Afficher tout</a></div>

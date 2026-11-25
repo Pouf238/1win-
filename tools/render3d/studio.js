@@ -393,6 +393,48 @@ P['scene-objets'] = () => ({ g: group(at(P['mugs-ceramique']().g, [-0.5, 0, 0]),
 P['scene-evenementiel'] = () => ({ g: group(at(P['stand-parapluie']().g, [0, 0, -0.6]), at(P['badges-de-salon']().g, [1.6, 0.02, 1.4], [0, -0.3, 0])), cam: [6, 14, 0.92] });
 
 // ------------------------------------------------------------------ prise de vue
+// Calendriers 2027 à la marque Symo Print (page de janvier réelle : le 1er janvier 2027 est un vendredi).
+const MOIS = ['JANVIER', 'FÉVRIER', 'MARS'];
+function calPage(w, h, { month = 0, photoRatio = 0.5, seed = 0, title = '2027' } = {}) {
+  return tex(w, h, (x) => {
+    paperBg(x, w, h, C.w); const ph = h * photoRatio;
+    x.save(); x.beginPath(); x.rect(0, 0, w, ph); x.clip(); hero(x, w, ph, { title, sub: 0, logo: false, seed, tsize: ph * 0.26 }); x.restore();
+    const u = Math.min(w, h) / 100, top = ph + 6 * u;   // portrait : largeur ; paysage (bureau) : hauteur
+    D.txt(x, MOIS[month] + ' 2027', 6 * u, top + 5 * u, { size: 5.2 * u, weight: 900, color: C.t, track: 2 });
+    if (w > h) D.logo(x, w - 62 * u, h - 30 * u, 54 * u, false); else D.logo(x, w - 34 * u, top - 1.2 * u, 28 * u, false);   // bureau : logo à droite de la grille
+    const days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'], cw = Math.min((w - 12 * u) / 7, 13 * u), gy = top + 12 * u, rows = 6, rh = (h - gy - 5 * u) / (rows + 0.6);
+    days.forEach((d, i) => D.txt(x, d, 6 * u + cw * i + cw / 2, gy, { size: 2.8 * u, weight: 700, color: i > 4 ? C.o : C.gd, align: 'center' }));
+    const first = (new Date(2027, month, 1).getDay() + 6) % 7, n = new Date(2027, month + 1, 0).getDate();
+    for (let dnum = 1; dnum <= n; dnum++) { const k = first + dnum - 1, r = Math.floor(k / 7), c = k % 7; const cx = 6 * u + cw * c, cy = gy + 2 * u + rh * r;
+      x.fillStyle = r % 2 ? '#F3F8F9' : '#FFFFFF'; x.fillRect(cx + 0.3 * u, cy, cw - 0.6 * u, rh - 0.6 * u);
+      D.txt(x, String(dnum), cx + cw - 1.6 * u, cy + rh * 0.62, { size: 3.4 * u, weight: c > 4 ? 800 : 600, color: c > 4 ? C.od : C.n, align: 'right' }); }
+  });
+}
+function spiral(len, y, z, { r = 0.018, tube = 0.0035, step = 0.03, axis = 'x' } = {}) {
+  const g = new THREE.Group(), m = M.metal('#3B4A50', 0.35), n = Math.floor(len / step);
+  for (let i = 0; i <= n; i++) { const t = mesh(new THREE.TorusGeometry(r, tube, 8, 28), m); t.position.set(-len / 2 + i * step, y, z); t.rotation.set(0, Math.PI / 2, 0); g.add(t); }
+  return g;
+}
+P['calendriers-muraux'] = () => {
+  const W = 0.62, H = 0.88, th = 0.004, e = M.edge();
+  const pg0 = M.paper(calPage(1240, 1760, { month: 0, seed: 1 }), 0.7), pg1 = M.paper(calPage(1240, 1760, { month: 1, seed: 0, title: '2027' }), 0.7);
+  const back = M.paper(tex(64, 64, (x, w, h) => paperBg(x, w, h, '#EEF2F3')), 0.9);
+  const cal = (front, n) => { const g = new THREE.Group(); for (let i = 0; i < n; i++) g.add(at(sheet(W, H, th, i === n - 1 ? front : back, back, e), [0, i * th, 0])); g.add(spiral(W * 0.92, n * th * 0.5, -H / 2 + 0.012)); return g; };
+  const g = group(at(cal(pg1, 4), [0.3, 0, -0.18], [0, -0.32, 0]), at(cal(pg0, 6), [-0.12, 0.002, 0.08], [0, 0.12, 0]));
+  return { g, cam: [8, 58, 0.98] };
+};
+P['calendriers-de-bureau'] = () => {
+  const W = 0.9, H = 0.4, th = 0.005, a = 0.36, e = M.edge();
+  const front = M.paper(calPage(1800, 800, { month: 0, photoRatio: 0.46, seed: 1 }), 0.7), back = M.paper(tex(900, 400, (x, w, h) => { paperBg(x, w, h, C.w); D.logo(x, w * 0.36, h * 0.42, w * 0.28, false); }), 0.8);
+  const tent = () => { const g = new THREE.Group();
+    const f = at(panel(W, H, th, front, back, e), [0, Math.cos(a) * H / 2, Math.sin(a) * H / 2], [-a, 0, 0]);
+    const b = at(panel(W, H, th, back, back, e), [0, Math.cos(a) * H / 2, -Math.sin(a) * H / 2], [a, 0, 0]);
+    g.add(f, b); for (let i = 0; i < 5; i++) g.add(at(panel(W, H, 0.0016, back, back, e), [0, Math.cos(a) * H / 2 + 0.001, Math.sin(a) * H / 2 - 0.004 - i * 0.002], [-a, 0, 0]));
+    g.add(spiral(W * 0.94, Math.cos(a) * H + 0.004, 0, { r: 0.016 })); return g; };
+  const g = group(at(tent(), [0, 0, 0], [0, 0.18, 0]));
+  return { g, cam: [-14, 18, 1.0] };
+};
+
 function shoot(slug) {
   const def = P[slug]; if (!def) throw new Error('produit inconnu : ' + slug);
   const { g, cam = [0, 30, 1], exposure } = def(); const scene = new THREE.Scene(); scene.environment = ENV; scene.add(g);

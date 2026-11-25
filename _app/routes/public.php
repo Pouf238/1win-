@@ -24,8 +24,7 @@ route('GET', '/', function () {
     $new = DB::all('SELECT * FROM products WHERE active=1 AND is_new=1 ORDER BY id DESC LIMIT 4');
     $tests = DB::all('SELECT * FROM testimonials WHERE active=1 ORDER BY sort, id LIMIT 6');
     $vitrine = vitrine_products();
-    $ld = [['@context' => 'https://schema.org', '@type' => 'LocalBusiness', 'name' => shop('shop_name'), 'url' => abs_url('/'), 'telephone' => shop('phone'), 'image' => abs_url('assets/img/og.png'), 'description' => shop('tagline') . '. Imprimerie à Abidjan.',
-        'address' => ['@type' => 'PostalAddress', 'streetAddress' => shop('address'), 'addressLocality' => shop('city'), 'addressCountry' => 'CI'], 'priceRange' => 'FCFA']];
+    $ld = [business_jsonld()];
     page('shop/home', compact('banners', 'cats', 'best', 'pop', 'promo', 'new', 'tests', 'vitrine'), ['jsonld' => $ld, 'body' => 'home', 'scripts' => []]);   // araignée 3D retirée à la demande du propriétaire (9 nov. 2026) ; fichiers conservés, inactifs
 });
 
@@ -61,7 +60,7 @@ route('GET', '/c/{slug}', function ($a) {
     $guides = $plain ? category_guides(DB::all('SELECT * FROM products WHERE active=1 AND category_id IN (' . DB::in($ids) . ') ORDER BY bestseller DESC, featured DESC, sort, name LIMIT 12', $ids)) : null;
     $faqs = $plain ? DB::all('SELECT * FROM faqs WHERE active=1 ORDER BY sort, id LIMIT 4') : [];
     page('shop/list', ['title' => $c['name'], 'intro' => $c['short_desc'] ?: $c['description'], 'crumbs' => $crumbs, 'tiles' => $subs, 'rows' => $rows, 'total' => $total, 'pg' => $pg, 'pages' => $pages, 'cat' => $c, 'subs' => $subs, 'sub' => $sub, 'base' => '/c/' . $c['slug'], 'side' => $side, 'guides' => $guides, 'faqs' => $faqs],
-        ['title' => $c['seo_title'] ?: $c['name'], 'desc' => $c['seo_desc'] ?: $c['short_desc'], 'jsonld' => $ld]);
+        ['title' => $c['seo_title'] ?: $c['name'], 'desc' => $c['seo_desc'] ?: meta_desc((string) $c['short_desc']), 'jsonld' => $ld, 'og_image' => og_path('c', $c)]);
 });
 
 route('GET', '/recherche', function () {
@@ -87,14 +86,15 @@ route('GET', '/p/{slug}', function ($a) {
     $q = Pricing::quote($p, $cfg); $cat = DB::find('categories', (int) $p['category_id']); $parent = $cat && $cat['parent_id'] ? DB::find('categories', (int) $cat['parent_id']) : null;
     $related = DB::all('SELECT * FROM products WHERE active=1 AND category_id=? AND id<>? ORDER BY bestseller DESC, name LIMIT 4', [$p['category_id'], $p['id']]);
     $crumbs = [['Catalogue', '/catalogue']]; if ($parent) $crumbs[] = [$parent['name'], '/c/' . $parent['slug']]; if ($cat) $crumbs[] = [$cat['name'], '/c/' . $cat['slug']]; $crumbs[] = [$p['name'], ''];
-    $img = $p['image'] ? 'assets/img/produits/' . basename($p['image']) . '.webp' : null;
+    $img = ($pn = product_photo($p)) !== '' ? 'assets/img/produits/' . $pn . '.webp' : null;   // vraie photo, sinon visuel 3D
     $ld = [['@context' => 'https://schema.org', '@type' => 'Product', 'name' => $p['name'], 'description' => $p['short_desc'], 'sku' => 'SP-' . $p['id'], 'brand' => ['@type' => 'Brand', 'name' => shop('shop_name')],
             'image' => $img ? [abs_url($img)] : [abs_url('assets/img/og.png')], ] + (price_on_request($p) ? [] : ['offers' => ['@type' => 'Offer', 'priceCurrency' => 'XOF', 'price' => (int) $p['price_from'], 'availability' => 'https://schema.org/InStock', 'url' => abs_url('/p/' . $p['slug']), 'seller' => ['@type' => 'Organization', 'name' => shop('shop_name')]]]),
         ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($c2, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $c2[0]], $crumbs, array_keys($crumbs))]];
     $gal = array_values(array_filter(array_merge([$p['image']], feature('catalog.gallery') ? jd($p['gallery']) : [])));
     if (!$gal && !isset(PRODUCT_VISUALS[$p['slug']]) && ($r3d = product_render($p)) !== '') $gal = [$r3d];   // produit sans photo : visuel 3D de présentation
+    elseif ($gal && in_array(basename((string) $gal[0]), PHOTOS_OTHER_BRAND, true) && ($r3d = product_render($p)) !== '') array_unshift($gal, $r3d);   // photo à la marque d'un autre imprimeur : le visuel Symo Print passe devant
     $seen = recent_products((int) $p['id']); recent_seen((int) $p['id']);
-    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal', 'seen'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée', 'desc' => $p['seo_desc'] ?: $p['short_desc'], 'jsonld' => $ld, 'mobbar' => feature('customization') && !price_on_request($p), 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', 'og_image' => $img]);
+    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal', 'seen'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée à Abidjan', 'desc' => $p['seo_desc'] ?: meta_desc((string) $p['short_desc']), 'jsonld' => $ld, 'og_image' => og_path('p', $p) ?? $img, 'mobbar' => feature('customization') && !price_on_request($p), 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', ]);   // image d'aperçu : og_path() (carte JPEG 1200 × 630), plus haut
 });
 
 // ---------------- API : prix (calcul serveur), fichiers, favoris
@@ -168,11 +168,26 @@ route('GET', '/go/whatsapp', function () {
     stats_track('whatsapp', 0, $from !== '' ? $from : 'lien direct');
     header('Cache-Control: no-store'); header('X-Robots-Tag: noindex'); redirect(wa_link($m));   // destination fixe : wa.me + numéro de la boutique (pas de redirection ouverte)
 });
+route('GET', '/og/{kind}/{file}', function ($a) {   // image d'aperçu d'un produit ou d'une rubrique (WhatsApp, Facebook…), fabriquée une fois puis gardée
+    if (!in_array($a['kind'], ['p', 'c'], true) || !preg_match('/^([a-z0-9-]{1,150})\.jpg$/', (string) $a['file'], $m)) abort(404);
+    $row = DB::row('SELECT * FROM ' . ($a['kind'] === 'p' ? 'products' : 'categories') . ' WHERE slug=? AND active=1', [$m[1]]); if (!$row) abort(404);
+    [$src, $mode] = og_source($a['kind'], $row); if ($src === '' || !function_exists('imagecreatefromwebp')) abort(404);
+    $dir = APP . '/storage/og'; $pre = $a['kind'] . '-' . $m[1] . '-'; $f = $dir . '/' . $pre . filemtime($src) . '.jpg';
+    if (!is_file($f)) {
+        if (!is_dir($dir)) @mkdir($dir, 0755, true);
+        foreach (glob($dir . '/' . $pre . '*.jpg') ?: [] as $old) if (preg_match('/^' . preg_quote($pre, '/') . '\d+\.jpg$/', basename($old))) @unlink($old);   // ancienne version du même visuel
+        if (!og_card($src, $mode, $f)) abort(404);
+    }
+    header('Content-Type: image/jpeg'); header('Cache-Control: public, max-age=604800'); header('Content-Length: ' . filesize($f)); readfile($f); exit;
+});
 route('GET', '/robots.txt', function () {
     header('Content-Type: text/plain; charset=utf-8'); echo "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /compte\nDisallow: /panier\nDisallow: /commande\nDisallow: /api\nDisallow: /recherche\nDisallow: /go\n\nSitemap: " . abs_url('/sitemap.xml') . "\n"; exit;
 });
 route('GET', '/sitemap.xml', function () {
     header('Content-Type: application/xml; charset=utf-8'); $u = [['/', '1.0'], ['/catalogue', '0.9'], ['/produits-a-z', '0.6'], ['/devis', '0.8'], ['/contact', '0.5'], ['/faq', '0.5'], ['/a-propos', '0.4'], ['/nos-services', '0.6']];
-    foreach (DB::all('SELECT slug FROM categories WHERE active=1') as $c) $u[] = ['/c/' . $c['slug'], '0.8']; foreach (DB::all('SELECT slug FROM products WHERE active=1') as $p) $u[] = ['/p/' . $p['slug'], '0.7'];
-    echo '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'; foreach ($u as [$l, $pr]) echo '<url><loc>' . e(abs_url($l)) . '</loc><priority>' . $pr . '</priority></url>'; echo '</urlset>'; exit;
+    foreach (DB::all('SELECT slug FROM categories WHERE active=1') as $c) $u[] = ['/c/' . $c['slug'], '0.8'];
+    foreach (DB::all('SELECT * FROM products WHERE active=1') as $p) { $pn = product_photo($p); $d = substr((string) ($p['updated_at'] ?: $p['created_at']), 0, 10); $u[] = ['/p/' . $p['slug'], '0.7', preg_match('/^\d{4}-\d\d-\d\d$/', $d) ? $d : '', $pn !== '' ? [abs_url('assets/img/produits/' . $pn . '.webp'), $p['name']] : null]; }
+    echo '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">';
+    foreach ($u as $r) echo '<url><loc>' . e(abs_url($r[0])) . '</loc>' . (!empty($r[2]) ? '<lastmod>' . $r[2] . '</lastmod>' : '') . '<priority>' . $r[1] . '</priority>' . (!empty($r[3]) ? '<image:image><image:loc>' . e($r[3][0]) . '</image:loc><image:title>' . e($r[3][1]) . '</image:title></image:image>' : '') . '</url>';
+    echo '</urlset>'; exit;
 });

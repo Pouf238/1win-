@@ -3,7 +3,7 @@
 $fmtDay = fn(string $d) => substr($d, 8, 2) . '/' . substr($d, 5, 2);
 $delta = function (int|float $now, int|float $before): string { if (!$before) return $now ? '<small class="st-up">nouveau</small>' : ''; $p = (int) round(($now - $before) * 100 / $before); return '<small class="' . ($p >= 0 ? 'st-up' : 'st-down') . '">' . ($p >= 0 ? '+' : '') . $p . ' %</small>'; };
 $bar = fn(int $n, int $max) => '<span class="st-bar"><i style="width:' . max(2, (int) round($n * 100 / max(1, $max))) . '%"></i></span>';
-$srcLabel = ['direct' => 'Accès direct (adresse tapée, favori, QR code sans repère)', 'google' => 'Google', 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'whatsapp' => 'WhatsApp', 'tiktok' => 'TikTok', 'youtube' => 'YouTube', 'bing' => 'Bing', 'affiche' => 'Affiche (QR code)'];
+$srcLabel = ['direct' => 'Accès direct (adresse tapée, favori, QR code sans repère)', 'google' => 'Google', 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'whatsapp' => 'WhatsApp', 'tiktok' => 'TikTok', 'youtube' => 'YouTube', 'bing' => 'Bing', 'affiche' => 'Affiche (QR code)', 'google-maps' => 'Fiche Google Maps', 'boutique' => 'Boutique (QR code au comptoir, sacs, factures)', 'flyer' => 'Flyers distribués (QR code)', 'statut' => 'Statut WhatsApp', 'linkedin' => 'LinkedIn', 'chatgpt' => 'ChatGPT'];
 $kindLabel = STATS_KINDS;
 ?>
 <div class="top"><h1>Statistiques du site</h1><nav class="st-per" aria-label="Période"><?php foreach ([1 => "Aujourd'hui", 7 => '7 jours', 30 => '30 jours', 90 => '90 jours'] as $k => $l): ?><a href="?p=<?= $k ?>" class="<?= $per === $k ? 'on' : '' ?>"><?= e($l) ?></a><?php endforeach; ?></nav></div>

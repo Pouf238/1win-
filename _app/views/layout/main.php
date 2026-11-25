@@ -2,7 +2,7 @@
 /** @var string $content @var array $meta */
 $name = shop('shop_name', 'Symo Print');
 $title = $meta['title'] ? $meta['title'] . ' | ' . $name : $name . ' : imprimerie en ligne à Abidjan, ' . shop('tagline');
-$desc = $meta['desc'] ?: "Symo Print, imprimerie moderne, fiable et professionnelle à Abidjan : flyers, cartes de visite, bâches, roll-up, t-shirts, objets personnalisés. " . (feature('orders') ? "Commandez en ligne en FCFA, livraison en Côte d'Ivoire." : "Devis gratuit en ligne ou sur WhatsApp, prix en FCFA, livraison en Côte d'Ivoire.");   // jamais « commandez en ligne » quand la commande en ligne est fermée
+$desc = $meta['desc'] ?: "Imprimerie à Abidjan (Abobo) : flyers, cartes de visite, bâches, roll-up, t-shirts et objets personnalisés. " . (feature('orders') ? 'Commandez en ligne, prix en FCFA.' : 'Devis gratuit en ligne ou sur WhatsApp, prix en FCFA.');   // jamais « commandez en ligne » quand la commande en ligne est fermée
 $canon = $meta['canon'] ?? (abs_url((string) (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/')));
 $ogimg = abs_url($meta['og_image'] ?? 'assets/img/og.png');
 $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs());
@@ -11,12 +11,12 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?= e($title) ?></title>
-<meta name="description" content="<?= e(mb_substr($desc, 0, 160)) ?>">
+<meta name="description" content="<?= e(meta_cut($desc, 160)) ?>"><?= site_verification_meta() ?>
 <link rel="canonical" href="<?= e($canon) ?>">
 <?php if (!empty($meta['noindex'])): ?><meta name="robots" content="noindex,nofollow"><?php endif; ?>
 <meta name="theme-color" content="#1F7A8C">
 <meta property="og:type" content="website"><meta property="og:site_name" content="<?= e($name) ?>"><meta property="og:locale" content="fr_FR"><meta property="og:title" content="<?= e($title) ?>"><meta property="og:description" content="<?= e(mb_substr($desc, 0, 200)) ?>"><meta property="og:url" content="<?= e($canon) ?>"><meta property="og:image" content="<?= e($ogimg) ?>">
-<meta name="twitter:card" content="summary_large_image">
+<?php if (str_contains($ogimg, '/og/')): ?><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:type" content="image/jpeg"><?php endif; ?><meta name="twitter:card" content="summary_large_image">
 <?= site_icons() ?>
 <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">

@@ -52,10 +52,13 @@ function photo(string $slot, array $o = []): string {
         e($o['cls'] ?? ''), $u1, $u1, $w1, $u2, $w2, e($o['sizes'] ?? '(min-width:900px) 34vw, 92vw'), e($alt), $d[0], $d[1], !empty($o['eager']) ? ' fetchpriority="high"' : ' loading="lazy"');
 }
 /** Nom du fichier photo d'un produit (photo principale, sinon 1re photo de la galerie, sinon visuel 3D de présentation), ou '' s'il n'en a aucun. */
+/** Photos fournies qui montrent la marque d'un autre imprimeur (logo « onlineprinters ») : conservées dans la galerie de la fiche,
+ *  mais jamais en image principale (vignettes, accueil, aperçu de partage) quand un visuel Symo Print du produit existe. */
+const PHOTOS_OTHER_BRAND = ['calendrier-mural', 'calendrier-mural-pile', 'calendrier-bureau', 'calendrier-bureau-pile', 'calendrier-spirale-couverture', 'calendrier-spirale-mois'];
 function product_photo(array $p): string {
     foreach (array_merge([(string) ($p['image'] ?? '')], array_map('strval', (array) (json_decode((string) ($p['gallery'] ?? ''), true) ?: []))) as $n) {
         $n = basename(preg_replace('/\.webp$/', '', $n));
-        if ($n !== '' && is_file(ROOT . '/assets/img/produits/' . $n . '.webp')) return $n;
+        if ($n !== '' && is_file(ROOT . '/assets/img/produits/' . $n . '.webp')) return in_array($n, PHOTOS_OTHER_BRAND, true) && ($r = product_render($p)) !== '' ? $r : $n;
     }
     return product_render($p);
 }
@@ -137,16 +140,20 @@ const CAT_PHOTOS = [
 /** Produits « visuels par option » dont les photos portent le nom des visuels (pas de colonne image) : utile pour savoir à quel produit appartient une photo. */
 const VISUAL_OWNERS = ['depliants' => ['depliant-2v-portrait', 'depliant-2v-paysage', 'depliant-2v-carre', 'depliant-3v-roule', 'depliant-3v-accordeon', 'depliant-2v-paysage-ferme', 'depliant-2v-carre-ouvert', 'depliant-3v-roule-exterieur', 'depliant-3v-roule-ouvert']];
 function cat_photo(array $c, string $sizes = ''): string {
+    $n = cat_photo_name($c); if ($n !== '') return '<img src="' . e(asset("img/produits/$n.webp")) . '" alt="" loading="lazy" decoding="async">';
+    return mock((string) ($c['icon'] ?? 'flyer'));
+}
+/** Nom du visuel d'une rubrique (photo choisie, sinon photo d'un de ses produits, sinon visuel 3D d'un de ses produits) ; '' si aucun. */
+function cat_photo_name(array $c): string {
     $n = CAT_PHOTOS[$c['slug']] ?? '';
     if ($n === '' || !is_file(ROOT . "/assets/img/produits/$n.webp")) {
         $n = (string) (DB::val("SELECT p.image FROM products p JOIN categories c ON c.id=p.category_id WHERE p.active=1 AND p.image<>'' AND (c.slug=? OR c.parent_id=(SELECT id FROM categories WHERE slug=?)) ORDER BY p.bestseller DESC, p.sort LIMIT 1", [$c['slug'], $c['slug']]) ?: '');
-        $n = basename($n);
+        $n = basename($n); if (in_array($n, PHOTOS_OTHER_BRAND, true)) $n = '';   // jamais la marque d'un autre imprimeur en vignette de rubrique
     }
     if ($n === '' || !is_file(ROOT . "/assets/img/produits/$n.webp")) {   // sinon : visuel 3D d'un produit de la catégorie (même règle : uniquement un produit qu'elle contient)
         foreach (DB::all("SELECT p.slug FROM products p JOIN categories c ON c.id=p.category_id WHERE p.active=1 AND (c.slug=? OR c.parent_id=(SELECT id FROM categories WHERE slug=?)) ORDER BY p.bestseller DESC, p.featured DESC, p.sort, p.name", [$c['slug'], $c['slug']]) as $r) if (($n = product_render($r)) !== '') break;
     }
-    if ($n !== '' && is_file(ROOT . "/assets/img/produits/$n.webp")) return '<img src="' . e(asset("img/produits/$n.webp")) . '" alt="" loading="lazy" decoding="async">';
-    return mock((string) ($c['icon'] ?? 'flyer'));
+    return $n !== '' && is_file(ROOT . "/assets/img/produits/$n.webp") ? $n : '';
 }
 /** Visuel de mise en scène (studio tools/render3d, fond « aurore » sombre) pour l'en-tête d'une grande rubrique ; '' si aucun. */
 const CAT_SCENES = ['impression-commerciale' => 'scene-impression', 'grand-format' => 'scene-grand-format', 'objets-publicitaires' => 'scene-objets', 'communication-evenementielle' => 'scene-evenementiel'];

@@ -224,3 +224,23 @@ img[src*="/r3d-"]{mix-blend-mode:normal!important}
 .px-main-im img.px-scene{object-fit:cover;object-position:center 60%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%);mask-image:linear-gradient(90deg,transparent 0,#000 18%)}
 .phead .ph-vis>img.ph-scene{background:none!important;padding:0!important;max-height:240px!important;aspect-ratio:1;object-fit:cover;border-radius:20px;box-shadow:0 30px 70px -30px rgba(0,0,0,.8),0 0 0 1px rgba(76,201,216,.25)!important;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 62%,transparent 100%);mask-image:radial-gradient(circle at 50% 50%,#000 62%,transparent 100%)}
 @media (max-width:680px){.px-main-im img.px-scene{-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}}
+
+/* Fiche produit sur téléphone : la photo du produit visible dès l'ouverture (juste sous le titre), fil d'Ariane réduit au lien « retour » */
+@media (max-width:720px){
+  .pp .main-col{display:flex;flex-direction:column}
+  .pp .main-col>*{order:3}
+  .pp .main-col>:first-child,.pp .main-col>.pp-top{order:1}
+  .pp .main-col>.gallery.mb{order:2;margin:4px 0 16px}
+  .pp .main-col>.pp-top h1{margin-bottom:6px}
+  .wrap:has(>.pp)>.crumbs{padding:10px 0 4px}
+  .wrap:has(>.pp)>.crumbs>*{display:none}
+  .wrap:has(>.pp)>.crumbs>a:nth-last-child(3){display:inline-block;font-weight:600}
+  .wrap:has(>.pp)>.crumbs>a:nth-last-child(3)::before{content:"‹ ";font-weight:700}
+}
+
+/* Accueil : section saisonnière « Fêtes de fin d'année » */
+.px-fetes .px-head{align-items:flex-end}
+.px-fetes .px-sub{margin:6px 0 0;color:var(--pxmut);font-size:15px;max-width:62ch}
+.px-fetes .px-head>a{background:#25D366;color:#fff;padding:10px 16px;border-radius:99px;text-transform:none;letter-spacing:0;font-size:14px}
+.px-fetes .px-head>a:hover{text-decoration:none;filter:brightness(.95)}
+@media (max-width:720px){.px-fetes .px-head{flex-direction:column;align-items:flex-start}}
