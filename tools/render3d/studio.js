@@ -435,6 +435,121 @@ P['calendriers-de-bureau'] = () => {
   return { g, cam: [-14, 18, 1.0] };
 };
 
+// ------------------------------------------------------------------ 14 produits dont les photos fournies portaient la marque d'un autre imprimeur (25 nov. 2026)
+const fabric = (bg, light, { logoW = 0.56, y = 0.5, weave = true, text } = {}) => tex(1024, 1024, (x, w, h) => {
+  x.fillStyle = bg; x.fillRect(0, 0, w, h);
+  if (weave) { x.save(); x.globalAlpha = 0.06; x.strokeStyle = light ? '#000' : '#fff'; for (let i = 0; i < w; i += 6) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, h); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(w, i); x.stroke(); } x.restore(); }
+  const lw = w * logoW; D.logo(x, (w - lw) / 2, h * y - lw * 189 / 619 / 2, lw, !light);
+  if (text) D.txt(x, text, w / 2, h * y + lw * 0.3, { size: w * 0.045, weight: 700, color: light ? C.td : '#FFFFFF', align: 'center', track: 6 });
+});
+const tube = (pts, r, mat, closed = false) => mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(q => V(...q)), closed), 96, r, 12, closed), mat);
+/** Pièce plate épaisse (porte-clés, décapsuleur) : faces avec visuel, tranche unie. */
+function slab(shape, depth, faceMat, sideMat) {
+  const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelSize: depth * 0.25, bevelThickness: depth * 0.25, bevelSegments: 3, curveSegments: 48 });
+  g.computeBoundingBox(); const b = g.boundingBox, uv = g.attributes.uv, q = g.attributes.position;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, (q.getX(i) - b.min.x) / (b.max.x - b.min.x), (q.getY(i) - b.min.y) / (b.max.y - b.min.y));
+  return mesh(g, [faceMat, sideMat]);
+}
+function roundRect(w, h, r) { const s = new THREE.Shape(); s.moveTo(-w / 2 + r, -h / 2); s.lineTo(w / 2 - r, -h / 2); s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r); s.lineTo(w / 2, h / 2 - r); s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); s.lineTo(-w / 2 + r, h / 2); s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r); s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2); return s; }
+const ring = (r = 0.12, t = 0.012) => mesh(new THREE.TorusGeometry(r, t, 16, 64), M.metal('#D9DFE2', 0.2));
+
+P['affiches-baguettes'] = () => {
+  const rail = M.metal('#C9D1D4', 0.3), cord = M.color('#2A3236', 0.6);
+  const poster = (i) => { const g = new THREE.Group(); g.add(at(panel(0.84, 1.2, 0.003, M.paper(ART.poster(i), 0.6), M.paper(tex(64, 64, (x, w, h) => paperBg(x, w, h)))), [0, 0, 0]));
+    [0.61, -0.61].forEach(y => g.add(at(rbox(0.9, 0.04, 0.035, 0.012, rail), [0, y, 0]))); g.add(tube([[-0.4, 0.63, 0], [0, 0.92, -0.01], [0.4, 0.63, 0]], 0.004, cord)); return g; };
+  const g = group(at(poster(0), [-0.25, 1.0, 0.2], [0, 0.18, 0]), at(poster(1), [0.55, 1.05, -0.35], [0, -0.22, 0]));
+  return { g, cam: [6, 6, 1.0] };
+};
+P['baches-barrieres-chantier'] = () => {
+  const frame = M.metal('#B8C2C6', 0.35), g = new THREE.Group();
+  [[-1.75, 0], [1.75, 0]].forEach(([x]) => { g.add(at(cyl(0.025, 0.025, 2.0, frame), [x, 1.08, 0])); g.add(at(rbox(0.26, 0.14, 0.6, 0.03, M.color('#8E989B', 0.85)), [x, 0.07, 0])); });
+  [2.06, 0.1].forEach(y => g.add(at(cyl(0.022, 0.022, 3.5, frame), [0, y, 0], [0, 0, Math.PI / 2])));
+  for (let i = -1.6; i <= 1.61; i += 0.1) g.add(at(cyl(0.004, 0.004, 1.96, frame, 8), [i, 1.08, -0.02]));
+  g.add(at(curved(3.4, 1.82, 0, M.paper(ART.wide('BIENTÔT ICI', 1), 0.6), 80, 0.025), [0, 1.08, 0.04]));
+  return { g, cam: [-10, 8, 1.0] };
+};
+P['baches-echafaudage'] = () => {
+  const tubeM = M.metal('#AEB8BC', 0.35), plank = M.color('#C8A777', 0.8), g = new THREE.Group(); const X = [-1.8, -0.6, 0.6, 1.8], Y = [0, 1.3, 2.6, 3.9];
+  X.forEach(x => [-0.45, 0.45].forEach(z => g.add(at(cyl(0.03, 0.03, 4.1, tubeM), [x, 2.05, z]))));
+  Y.slice(1).forEach(y => { [-0.45, 0.45].forEach(z => g.add(at(cyl(0.025, 0.025, 3.7, tubeM), [0, y, z], [0, 0, Math.PI / 2]))); g.add(at(rbox(3.6, 0.05, 0.8, 0.01, plank), [0, y - 0.04, 0])); });
+  [[-1.2, 0.65], [0, 1.95], [1.2, 0.65], [-1.2, 3.25]].forEach(([x, y]) => g.add(at(cyl(0.02, 0.02, 1.75, tubeM), [x, y, 0.47], [0, 0, 0.82])));   // diagonales de contreventement
+  g.add(at(curved(2.3, 2.45, 0, M.paper(tex(1200, 1280, (x, w, h) => hero(x, w, h, { title: 'VOTRE\nPUBLICITÉ', sub: 2, seed: 0 })), 0.6), 40, 0.03), [0.62, 2.62, 0.5]));
+  return { g, cam: [-18, 6, 1.0] };
+};
+P['tours-de-cou'] = () => {
+  const strip = (bg) => { const t = tex(4096, 128, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h); for (let i = 0; i < 9; i++) D.txt(x, 'SYMO PRINT', 230 + i * 460, h * 0.68, { size: 60, weight: 800, color: '#FFFFFF', align: 'center', track: 4 }); }); return M.paper(t, 0.6); };
+  const lan = (bg, ox, oz, rot) => { const g = new THREE.Group(); const c = new THREE.CatmullRomCurve3([V(-0.05, 0, 0.9), V(-0.55, 0, 0.6), V(-0.75, 0, 0), V(-0.55, 0, -0.6), V(0, 0, -0.85), V(0.55, 0, -0.6), V(0.75, 0, 0), V(0.55, 0, 0.6), V(0.05, 0, 0.9)]);
+    g.add(ribbon(c, 0.09, strip(bg), 260, V(0, 1, 0))); g.add(at(rbox(0.1, 0.03, 0.14, 0.01, M.metal('#C9D1D4', 0.25)), [0, 0.012, 0.98])); g.add(at(ring(0.06, 0.008), [0, 0.01, 1.12], [Math.PI / 2, 0, 0])); g.position.set(ox, 0.006, oz); g.rotation.y = rot; return g; };
+  return { g: group(lan(C.t, -0.45, 0, 0.3), lan(C.n, 0.6, -0.2, -0.5)), cam: [0, 62, 1.0] };
+};
+P['decapsuleurs-plastique'] = () => {
+  const sh = () => { const s = roundRect(0.36, 0.95, 0.16); const hole = new THREE.Path(); hole.absellipse(0, 0.27, 0.11, 0.085, 0, Math.PI * 2, true); s.holes.push(hole); return s; };
+  const face = (bg, light) => M.paper(tex(400, 1050, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h); x.save(); x.translate(w / 2, h * 0.68); x.rotate(-Math.PI / 2); D.logo(x, -h * 0.22, -w * 0.18, h * 0.44, !light); x.restore(); }), 0.45);
+  const op = (bg, light, p, r) => at(slab(sh(), 0.05, face(bg, light), M.color(bg, 0.45)), p, r);
+  return { g: group(op('#FFFFFF', true, [-0.35, 0.03, 0], [-Math.PI / 2, 0, 0.35]), op(C.o, false, [0.2, 0.03, -0.12], [-Math.PI / 2, 0, -0.2]), op(C.t, false, [0.72, 0.03, 0.05], [-Math.PI / 2, 0, -0.55])), cam: [0, 60, 1.0] };
+};
+P['porte-cles-jeton-bambou'] = () => {
+  const s = roundRect(0.7, 0.26, 0.12); const tok = new THREE.Path(); tok.absarc(0.22, 0, 0.02, 0, Math.PI * 2, true);
+  const wood = (logo) => M.paper(tex(1400, 520, (x, w, h) => { x.fillStyle = '#D9B98A'; x.fillRect(0, 0, w, h); x.globalAlpha = 0.25; for (let i = 0; i < 40; i++) { x.strokeStyle = i % 2 ? '#B48F5E' : '#E8CFA6'; x.lineWidth = 2 + (i % 3); x.beginPath(); x.moveTo(0, i * 13 + 4); x.bezierCurveTo(w * 0.3, i * 13 - 6, w * 0.7, i * 13 + 10, w, i * 13); x.stroke(); } x.globalAlpha = 1;
+    if (logo) { x.globalAlpha = 0.85; x.globalCompositeOperation = 'multiply'; D.logo(x, w * 0.12, h * 0.25, w * 0.56, false); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; } }), 0.75);
+  const key = (p, r) => { const g = new THREE.Group(); const hole = new THREE.Path(); hole.absarc(-0.28, 0, 0.035, 0, Math.PI * 2, true); const sh2 = roundRect(0.7, 0.26, 0.12); sh2.holes.push(hole);
+    g.add(slab(sh2, 0.035, wood(true), M.color('#C9A673', 0.7))); g.add(at(ring(0.1, 0.01), [-0.4, 0, 0.02], [0, 0, 0])); return at(g, p, r); };
+  return { g: group(key([-0.15, 0.03, 0.1], [-Math.PI / 2, 0, 0.25]), key([0.35, 0.03, -0.25], [-Math.PI / 2, 0, -0.35])), cam: [0, 64, 1.0] };
+};
+P['porte-cles-sangle'] = () => {
+  const key = (col, p, r) => { const g = new THREE.Group(); g.add(at(rbox(0.62, 0.02, 0.14, 0.008, M.color(col, 0.85)), [0, 0, 0]));
+    g.add(at(rbox(0.26, 0.04, 0.17, 0.012, M.paper(tex(600, 400, (x, w, h) => { x.fillStyle = '#DDE3E6'; x.fillRect(0, 0, w, h); x.globalAlpha = 0.7; D.logo(x, w * 0.12, h * 0.3, w * 0.76, false); }), 0.3)), [0.05, 0.012, 0]));
+    g.add(at(ring(0.11, 0.011), [-0.4, 0.01, 0], [Math.PI / 2, 0, 0])); return at(g, p, r); };
+  return { g: group(key(C.n, [-0.1, 0.02, 0.15], [0, 0.3, 0]), key('#B8302A', [0.3, 0.02, -0.2], [0, -0.35, 0]), key(C.t, [0.05, 0.02, 0.45], [0, 0.05, 0])), cam: [0, 58, 1.0] };
+};
+P['boites-carton-personnalisees'] = () => {
+  const side = M.paper(tex(800, 800, (x, w, h) => { x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h); x.fillStyle = C.t; x.beginPath(); x.moveTo(0, h); x.lineTo(w, h * 0.55); x.lineTo(w, h); x.fill(); x.fillStyle = C.o; x.beginPath(); x.moveTo(0, h * 0.9); x.lineTo(w, h * 0.48); x.lineTo(w, h * 0.55); x.lineTo(0, h * 0.97); x.fill(); D.logo(x, w * 0.14, h * 0.22, w * 0.6, false); }), 0.7);
+  const top = M.paper(tex(800, 800, (x, w, h) => { x.fillStyle = C.n; x.fillRect(0, 0, w, h); D.logo(x, w * 0.17, h * 0.4, w * 0.66, true); }), 0.7), kraft = M.color('#C9A577', 0.85);
+  const cube = at(mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7), [side, side, top, kraft, side, side]), [-0.35, 0.35, 0], [0, 0.4, 0]);
+  const flat = at(mesh(new THREE.BoxGeometry(1.0, 0.22, 0.75), [side, side, top, kraft, side, side]), [0.6, 0.11, 0.35], [0, -0.25, 0]);
+  return { g: group(cube, flat), cam: [12, 26, 1.0] };
+};
+function bagHandles(w, y, z, mat, h = 0.32, r = 0.012) { const g = new THREE.Group(); [-1, 1].forEach(s => g.add(tube([[-w / 2, y, s * z], [-w / 2 + 0.02, y + h, s * z], [w / 2 - 0.02, y + h, s * z], [w / 2, y, s * z]], r, mat))); return g; }
+P['sacs-shopping-non-tisse'] = () => {
+  const bag = (col, p, r) => { const front = M.paper(tex(900, 700, (x, w, h) => { x.fillStyle = col; x.fillRect(0, 0, w, h * 0.74); x.fillStyle = '#1E2427'; x.fillRect(0, h * 0.74, w, h); D.logo(x, w * 0.2, h * 0.24, w * 0.6, col !== '#FFFFFF'); }), 0.85);
+    const plain = M.color(col, 0.85); const g = new THREE.Group(); g.add(at(mesh(new THREE.BoxGeometry(0.9, 0.7, 0.24), [plain, plain, plain, plain, front, front]), [0, 0.35, 0])); g.add(bagHandles(0.4, 0.69, 0.1, M.color('#1E2427', 0.8), 0.36, 0.014)); return at(g, p, r); };
+  return { g: group(bag(C.o, [-0.55, 0, 0.1], [0, 0.25, 0]), bag(C.t, [0.5, 0, -0.25], [0, -0.3, 0])), cam: [0, 14, 1.0] };
+};
+P['tote-bags'] = () => {
+  const cotton = '#EFE6D2'; const tote = (light, p, r) => { const g = new THREE.Group(); const f = M.paper(fabric(light ? cotton : C.n, light, { logoW: 0.62 }), 0.95);
+    g.add(at(curved(0.8, 0.88, -0.03, f, 24, 0.008), [0, 0.44, 0])); g.add(at(curved(0.8, 0.88, 0.03, M.paper(fabric(light ? cotton : C.n, light, { logoW: 0 }), 0.95), 24), [0, 0.44, -0.035]));
+    g.add(bagHandles(0.42, 0.87, 0.018, M.color(light ? '#E5DAC2' : '#0E2E35', 0.95), 0.5, 0.016)); return at(g, p, r); };
+  return { g: group(tote(true, [-0.45, 0, 0.1], [0, 0.2, 0]), tote(false, [0.5, 0, -0.25], [0, -0.25, 0])), cam: [0, 10, 1.0] };
+};
+P['sacs-a-cordelettes'] = () => {
+  const bag = (col, light, p, r) => { const g = new THREE.Group(); g.add(at(curved(0.78, 1.0, -0.06, M.paper(fabric(col, light, { logoW: 0.6, y: 0.55 }), 0.7), 24, 0.012), [0, 0.5, 0.03])); g.add(at(curved(0.78, 1.0, 0.06, M.color(col, 0.7), 24), [0, 0.5, -0.03]));
+    const cord = M.color(light ? '#2A3236' : '#F3F3F1', 0.7); [-1, 1].forEach(s => g.add(tube([[s * 0.3, 1.0, 0.03], [s * 0.4, 0.8, 0.035], [s * 0.405, 0.4, 0.035], [s * 0.39, 0.03, 0.03]], 0.008, cord))); g.add(at(rbox(0.8, 0.05, 0.07, 0.02, M.color(col, 0.75)), [0, 0.98, 0])); return at(g, p, r); };
+  return { g: group(bag(C.o, false, [-0.5, 0, 0.1], [0, 0.22, 0]), bag(C.n, false, [0.45, 0, -0.25], [0, -0.25, 0])), cam: [0, 10, 1.0] };
+};
+P['sacs-isothermes'] = () => {
+  const bag = (col, p, r) => { const front = M.paper(fabric(col, false, { logoW: 0.62, y: 0.52 }), 0.55), plain = M.color(col, 0.55); const g = new THREE.Group();
+    g.add(at(mesh(new THREE.BoxGeometry(0.62, 0.7, 0.4), [plain, plain, M.color('#C9D1D4', 0.3, 0.6), plain, front, plain]), [0, 0.35, 0])); g.add(at(rbox(0.64, 0.04, 0.42, 0.015, M.color(col, 0.6)), [0, 0.72, 0]));
+    g.add(bagHandles(0.3, 0.73, 0.0, M.color('#1E2427', 0.7), 0.22, 0.02)); return at(g, p, r); };
+  return { g: group(bag(C.t, [-0.4, 0, 0.1], [0, 0.35, 0]), bag(C.n, [0.42, 0, -0.2], [0, -0.3, 0])), cam: [0, 16, 1.0] };
+};
+P['chaises-realisateur'] = () => {
+  const wood = M.color('#D2B48C', 0.6), g = new THREE.Group(), cloth = M.color(C.n, 0.85), W = 0.6, D2 = 0.24;
+  [-D2, D2].forEach(z => { [0.72, -0.72].forEach(a => g.add(at(cyl(0.022, 0.022, 0.78, wood), [0, 0.33, z], [0, 0, a]))); g.add(at(cyl(0.02, 0.02, W + 0.06, wood), [0, 0.02, z], [0, 0, Math.PI / 2])); });   // X de face et de dos, traverses au sol
+  [-1, 1].forEach(sx => { g.add(at(rbox(0.055, 0.045, 2 * D2 + 0.12, 0.015, wood), [sx * W / 2, 0.66, 0.02])); g.add(at(cyl(0.022, 0.022, 0.42, wood), [sx * W / 2, 0.45, D2 + 0.04]));   // accoudoirs et montants avant
+    g.add(at(cyl(0.024, 0.024, 1.08, wood), [sx * W / 2, 0.86, -D2])); });   // montants du dossier
+  g.add(at(rbox(W - 0.04, 0.02, 2 * D2, 0.008, cloth), [0, 0.58, 0]));   // assise
+  g.add(at(panel(W + 0.08, 0.3, 0.012, M.paper(fabric(C.n, false, { logoW: 0.68 }), 0.85), cloth), [0, 1.22, -D2 - 0.012]));   // dossier imprimé
+  return { g: group(at(g, [0, 0, 0], [0, -0.5, 0])), cam: [0, 14, 1.0] };
+};
+P['voiles-ombrage'] = () => {
+  const s2 = new THREE.Shape(); s2.moveTo(-1.6, 0); s2.quadraticCurveTo(0, 0.35, 1.6, 0); s2.quadraticCurveTo(0.55, 0.9, 0.2, 2.2); s2.quadraticCurveTo(-0.45, 0.95, -1.6, 0);
+  const sail = shapeMesh(s2, M.paper(tex(1200, 1000, (x, w, h) => { x.fillStyle = C.t; x.fillRect(0, 0, w, h); x.save(); x.globalAlpha = 0.07; for (let i = 0; i < w; i += 8) { x.fillStyle = '#fff'; x.fillRect(i, 0, 2, h); } x.restore(); D.logo(x, w * 0.24, h * 0.58, w * 0.52, true); }), 0.75));
+  const th = -1.05, g = group(at(sail, [0, 2.2, 0], [th, 0, 0])); const pole = M.metal('#8F9A9E', 0.35);
+  const top = [[-1.6, 2.2, 0], [1.6, 2.2, 0], [0.2, 2.2 + 2.2 * Math.cos(th), 2.2 * Math.sin(th)]];   // coins de la voile = haut des poteaux
+  top.forEach(([x, h, z]) => { g.add(at(cyl(0.04, 0.045, h + 0.15, pole), [x, (h + 0.15) / 2, z])); g.add(at(cyl(0.16, 0.18, 0.05, M.color('#2A3236', 0.6)), [x, 0.025, z])); });
+  return { g, cam: [10, 20, 1.0] };
+};
+
 function shoot(slug) {
   const def = P[slug]; if (!def) throw new Error('produit inconnu : ' + slug);
   const { g, cam = [0, 30, 1], exposure } = def(); const scene = new THREE.Scene(); scene.environment = ENV; scene.add(g);
