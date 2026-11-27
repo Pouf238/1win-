@@ -52,25 +52,12 @@ function photo(string $slot, array $o = []): string {
         e($o['cls'] ?? ''), $u1, $u1, $w1, $u2, $w2, e($o['sizes'] ?? '(min-width:900px) 34vw, 92vw'), e($alt), $d[0], $d[1], !empty($o['eager']) ? ' fetchpriority="high"' : ' loading="lazy"');
 }
 /** Nom du fichier photo d'un produit (photo principale, sinon 1re photo de la galerie, sinon visuel 3D de présentation), ou '' s'il n'en a aucun. */
-/** Photos fournies qui montrent la marque d'un autre imprimeur (logo « onlineprinters ») : conservées dans la galerie de la fiche,
- *  mais jamais en image principale (vignettes, accueil, aperçu de partage) quand un visuel Symo Print du produit existe. */
-const PHOTOS_OTHER_BRAND = ['affiche-baguettes', 'affiche-baguettes-2', 'bache-barriere-chantier', 'bache-echafaudage', 'banniere-suspendue', 'boite-couvercle', 'boite-couvercle-a-plat', 'boite-cube', 'boite-cube-a-plat',
-    'cahier-spirale', 'calendrier-bureau', 'calendrier-bureau-pile', 'calendrier-mural', 'calendrier-mural-pile', 'calendrier-spirale-couverture', 'calendrier-spirale-mois', 'chaise-realisateur', 'colonne-gonflable',
-    'decap-plastique-blanc', 'decap-plastique-rouge', 'dextrose-sachet', 'enveloppes-fenetre', 'gelifies-coeurs-sachet', 'gelifies-oursons-sachet', 'gelifies-sachet-dos', 'gelifies-trefles-sachet', 'gilet-securite-logo',
-    'guirlande-fanions', 'housse-table', 'housses-table-banc', 'mug-bambou-blanc', 'mug-bambou-noir', 'nappe-logo', 'papillotes', 'parasol-logo', 'pc-bambou-jeton-1', 'pc-bambou-jeton-2', 'pc-sangle-noir', 'pc-sangle-rouge',
-    'sac-cordelettes-noir', 'sac-cordelettes-orange', 'sac-cordelettes-rose', 'sac-isotherme-bleu', 'sac-isotherme-noir', 'shopping-blanc', 'shopping-bleu', 'shopping-orange', 'shopping-rouge', 'tente-pliante-logo',
-    'tote-coton-1', 'tote-coton-2', 'tour-de-cou-blanc', 'tour-de-cou-bleu', 'tour-de-cou-noir', 'tour-de-cou-rouge', 'voile-ombrage', 'voile-ombrage-terrasse'];   // liste établie par relecture visuelle de toutes les photos (25 nov. 2026)
-function photo_other_brand(string $n): bool { return in_array(basename($n), PHOTOS_OTHER_BRAND, true); }
-/** Image principale : la photo du produit, sauf si elle porte la marque d'un autre imprimeur → visuel 3D Symo Print, sinon une autre photo de la galerie
- *  sans cette marque, et seulement en dernier recours la photo d'origine (mieux qu'aucune image). */
 function product_photo(array $p): string {
-    $ok = []; foreach (array_merge([(string) ($p['image'] ?? '')], array_map('strval', (array) (json_decode((string) ($p['gallery'] ?? ''), true) ?: []))) as $n) {
-        $n = basename(preg_replace('/\.webp$/', '', $n)); if ($n !== '' && is_file(ROOT . '/assets/img/produits/' . $n . '.webp')) $ok[] = $n;
+    foreach (array_merge([(string) ($p['image'] ?? '')], array_map('strval', (array) (json_decode((string) ($p['gallery'] ?? ''), true) ?: []))) as $n) {
+        $n = basename(preg_replace('/\.webp$/', '', $n));
+        if ($n !== '' && is_file(ROOT . '/assets/img/produits/' . $n . '.webp')) return $n;
     }
-    if ($ok && !photo_other_brand($ok[0])) return $ok[0];
-    if (($r = product_render($p)) !== '') return $r;
-    foreach ($ok as $n) if (!photo_other_brand($n)) return $n;
-    return $ok[0] ?? '';
+    return product_render($p);
 }
 /** Visuel 3D de présentation d'un produit sans photo (studio tools/render3d : modélisation originale aux couleurs de la marque, aucune image de tiers) :
  *  assets/img/produits/r3d-<slug>.webp. Une vraie photo (image ou galerie du produit) passe toujours devant. */
@@ -140,12 +127,12 @@ function product_visuals(array $p, array $opts = []): ?array {
 // Garde-fou automatique : test D-13 (chaque photo ci-dessous appartient à un produit de la catégorie ou de ses rubriques).
 const CAT_PHOTOS = [
     'impression-commerciale' => 'depliant-3v-accordeon', 'flyers-depliants' => 'depliant-2v-carre',
-    'affiches' => 'r3d-affiches', 'papeterie' => 'r3d-calendriers-muraux',
-    'grand-format' => 'r3d-banderoles', 'baches-banderoles' => 'bache-mat',
-    'panneaux' => 'panneau-rigide-tranche', 'drapeaux-oriflammes' => 'r3d-oriflammes',
+    'affiches' => 'affiche-baguettes', 'papeterie' => 'enveloppes-fenetre',
+    'grand-format' => 'bache-barriere-chantier', 'baches-banderoles' => 'bache-echafaudage',
+    'panneaux' => 'panneau-rigide-tranche', 'drapeaux-oriflammes' => 'guirlande-fanions',
     'objets-publicitaires' => 'mug-liege', 'textiles' => 'tshirt-votre-logo', 'mugs-bouteilles' => 'bouteille-isotherme', 'sacs-stylos' => 'sac-papier',
     'goodies' => 'parapluie-ouvert', 'confiserie' => 'cookie-sachet',
-    'communication-evenementielle' => 'tente-pliante-marche', 'badges-billets' => 'r3d-badges-de-salon', 'stands-plv' => 'r3d-stand-parapluie',
+    'communication-evenementielle' => 'tente-pliante-marche', 'badges-billets' => 'tour-de-cou-bleu', 'stands-plv' => 'tente-pliante-logo',
 ];
 /** Produits « visuels par option » dont les photos portent le nom des visuels (pas de colonne image) : utile pour savoir à quel produit appartient une photo. */
 const VISUAL_OWNERS = ['depliants' => ['depliant-2v-portrait', 'depliant-2v-paysage', 'depliant-2v-carre', 'depliant-3v-roule', 'depliant-3v-accordeon', 'depliant-2v-paysage-ferme', 'depliant-2v-carre-ouvert', 'depliant-3v-roule-exterieur', 'depliant-3v-roule-ouvert']];
@@ -158,17 +145,10 @@ function cat_photo_name(array $c): string {
     $n = CAT_PHOTOS[$c['slug']] ?? '';
     if ($n === '' || !is_file(ROOT . "/assets/img/produits/$n.webp")) {
         $n = (string) (DB::val("SELECT p.image FROM products p JOIN categories c ON c.id=p.category_id WHERE p.active=1 AND p.image<>'' AND (c.slug=? OR c.parent_id=(SELECT id FROM categories WHERE slug=?)) ORDER BY p.bestseller DESC, p.sort LIMIT 1", [$c['slug'], $c['slug']]) ?: '');
-        $n = basename($n); if (photo_other_brand($n)) $n = '';   // jamais la marque d'un autre imprimeur en vignette de rubrique
+        $n = basename($n);
     }
     if ($n === '' || !is_file(ROOT . "/assets/img/produits/$n.webp")) {   // sinon : visuel 3D d'un produit de la catégorie (même règle : uniquement un produit qu'elle contient)
         foreach (DB::all("SELECT p.slug FROM products p JOIN categories c ON c.id=p.category_id WHERE p.active=1 AND (c.slug=? OR c.parent_id=(SELECT id FROM categories WHERE slug=?)) ORDER BY p.bestseller DESC, p.featured DESC, p.sort, p.name", [$c['slug'], $c['slug']]) as $r) if (($n = product_render($r)) !== '') break;
     }
     return $n !== '' && is_file(ROOT . "/assets/img/produits/$n.webp") ? $n : '';
 }
-/** Visuel de mise en scène (studio tools/render3d, fond « aurore » sombre) pour l'en-tête d'une grande rubrique ; '' si aucun. */
-const CAT_SCENES = ['impression-commerciale' => 'scene-impression', 'grand-format' => 'scene-grand-format', 'objets-publicitaires' => 'scene-objets', 'communication-evenementielle' => 'scene-evenementiel'];
-function cat_scene(array $c): string {
-    $n = CAT_SCENES[(string) ($c['slug'] ?? '')] ?? ''; if ($n === '' || !is_file(ROOT . "/assets/img/site/$n.webp")) return '';
-    return '<img class="ph-scene" src="' . e(asset("img/site/$n.webp")) . '" alt="" width="1200" height="1200" decoding="async">';
-}
-

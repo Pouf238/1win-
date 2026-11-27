@@ -32,7 +32,7 @@ function stats_source(): string {
 }
 /** Ce visiteur doit-il être compté ? (pas un robot, pas l'équipe connectée, pas de refus « Do Not Track » / « Global Privacy Control »). */
 function stats_countable(): bool {
-    if (PHP_SAPI === 'cli' || !stats_enabled() || !empty($GLOBALS['_security_probe'])) return false;   // robot d'attaque : ne fausse pas les statistiques
+    if (PHP_SAPI === 'cli' || !stats_enabled()) return false;
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''); if (stats_is_bot($ua)) return false;
     if (($_SERVER['HTTP_DNT'] ?? '') === '1' || ($_SERVER['HTTP_SEC_GPC'] ?? '') === '1') return false;
     if (!empty($_SESSION['staff'])) return false;
@@ -95,51 +95,27 @@ function stats_report(string $from, string $to): array {
 }
 function stats_recent(int $n = 25): array { return DB::all('SELECT ts, kind, label, path, source, device FROM stat_hits ORDER BY id DESC LIMIT ' . max(1, min(100, $n))); }
 
-/** Sécurité d'une journée : nombre d'événements suspects par type et adresses IP les plus actives (journal de sécurité). */
-const SECURITY_EVENTS = ['login_blocked' => 'Connexions bloquées (trop de mots de passe essayés)', 'login_fail' => 'Mots de passe erronés (souvent des clients qui se trompent)', 'mfa_fail' => 'Codes de double authentification erronés',
-    'token_bruteforce' => 'Essais pour deviner des liens de commande ou de devis', 'attack_probe' => "Tentatives d'injection de code", 'scan' => 'Robots cherchant des failles connues', 'upload_rejected' => 'Fichiers refusés',
-    'origin_denied' => 'Formulaires envoyés depuis un autre site', 'perm_denied' => "Accès refusés à l'équipe (droits insuffisants)", 'session_ua_mismatch' => "Sessions de l'équipe fermées (autre navigateur)", 'alert' => 'Alertes de sécurité'];
-function security_day(string $day): array {
-    $P = [$day . ' 00:00:00', $day . ' 23:59:59']; $in = implode(',', array_map(fn($k) => "'" . $k . "'", array_keys(SECURITY_EVENTS)));
-    $n = []; foreach (DB::all("SELECT action, COUNT(*) c FROM audit_log WHERE ts BETWEEN ? AND ? AND action IN ($in) GROUP BY action", $P) as $r) $n[$r['action']] = (int) $r['c'];
-    $ips = DB::all("SELECT ip, COUNT(*) c FROM audit_log WHERE ts BETWEEN ? AND ? AND action IN ($in) AND action NOT IN ('login_fail','perm_denied') AND ip<>'' GROUP BY ip ORDER BY c DESC LIMIT 3", $P);
-    return ['counts' => array_filter(array_replace(array_fill_keys(array_keys(SECURITY_EVENTS), 0), $n)), 'ips' => $ips];
-}
-/** Résumé de la veille envoyé par e-mail à la boutique, une fois par jour (appelé par la sauvegarde quotidienne et, à défaut, par le trafic) :
- *  fréquentation (si la mesure est active) + sécurité (toujours). */
-function stats_digest_maybe(?string $day = null): void {   // $day : tests uniquement (par défaut la veille)
+/** Résumé de la veille envoyé par e-mail à la boutique, une fois par jour (appelé par la sauvegarde quotidienne et, à défaut, par le trafic). */
+function stats_digest_maybe(): void {
     try {
-        if (Settings::get('stats_digest', '1') !== '1') return;
-        $y = $day ?? date('Y-m-d', strtotime('yesterday')); $flag = APP . '/storage/.stats-digest-' . $y;
+        if (!stats_enabled() || Settings::get('stats_digest', '1') !== '1' || !DB::tableExists('stat_hits')) return;
+        $y = date('Y-m-d', strtotime('yesterday')); $flag = APP . '/storage/.stats-digest-' . $y;
         $h = @fopen($flag, 'x'); if (!$h) return; fclose($h);   // création atomique : un seul envoi par jour, même en cas de requêtes simultanées
         foreach (glob(APP . '/storage/.stats-digest-*') ?: [] as $f) if ($f !== $flag && filemtime($f) < time() - 7 * 86400) @unlink($f);
-        $hasStats = stats_enabled() && DB::tableExists('stat_hits'); $html = ''; $subj = [];
-        if ($hasStats) {
-            $r = stats_report($y, $y); $w = stats_report(date('Y-m-d', strtotime('-8 days')), date('Y-m-d', strtotime('-2 days'))); $avg = round($w['visitors'] / 7, 1);
-            $li = fn(array $rows, string $k = 'label') => $rows ? '<ol style="margin:4px 0 0;padding-left:20px">' . implode('', array_map(fn($x) => '<li>' . e($x[$k] ?: ($x['path'] ?? '')) . ' <span style="color:#5b6c72">(' . (int) $x['n'] . ')</span></li>', array_slice($rows, 0, 5))) . '</ol>' : '<p style="color:#5b6c72;margin:4px 0 0">—</p>';
-            $src = $r['sources'] ? implode(' · ', array_map(fn($k, $v) => e($k) . ' ' . $v, array_keys(array_slice($r['sources'], 0, 5, true)), array_slice($r['sources'], 0, 5))) : '—';
-            $ev = $r['events']; $html .= '<p>Voici ce qui s\'est passé sur votre site hier (' . fdate($y) . ').</p>'
-                . '<table cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:15px;width:100%">'
-                . '<tr><td><b>Visiteurs</b></td><td align="right"><b style="font-size:20px">' . $r['visitors'] . '</b> <span style="color:#5b6c72">(moyenne des 7 jours précédents : ' . $avg . ')</span></td></tr>'
-                . '<tr><td>Pages vues</td><td align="right">' . $r['views'] . '</td></tr>'
-                . '<tr><td>Demandes de devis envoyées</td><td align="right">' . ($ev['quote_sent'] ?? 0) . '</td></tr>'
-                . '<tr><td>Clics vers WhatsApp</td><td align="right">' . ($ev['whatsapp'] ?? 0) . '</td></tr>'
-                . '<tr><td>Messages de contact</td><td align="right">' . ($ev['contact_sent'] ?? 0) . '</td></tr></table>'
-                . '<p style="margin-top:18px"><b>Produits les plus regardés</b></p>' . $li($r['products'])
-                . '<p style="margin-top:14px"><b>D\'où viennent les visiteurs</b><br>' . $src . '</p>'
-                . ($r['empty'] ? '<p style="margin-top:14px"><b>Recherches sans résultat</b> (des clients cherchent ces produits sur votre site)</p>' . $li($r['empty']) : '');
-            $subj[] = $r['visitors'] . ' visiteur' . ($r['visitors'] > 1 ? 's' : '') . ', ' . ($ev['quote_sent'] ?? 0) . ' devis';
-        }
-        $sec = security_day($y); $sus = array_sum(array_diff_key($sec['counts'], ['login_fail' => 1, 'perm_denied' => 1]));
-        $html .= '<h3 style="margin:22px 0 6px;font-size:16px">Sécurité</h3>';
-        if (!$sec['counts']) $html .= '<p style="margin:0">Rien à signaler hier.</p>';
-        else {
-            $html .= '<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:14px;width:100%">' . implode('', array_map(fn($k, $v) => '<tr><td style="border-bottom:1px solid #e3e8ea">' . e(SECURITY_EVENTS[$k]) . '</td><td align="right" style="border-bottom:1px solid #e3e8ea"><b>' . (int) $v . '</b></td></tr>', array_keys($sec['counts']), $sec['counts'])) . '</table>';
-            if ($sec['ips']) $html .= '<p style="margin:12px 0 4px"><b>Adresses les plus actives</b> (localisation approximative) :</p><ul style="margin:0;padding-left:20px">' . implode('', array_map(function ($x) { $pl = function_exists('ip_place') ? ip_place(ip_geo($x['ip'])) : ''; return '<li>' . e($x['ip']) . ($pl !== '' ? ' — ' . e($pl) : '') . ' <span style="color:#5b6c72">(' . (int) $x['c'] . ' événement' . ($x['c'] > 1 ? 's' : '') . ')</span></li>'; }, $sec['ips'])) . '</ul>';
-            $html .= '<p style="color:#5b6c72;font-size:13px">Tout a été bloqué automatiquement. Les robots qui testent les sites au hasard sont normaux sur internet ; une alerte immédiate vous est envoyée en cas de vraie tentative.</p>';
-        }
-        if ($sus) $subj[] = $sus . ' tentative' . ($sus > 1 ? 's' : '') . ' bloquée' . ($sus > 1 ? 's' : '');
-        $html .= Mail::button($hasStats ? 'Voir toutes les statistiques' : 'Voir le journal de sécurité', abs_url($hasStats ? '/admin/statistiques' : '/admin/securite'));
-        notify_staff('stats_digest_admin', 'Votre site hier : ' . ($subj ? implode(' · ', $subj) : 'rien à signaler'), $html);
+        $r = stats_report($y, $y); $w = stats_report(date('Y-m-d', strtotime('-8 days')), date('Y-m-d', strtotime('-2 days'))); $avg = round($w['visitors'] / 7, 1);
+        $li = fn(array $rows, string $k = 'label') => $rows ? '<ol style="margin:4px 0 0;padding-left:20px">' . implode('', array_map(fn($x) => '<li>' . e($x[$k] ?: ($x['path'] ?? '')) . ' <span style="color:#5b6c72">(' . (int) $x['n'] . ')</span></li>', array_slice($rows, 0, 5))) . '</ol>' : '<p style="color:#5b6c72;margin:4px 0 0">—</p>';
+        $src = $r['sources'] ? implode(' · ', array_map(fn($k, $v) => e($k) . ' ' . $v, array_keys(array_slice($r['sources'], 0, 5, true)), array_slice($r['sources'], 0, 5))) : '—';
+        $ev = $r['events']; $html = '<p>Voici ce qui s\'est passé sur votre site hier (' . fdate($y) . ').</p>'
+            . '<table cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:15px;width:100%">'
+            . '<tr><td><b>Visiteurs</b></td><td align="right"><b style="font-size:20px">' . $r['visitors'] . '</b> <span style="color:#5b6c72">(moyenne des 7 jours précédents : ' . $avg . ')</span></td></tr>'
+            . '<tr><td>Pages vues</td><td align="right">' . $r['views'] . '</td></tr>'
+            . '<tr><td>Demandes de devis envoyées</td><td align="right">' . ($ev['quote_sent'] ?? 0) . '</td></tr>'
+            . '<tr><td>Clics vers WhatsApp</td><td align="right">' . ($ev['whatsapp'] ?? 0) . '</td></tr>'
+            . '<tr><td>Messages de contact</td><td align="right">' . ($ev['contact_sent'] ?? 0) . '</td></tr></table>'
+            . '<p style="margin-top:18px"><b>Produits les plus regardés</b></p>' . $li($r['products'])
+            . '<p style="margin-top:14px"><b>D\'où viennent les visiteurs</b><br>' . $src . '</p>'
+            . ($r['empty'] ? '<p style="margin-top:14px"><b>Recherches sans résultat</b> (des clients cherchent ces produits sur votre site)</p>' . $li($r['empty']) : '')
+            . Mail::button('Voir toutes les statistiques', abs_url('/admin/statistiques'));
+        notify_staff('stats_digest_admin', 'Votre site hier : ' . $r['visitors'] . ' visiteur' . ($r['visitors'] > 1 ? 's' : '') . ', ' . ($ev['quote_sent'] ?? 0) . ' devis', $html);
     } catch (Throwable $e) { error_log('[symoprint] résumé des statistiques : ' . $e->getMessage()); }
 }

@@ -92,7 +92,6 @@ route('GET', '/p/{slug}', function ($a) {
         ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($c2, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $c2[0]], $crumbs, array_keys($crumbs))]];
     $gal = array_values(array_filter(array_merge([$p['image']], feature('catalog.gallery') ? jd($p['gallery']) : [])));
     if (!$gal && !isset(PRODUCT_VISUALS[$p['slug']]) && ($r3d = product_render($p)) !== '') $gal = [$r3d];   // produit sans photo : visuel 3D de présentation
-    elseif ($gal && photo_other_brand((string) $gal[0]) && ($r3d = product_render($p)) !== '') array_unshift($gal, $r3d);   // photo à la marque d'un autre imprimeur : le visuel Symo Print passe devant
     $seen = recent_products((int) $p['id']); recent_seen((int) $p['id']);
     page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal', 'seen'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée à Abidjan', 'desc' => $p['seo_desc'] ?: meta_desc((string) $p['short_desc']), 'jsonld' => $ld, 'og_image' => og_path('p', $p) ?? $img, 'mobbar' => feature('customization') && !price_on_request($p), 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', ]);   // image d'aperçu : og_path() (carte JPEG 1200 × 630), plus haut
 });

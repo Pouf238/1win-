@@ -1,5 +1,7 @@
 # Alertes de sécurité et localisation approximative
 
+> **État (27 nov. 2026)** : fonction RETIRÉE de la version courante à la demande du propriétaire (non choisie lors de la mise en ligne partielle). Le code est dans l'historique (commit `47015b7`) ; à remettre seulement sur demande.
+
 ## E-mail immédiat au début d'une attaque (`security_watch`)
 | Événement | Déclencheur |
 |---|---|

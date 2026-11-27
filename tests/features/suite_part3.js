@@ -255,7 +255,7 @@ module.exports = async function (X) {
     const scripts = /APPLIQUÉ/.test(c1) && /APPLIQUÉ/.test(g1) && /galerie complétée : cookies-en-sachet/.test(g1) && /APPLIQUÉ/.test(g2) && !/complétée|ajoutée|allumé \(/.test(g2);
     const php = "define('ROOT', '" + ROOT.replace(/\\/g, '/') + "'); require ROOT . '/_app/bootstrap.php'; $t = []; foreach (DB::all('SELECT id,parent_id,slug FROM categories') as $c) $t[$c['id']] = $c; $own = [];" +
       "foreach (DB::all('SELECT slug,image,gallery,category_id FROM products WHERE active=1') as $p) { $c = $t[$p['category_id']] ?? null; $cs = [$c['slug'] ?? '', ($c && $c['parent_id']) ? ($t[$c['parent_id']]['slug'] ?? '') : ''];" +
-      " foreach (array_filter(array_merge([(string) $p['image']], jd($p['gallery']), VISUAL_OWNERS[$p['slug']] ?? [], [product_render($p)])) as $n) $own[$n][] = $cs; }" +
+      " foreach (array_filter(array_merge([(string) $p['image']], jd($p['gallery']), VISUAL_OWNERS[$p['slug']] ?? [])) as $n) $own[$n][] = $cs; }" +
       "$bad = []; foreach (CAT_PHOTOS as $cat => $n) { if (!is_file(ROOT . \"/assets/img/produits/$n.webp\")) { $bad[] = \"$cat:$n absente\"; continue; } if (empty($own[$n])) { $bad[] = \"$cat:$n sans produit\"; continue; } foreach ($own[$n] as $cs) if (!in_array($cat, $cs, true)) $bad[] = \"$cat:$n appartient à \" . $cs[0]; }" +
       "foreach (['cartes', 'brochures-catalogues', 'roll-up-kakemono', 'stickers', 'etiquettes', 'vinyles'] as $k) if (isset(CAT_PHOTOS[$k])) $bad[] = \"$k : photo imposée sans produit photographié\"; echo implode(' | ', $bad);";
     let bad = ''; try { bad = require('child_process').execFileSync('php', ['-r', php], { encoding: 'utf8' }).trim(); } catch (e) { bad = 'erreur ' + String(e.stderr || e.message).slice(0, 160); }

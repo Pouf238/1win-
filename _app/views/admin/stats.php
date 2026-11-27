@@ -49,5 +49,5 @@ $kindLabel = STATS_KINDS;
 
 <?php if (can('settings')): ?><div class="card"><h2>Réglages</h2><form method="post" action="/admin/statistiques/reglages"><?= csrf_field() ?>
   <?= fld('bool', 'enabled', 'Mesurer la fréquentation du site', $enabled, ['help' => 'anonyme, sans cookie']) ?>
-  <?= fld('bool', 'digest', 'Recevoir chaque matin un résumé de la veille par e-mail (visites et sécurité)', $digest, ['help' => $mailto !== '' ? 'envoyé à ' . $mailto : 'aucune adresse : renseignez « E-mail de notification » dans Réglages']) ?>
+  <?= fld('bool', 'digest', 'Recevoir chaque matin un résumé de la veille par e-mail', $digest, ['help' => $mailto !== '' ? 'envoyé à ' . $mailto : 'aucune adresse : renseignez « E-mail de notification » dans Réglages']) ?>
   <button class="btn btn-p" type="submit">Enregistrer</button></form></div><?php endif; ?>

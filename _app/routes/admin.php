@@ -239,12 +239,7 @@ route('GET', '/admin/securite', function () {
     require_perm('security'); $lvl = in_array(get('level'), ['info', 'warn', 'alert'], true) ? get('level') : ''; $q = get('q');
     $w = ['1=1']; $p = []; if ($lvl) { $w[] = 'level=?'; $p[] = $lvl; } if ($q !== '') { $w[] = '(action LIKE ? OR target LIKE ? OR ip LIKE ?)'; $l = '%' . $q . '%'; array_push($p, $l, $l, $l); }
     $bk = @file_get_contents(dirname(ROOT) . '/backups/.dernier-succes'); adm('security', ['backup' => $bk ? trim($bk) : '', 'rows' => DB::all('SELECT * FROM audit_log WHERE ' . implode(' AND ', $w) . ' ORDER BY id DESC LIMIT 300', $p), 'integrity' => audit_verify(), 'staff' => DB::all("SELECT id,email,name,role,active,mfa_enabled,last_login,must_change_pw FROM users WHERE role<>'customer' ORDER BY id"),
-        'fails' => (int) DB::val("SELECT COUNT(*) FROM audit_log WHERE action IN ('login_fail','mfa_fail') AND ts>?", [date('Y-m-d H:i:s', time() - 86400)]), 'alerts' => (int) DB::val("SELECT COUNT(*) FROM audit_log WHERE level='alert' AND ts>?", [date('Y-m-d H:i:s', time() - 7 * 86400)]), 'alertsOn' => Settings::get('security_alerts', '1') === '1', 'geoOn' => Settings::get('security_geo', '1') === '1', 'mailto' => (string) (shop('notify_email') ?: shop('email'))], 'Sécurité et journal', 'security');
-});
-route('POST', '/admin/securite/reglages', function () {
-    require_perm('security'); $a = post('alerts') ? '1' : '0'; $g = post('geo') ? '1' : '0'; Settings::set('security_alerts', $a); Settings::set('security_geo', $g);
-    audit('security_settings', '', ['alertes' => $a, 'localisation' => $g], 'warn'); if ($a === '0') alert_mail('Alertes de sécurité immédiates désactivées', "Les e-mails d'alerte au début d'une attaque ont été désactivés. Si ce n'est pas vous, changez votre mot de passe et réactivez-les.");
-    flash('ok', 'Réglages des alertes de sécurité enregistrés.'); redirect('/admin/securite');
+        'fails' => (int) DB::val("SELECT COUNT(*) FROM audit_log WHERE action IN ('login_fail','mfa_fail') AND ts>?", [date('Y-m-d H:i:s', time() - 86400)]), 'alerts' => (int) DB::val("SELECT COUNT(*) FROM audit_log WHERE level='alert' AND ts>?", [date('Y-m-d H:i:s', time() - 7 * 86400)])], 'Sécurité et journal', 'security');
 });
 route('GET', '/admin/securite/export', function () {
     require_perm('security'); require_reauth(); audit('audit_export', '', [], 'warn'); header('Content-Type: text/csv; charset=utf-8'); header('Content-Disposition: attachment; filename="journal-securite.csv"'); echo "\xEF\xBB\xBFdate;niveau;action;cible;utilisateur;ip;details\n";

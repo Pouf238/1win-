@@ -18,7 +18,7 @@ function meta_desc(string $base): string {
 /** Visuel source d'un produit ('p') ou d'une rubrique ('c') : [fichier, 'contain'|'cover'] ou ['', '']. */
 function og_source(string $kind, array $row): array {
     if ($kind === 'p') { $n = product_photo($row); return $n !== '' ? [ROOT . '/assets/img/produits/' . $n . '.webp', 'contain'] : ['', '']; }
-    $s = CAT_SCENES[(string) ($row['slug'] ?? '')] ?? ''; if ($s !== '' && is_file(ROOT . "/assets/img/site/$s.webp")) return [ROOT . "/assets/img/site/$s.webp", 'cover'];
+    $s = defined('CAT_SCENES') ? (CAT_SCENES[(string) ($row['slug'] ?? '')] ?? '') : ''; if ($s !== '' && is_file(ROOT . "/assets/img/site/$s.webp")) return [ROOT . "/assets/img/site/$s.webp", 'cover'];
     $n = cat_photo_name($row); return $n !== '' ? [ROOT . '/assets/img/produits/' . $n . '.webp', 'contain'] : ['', ''];
 }
 /** Chemin de l'image d'aperçu (avec version), ou null → image générale du site. */

@@ -16,7 +16,7 @@ function order_access(array $o, bool $staffOnly = false): bool {
 /** Jeton de suivi (lien reçu par e-mail) : comparaison à temps constant, essais erronés plafonnés par IP (anti force brute / énumération). */
 function token_access(string $expected): bool {
     $t = $_GET['t'] ?? ($_POST['t'] ?? ''); if (!is_string($t) || $t === '') return false;
-    if (throttle('tok:' . client_ip(), 30, 900, true)) { audit('token_bruteforce', '', [], 'warn'); security_watch('token', "Quelqu'un essaie de deviner les liens de commandes ou de devis", "Plus de 30 liens de suivi de commande ou de devis ont été essayés en 15 minutes depuis la même adresse, pour tenter d'accéder aux commandes d'autres clients. Le site a bloqué cette adresse pendant 15 minutes. Aucune commande n'a été exposée : les liens sont impossibles à deviner."); header('Retry-After: 900'); abort(429, 'Trop de tentatives. Réessayez plus tard.'); }
+    if (throttle('tok:' . client_ip(), 30, 900, true)) { audit('token_bruteforce', '', [], 'warn'); header('Retry-After: 900'); abort(429, 'Trop de tentatives. Réessayez plus tard.'); }
     if ($expected !== '' && hash_equals($expected, $t)) return true;
     throttle('tok:' . client_ip(), 30, 900); return false;
 }

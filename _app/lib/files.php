@@ -20,7 +20,7 @@ class Files {
         if ($f['size'] < 10) throw new RuntimeException('Fichier vide.');
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']) ?: 'application/octet-stream';
         if (!in_array($mime, self::MIMES[$ext], true)) { audit('upload_rejected', $ext, ['why' => 'mime ' . $mime], 'warn'); throw new RuntimeException("Le contenu du fichier ne correspond pas à son format (.$ext)."); }
-        try { self::inspect($f['tmp_name'], $ext); } catch (RuntimeException $e) { audit('upload_rejected', $ext, ['why' => $e->getMessage()], 'warn'); if (preg_match('/contenu actif|Archive refusée/u', $e->getMessage())) security_watch('upload', 'Fichier piégé refusé', "Un fichier .$ext contenant du code actif (ou une archive dangereuse) a été envoyé sur le site. Il a été refusé et n'a jamais été enregistré."); throw $e; }
+        try { self::inspect($f['tmp_name'], $ext); } catch (RuntimeException $e) { audit('upload_rejected', $ext, ['why' => $e->getMessage()], 'warn'); throw $e; }
         $w = $h = 0; $warn = '';   // dimensions des images : alerte de faible résolution (information, ne bloque pas l'envoi)
         if (in_array($ext, ['jpg', 'jpeg', 'png', 'tif', 'tiff'], true) && ($gi = @getimagesize($f['tmp_name']))) { $w = (int) $gi[0]; $h = (int) $gi[1]; if ($w * $h > 200000000) throw new RuntimeException('Image aux dimensions excessives : réduisez-la ou exportez-la en PDF.'); if (min($w, $h) < 1000) $warn = "Faible résolution ($w × $h px) : l'impression peut manquer de netteté. Envoyez un fichier plus grand si possible."; }
         $stored = bin2hex(random_bytes(16)) . '.dat'; $dir = self::dir();

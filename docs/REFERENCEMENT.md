@@ -1,5 +1,7 @@
 # Référencement et conversion (25 nov. 2026)
 
+> **État (27 nov. 2026)** : seule la partie « référencement » (aperçus de partage, descriptions, fiche entreprise, codes Google/Bing, plan du site) est dans la version courante. La fiche produit mobile, la section « Fêtes », les calendriers 3D, la règle des photos d'un autre imprimeur et les 16 visuels 3D ont été retirés à la demande du propriétaire (historique : `c9e8fb0`, `7fccbf0`, `58b888f`).
+
 ## Ce qui est en place dans le site
 | Élément | Détail |
 |---|---|
