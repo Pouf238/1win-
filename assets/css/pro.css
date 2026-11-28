@@ -150,7 +150,7 @@ h1,h2,h3,h4{font-family:var(--hd);letter-spacing:-.012em}
 .footer{background:var(--sand)!important;color:var(--pxink);padding-top:0!important;margin-top:56px;font-size:14.5px}
 .footer::before{display:none}
 .footer .fgrid{grid-template-columns:1.3fr 1fr 1fr 1.4fr;gap:40px;padding-block:52px 44px}
-.footer h4{color:var(--pxink);font-family:var(--bd);font-size:15px;font-weight:700;text-transform:none;letter-spacing:0;margin-bottom:14px}
+.footer :is(h2,h4){color:var(--pxink);font-family:var(--bd);font-size:15px;font-weight:700;text-transform:none;letter-spacing:0;margin-bottom:14px}
 .footer a{color:#34433F}
 .footer a:hover{color:var(--p)}
 .footer li{margin-bottom:10px}

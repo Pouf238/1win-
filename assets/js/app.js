@@ -66,7 +66,7 @@
   $$('#filters input, #filters select').forEach(function (i) { i.addEventListener('change', function () { i.form.submit(); }); });
 
   // onglets
-  $$('[data-tab]').forEach(function (b) { b.addEventListener('click', function () { $$('[data-tab]').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tabp').forEach(function (p) { p.classList.toggle('on', p.id === b.getAttribute('data-tab')); }); }); });
+  $$('[data-tab]').forEach(function (b) { b.addEventListener('click', function () { $$('[data-tab]').forEach(function (x) { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b ? 'true' : 'false'); }); $$('.tabp').forEach(function (p) { p.classList.toggle('on', p.id === b.getAttribute('data-tab')); }); }); });
   // confirmation avant suppression
   d.addEventListener('submit', function (e) { var m = e.target.getAttribute('data-confirm'); if (m && !confirm(m)) e.preventDefault(); });
   // compteur panier

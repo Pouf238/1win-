@@ -126,6 +126,29 @@ async function sendQuote(su, ref, validUntil) { const id = sh('qid', ref); await
     sh('setcol', 'stat_hits', '1=1', 'day', '2000-01-01'); const v = new Client(); const H = { headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 Flood' } }; await v.r('GET', '/', H); const vis = sh('getcol', 'stat_hits', "day<>'2000-01-01'", 'visitor'); sh('statfill', vis, '299'); const n0 = hits(`visitor='${vis}'`); await v.r('GET', '/aide', H); await v.r('GET', '/contact', H); const n1 = hits(`visitor='${vis}'`);
     return { pass: n0 === 300 && n1 === 300, note: `avant=${n0} après 2 pages=${n1}` }; });
 
+  // ---------------- J. Contenu pour Google (28 nov. 2026) : textes vrais, caractéristiques et questions tirées du catalogue, données structurées
+  const ld = (body) => [...body.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m => JSON.parse(m[1]));
+  const txt = (s) => s.replace(/&#039;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  await t('SEO-01', 'fiche produit : titre mot-clé d\'abord, caractéristiques et questions issues du catalogue, FAQPage identique au texte affiché, fil d\'Ariane avec adresses', async () => {
+    const slug = sh('getcol', 'products', 'id=7', 'slug'), name = sh('getcol', 'products', 'id=7', 'name'); const r = await new Client().r('GET', '/p/' + slug); const b = txt(r.body);
+    const title = (b.match(/<title>([^<]*)<\/title>/) || [])[1] || ''; const j = ld(r.body); const faq = j.find(x => x['@type'] === 'FAQPage'), bc = j.find(x => x['@type'] === 'BreadcrumbList');
+    const shown = (faq ? faq.mainEntity : []).every(q => b.includes(q.name) && b.includes(q.acceptedAnswer.text));
+    const crumbsOk = bc && bc.itemListElement[0].name === 'Accueil' && bc.itemListElement.slice(0, -1).every(i => /^https?:\/\//.test(i.item || '')) && !bc.itemListElement.at(-1).item;
+    return { pass: r.status === 200 && title.startsWith(name + ' à Abidjan') && /class="pspec"/.test(b) && /Quantité minimale/.test(b) && /Délai de fabrication/.test(b) && !!faq && faq.mainEntity.length >= 5 && shown && crumbsOk && /role="tab"[^>]*aria-selected="true"/.test(b), note: `titre=« ${title} » questions=${faq ? faq.mainEntity.length : 0} affichées=${shown} ariane=${!!crumbsOk}` }; });
+  await t('SEO-02', 'texte du propriétaire prioritaire : une description rédigée dans l\'administration remplace le texte de présentation', async () => {
+    const slug = sh('getcol', 'products', 'id=7', 'slug'); const before = txt((await new Client().r('GET', '/p/' + slug)).body); const old = sh('getcol', 'products', 'id=7', 'description');
+    const own = '<p>' + 'Texte du propriétaire zzown. '.repeat(14) + '</p>'; sh('setcol', 'products', 'id=7', 'description', own); const after = txt((await new Client().r('GET', '/p/' + slug)).body); sh('setcol', 'products', 'id=7', 'description', old);
+    return { pass: /Idéal pour/.test(before) && /zzown/.test(after) && !/Idéal pour/.test(after) && /class="pspec"/.test(after), note: `avant : texte rédigé=${/Idéal pour/.test(before)} ; après : propriétaire=${/zzown/.test(after)}` }; });
+  await t('SEO-03', 'rubrique et accueil : texte de présentation avec liens vers les produits, titre d\'accueil « Imprimerie à Abidjan », fiche entreprise + WebSite', async () => {
+    const cs = sh('getcol', 'categories', "slug='impression-commerciale'", 'slug') || sh('getcol', 'categories', 'id=1', 'slug'); const c = txt((await new Client().r('GET', '/c/' + cs)).body);
+    const filtered = txt((await new Client().r('GET', '/c/' + cs + '?promo=1')).body); const h = await new Client().r('GET', '/'); const hb = txt(h.body); const types = ld(h.body).map(x => x['@type']);
+    const links = (c.match(/class="cg-links"[\s\S]*?<\/ul>/) || [''])[0].match(/href="\/p\/[a-z0-9-]+"/g) || [];
+    return { pass: /class="cg cg-txt"/.test(c) && links.length >= 3 && !/cg-txt/.test(filtered) && /<title>Imprimerie à Abidjan/.test(hb) && /class="seo-home"/.test(hb) && types.includes('LocalBusiness') && types.includes('WebSite'), note: `liens rubrique=${links.length} types accueil=${types.join(',')}` }; });
+  await t('SEO-04', 'IndexNow et accessibilité : clé publique servie, images de rubriques décrites, icônes d\'en-tête nommées', async () => {
+    const k = await new Client().r('GET', '/indexnow-key.txt'); const h = (await new Client().r('GET', '/')).body;
+    const tiles = (h.match(/class="px-find-im"><img[^>]*>/g) || []); const emptyAlt = tiles.filter(x => /alt=""/.test(x)).length;
+    return { pass: k.status === 200 && /^[a-f0-9]{32}$/.test(k.body.trim()) && tiles.length > 0 && emptyAlt === 0 && /href="\/compte\/favoris" aria-label="Favoris"/.test(h) && /<footer[\s\S]*<h2[^>]*>Catalogue<\/h2>/.test(h), note: `clé=${k.status} tuiles=${tiles.length} sans texte=${emptyAlt}` }; });
+
   const fails = results.filter(r => !r.pass); console.log(`\n=== ${results.length - fails.length}/${results.length} tests de la plateforme réussis`);
   if (process.env.RESULTS) fs.writeFileSync(process.env.RESULTS, JSON.stringify(results, null, 1)); process.exit(fails.length ? 1 : 0);
 })().catch(e => { console.error('CRASH', e); process.exit(2); });

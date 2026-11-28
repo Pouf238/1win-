@@ -97,7 +97,7 @@ const FEATURE_ALWAYS = [
     '/admin/clients', '/admin/clients/{id}', '/admin/clients/{id}/actif', '/admin/clients/{id}/supprimer', '/admin/messages', '/admin/messages/{id}/traite',
     '/admin/reglages', '/admin/utilisateurs', '/admin/utilisateurs/{id}', '/admin/securite', '/admin/securite/export', '/admin/fonctionnalites', '/admin/fonctionnalites/limites',
     '/admin/produits', '/admin/produits/bulk', '/admin/produits/nouveau', '/admin/produits/{id}', '/admin/produits/{id}/supprimer', '/admin/produits/{id}/dupliquer',
-    '/admin/newsletter', '/admin/newsletter/export', '/admin/newsletter/{id}/supprimer', '/admin/statistiques', '/admin/statistiques/reglages', '/og/{kind}/{file}', '/go/whatsapp',
+    '/admin/newsletter', '/admin/newsletter/export', '/admin/newsletter/{id}/supprimer', '/admin/statistiques', '/admin/statistiques/reglages', '/og/{kind}/{file}', '/go/whatsapp', '/indexnow-key.txt',
     '/admin/categories', '/admin/categories/nouveau', '/admin/categories/{id}', '/admin/categories/{id}/supprimer', '/admin/bannieres', '/admin/bannieres/nouveau', '/admin/bannieres/{id}', '/admin/bannieres/{id}/supprimer',
     '/admin/faq', '/admin/faq/nouveau', '/admin/faq/{id}', '/admin/faq/{id}/supprimer', '/admin/livraison', '/admin/livraison/nouveau', '/admin/livraison/{id}', '/admin/livraison/{id}/supprimer',
     '/admin/pages', '/admin/pages/nouveau', '/admin/pages/{id}', '/admin/pages/{id}/supprimer', '/admin/promos', '/admin/promos/nouveau', '/admin/promos/{id}', '/admin/promos/{id}/supprimer',

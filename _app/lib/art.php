@@ -137,7 +137,7 @@ const CAT_PHOTOS = [
 /** Produits « visuels par option » dont les photos portent le nom des visuels (pas de colonne image) : utile pour savoir à quel produit appartient une photo. */
 const VISUAL_OWNERS = ['depliants' => ['depliant-2v-portrait', 'depliant-2v-paysage', 'depliant-2v-carre', 'depliant-3v-roule', 'depliant-3v-accordeon', 'depliant-2v-paysage-ferme', 'depliant-2v-carre-ouvert', 'depliant-3v-roule-exterieur', 'depliant-3v-roule-ouvert']];
 function cat_photo(array $c, string $sizes = ''): string {
-    $n = cat_photo_name($c); if ($n !== '') return '<img src="' . e(asset("img/produits/$n.webp")) . '" alt="" loading="lazy" decoding="async">';
+    $n = cat_photo_name($c); if ($n !== '') return '<img src="' . e(asset("img/produits/$n.webp")) . '" alt="' . e('Photo : ' . (string) ($c['name'] ?? '')) . '" loading="lazy" decoding="async">';
     return mock((string) ($c['icon'] ?? 'flyer'));
 }
 /** Nom du visuel d'une rubrique (photo choisie, sinon photo d'un de ses produits, sinon visuel 3D d'un de ses produits) ; '' si aucun. */

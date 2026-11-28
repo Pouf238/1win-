@@ -31,7 +31,7 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
   </div>
 
   <?php if ($cz): ?>
-  <form id="cfg" class="cfg" autocomplete="off" novalidate>
+  <form id="cfg" class="cfg" autocomplete="off" novalidate><h2 class="sr">Personnalisez votre produit</h2>
   <?php $n = 0; ?>
   <?php if ($isArea): ?><div class="og"><h3><span><?= ++$n ?>. Dimensions</span></h3><p class="hlp">En centimètres. Largeur de <?= (int) $pr['w']['min'] ?> à <?= (int) $pr['w']['max'] ?> cm, hauteur de <?= (int) $pr['h']['min'] ?> à <?= (int) $pr['h']['max'] ?> cm.</p>
     <div class="dims"><div><label for="w">Largeur (cm)</label><input class="inp" id="w" name="w" type="number" inputmode="decimal" min="<?= (int) $pr['w']['min'] ?>" max="<?= (int) $pr['w']['max'] ?>" step="1" value="<?= e($cfg['w']) ?>"></div><div><label for="h">Hauteur (cm)</label><input class="inp" id="h" name="h" type="number" inputmode="decimal" min="<?= (int) $pr['h']['min'] ?>" max="<?= (int) $pr['h']['max'] ?>" step="1" value="<?= e($cfg['h']) ?>"></div></div></div><?php endif; ?>
@@ -65,10 +65,15 @@ $jsCfg = ['id' => (int) $p['id'], 'area' => $isArea, 'min' => (int) $qc['min'], 
     <?php if (feature('quotes')): ?><a class="btn btn-a" href="/devis?produit=<?= e(rawurlencode($p['name'])) ?>">Demander un devis pour ce produit</a> <?php endif; ?><a class="btn btn-o" href="<?= e(wa_go('Bonjour Symo Print, je souhaite des informations sur : ' . $p['name'])) ?>" rel="noopener">WhatsApp</a></div>
   <?php endif; ?>
 
-  <div class="tabs" role="tablist" id="tabs"><button type="button" class="on" data-tab="t1">Description</button><button type="button" data-tab="t2">Exigences des fichiers</button><button type="button" data-tab="t3">Livraison et délais</button></div>
-  <div class="tabp on" id="t1"><div class="prose"><?= $p['description'] ? html_clean($p['description']) /* HTML de l'administration filtré (liste blanche) : audit du 20 nov. 2026 */ : '<p>' . e($p['short_desc']) . '</p>' ?><p>Ce produit est fabriqué sur mesure dans notre atelier d'Abobo (Abidjan), après validation de votre fichier. Besoin d'aide pour choisir ? <a href="<?= e(wa_go('Bonjour, je souhaite des conseils pour : ' . $p['name'])) ?>">Écrivez-nous sur WhatsApp</a>.</p></div></div>
-  <div class="tabp" id="t2"><div class="prose"><?= html_clean($p['file_info']) ?><p>Consultez notre <a href="/guide-fichiers">guide des fichiers d'impression</a>. Ajoutez l'option « Vérification des fichiers » pour qu'un expert contrôle votre fichier.</p></div></div>
-  <div class="tabp" id="t3"><div class="prose"><p>Le délai de fabrication est indiqué ci-dessus. La livraison à Abidjan prend en général 1 à 3 jours ouvrés selon la commune ; vers l'intérieur du pays, comptez 3 à 6 jours. Le retrait à l'atelier est gratuit. Détails : <a href="/livraison">politique de livraison</a>.</p></div></div>
+  <div class="tabs" role="tablist" id="tabs"><button type="button" class="on" role="tab" id="tb1" aria-selected="true" aria-controls="t1" data-tab="t1">Description</button><button type="button" role="tab" id="tb2" aria-selected="false" aria-controls="t2" data-tab="t2">Exigences des fichiers</button><button type="button" role="tab" id="tb3" aria-selected="false" aria-controls="t3" data-tab="t3">Livraison et délais</button></div>
+  <?php $st = seo_text('p', (string) $p['slug']); $own = has_owner_text($p); $useSt = $st && !$own;   // texte du propriétaire d'abord ; sinon texte rédigé (seo_texts.php) ; sinon accroche ?>
+  <div class="tabp on" id="t1" role="tabpanel" aria-labelledby="tb1"><div class="prose"><?php if ($useSt): ?><p><?= e($st[0]) ?></p><?php if (!empty($st[1])): ?><p><?= e($st[1]) ?></p><?php endif; ?><?php if (!empty($st[2])): ?><h3>Idéal pour</h3><ul><?php foreach ($st[2] as $u): ?><li><?= e($u) ?></li><?php endforeach; ?></ul><?php endif; ?><?php else: ?><?= $p['description'] ? html_clean($p['description']) /* HTML de l'administration filtré (liste blanche) : audit du 20 nov. 2026 */ : '<p>' . e($p['short_desc']) . '</p>' ?><?php endif; ?><p>Ce produit est fabriqué sur mesure dans notre atelier d'Abobo (Abidjan), après validation de votre fichier. Besoin d'aide pour choisir ? <a href="<?= e(wa_go('Bonjour, je souhaite des conseils pour : ' . $p['name'])) ?>">Écrivez-nous sur WhatsApp</a>.</p></div></div>
+  <div class="tabp" id="t2" role="tabpanel" aria-labelledby="tb2"><div class="prose"><?= html_clean($p['file_info']) ?><p>Consultez notre <a href="/guide-fichiers">guide des fichiers d'impression</a>. Ajoutez l'option « Vérification des fichiers » pour qu'un expert contrôle votre fichier.</p></div></div>
+  <div class="tabp" id="t3" role="tabpanel" aria-labelledby="tb3"><div class="prose"><p>Le délai de fabrication est indiqué ci-dessus. La livraison à Abidjan prend en général 1 à 3 jours ouvrés selon la commune ; vers l'intérieur du pays, comptez 3 à 6 jours. Le retrait à l'atelier est gratuit. Détails : <a href="/livraison">politique de livraison</a>.</p></div></div>
+  <section class="pspec" aria-labelledby="spec-h"><h2 id="spec-h">Caractéristiques</h2>
+    <dl class="spec"><?php foreach (product_specs($p, $x) as [$k, $v]): ?><div><dt><?= e($k) ?></dt><dd><?= e($v) ?></dd></div><?php endforeach; ?></dl></section>
+  <section class="pfaq" aria-labelledby="pfaq-h"><h2 id="pfaq-h">Questions fréquentes : <?= e($p['name']) ?></h2>
+    <div class="faq"><?php foreach ($faq ?? product_faq($p, $x) as $f): ?><details><summary><?= e($f[0]) ?></summary><div class="ans"><?= e($f[1]) ?><?php if (!empty($f[2])): ?> <a href="<?= e($f[2]) ?>">En savoir plus</a><?php endif; ?></div></details><?php endforeach; ?></div></section>
 </div>
 
 <?php if ($cz): ?><aside><div class="buybox" id="buybox" aria-live="polite">

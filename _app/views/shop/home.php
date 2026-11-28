@@ -74,6 +74,15 @@ $variety = array_merge($cats, isset($bySlug['textiles']) ? [$bySlug['textiles']]
   <ul class="px-find"><?php foreach ($subs as $sc): ?><li><a href="/c/<?= e($sc['slug']) ?>"><span class="px-find-im"><?= cat_photo($sc) ?></span><b><?= e($sc['name']) ?></b></a></li><?php endforeach; ?><li><a class="px-find-all" href="/catalogue"><span class="px-find-im"><?= ic('list') ?></span><b>Tout le catalogue</b></a></li></ul>
 </div></section>
 
+<?php $sh = seo_texts()['home'] ?? null; if ($sh):   // présentation de l'imprimerie (texte relu, sans chiffre inventé) + liens vers les produits les plus recherchés
+  $keys = ['cartes-de-visite', 'flyers', 'depliants', 'affiches', 'baches-publicitaires', 'banderoles', 'roll-up', 'stickers-personnalises', 'etiquettes-adhesives', 'tshirts-personnalises', 'mugs-ceramique', 'sacs-papier-kaba'];
+  $top = DB::all('SELECT name, slug FROM products WHERE active=1 AND slug IN (' . DB::in($keys) . ')', $keys); usort($top, fn($a, $b) => array_search($a['slug'], $keys) <=> array_search($b['slug'], $keys)); ?>
+<section class="seo-home" aria-labelledby="sh-h"><div class="wrap"><div class="sh-in">
+  <div><h2 id="sh-h"><?= e($sh[0]) ?></h2><?php foreach (array_slice($sh, 1) as $para): ?><p><?= e($para) ?></p><?php endforeach; ?></div>
+  <?php if ($top): ?><div class="sh-side"><h3>Les plus demandés à Abidjan</h3><ul class="sh-list"><?php foreach ($top as $t): ?><li><a href="/p/<?= e($t['slug']) ?>"><?= e($t['name']) ?></a></li><?php endforeach; ?></ul></div><?php endif; ?>
+</div></div></section>
+<?php endif; ?>
+
 <?php if ($tests): ?><section class="px-sec"><div class="wrap"><div class="px-revs">
   <div class="px-revs-h"><h2>Avis de nos clients</h2><div class="stars" aria-hidden="true">★★★★★</div><p>Ils nous ont confié leurs impressions.</p></div>
   <?php foreach (array_slice($tests, 0, 3) as $t): ?><figure class="px-rev"><div class="stars" aria-label="<?= (int) $t['rating'] ?> sur 5"><?= stars((int) $t['rating']) ?></div><blockquote><?= e($t['text']) ?></blockquote><figcaption><?= e($t['name']) ?><?= $t['role'] ? ' · ' . e($t['role']) : '' ?></figcaption></figure><?php endforeach; ?>

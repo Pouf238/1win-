@@ -6,7 +6,7 @@
 | Élément | Détail |
 |---|---|
 | Images d'aperçu | `/og/p/<produit>.jpg` et `/og/c/<rubrique>.jpg` : carte JPEG 1200 × 630 fabriquée depuis la photo (ou le visuel 3D) du produit, gardée dans `_app/storage/og/`, renouvelée quand l'image change. Utilisée par WhatsApp, Facebook, X, LinkedIn quand on partage un lien. |
-| Titres | produit sans titre SEO : « <nom> : impression personnalisée à Abidjan ». |
+| Titres | mot-clé d'abord (`seo_title_for()`) : produit « <nom> à Abidjan : prix en FCFA » (ou « <nom> à Abidjan » si le nom est long), rubrique « <nom> à Abidjan » ; accueil « Imprimerie à Abidjan : flyers, cartes de visite, bâches ». Le titre SEO saisi dans l'administration passe toujours en premier. |
 | Descriptions | texte du produit/de la rubrique + l'action réellement possible (`meta_desc()`) : « Devis gratuit en ligne ou sur WhatsApp » quand la commande en ligne est fermée, jamais « commandez en ligne » dans ce cas. Coupées proprement à 160 caractères. |
 | Fiche entreprise (JSON-LD) | `business_jsonld()` : adresse, téléphone, zone desservie (Côte d'Ivoire), contact WhatsApp, e-mail et réseaux sociaux seulement s'ils sont renseignés (liens https). |
 | Vérification | Réglages → « Référencement (Google, Bing) » : coller la balise de Google Search Console / Bing Webmaster Tools (ou le code seul) ; valeur filtrée (`site_verification_clean`). |
@@ -29,3 +29,20 @@ Relecture visuelle des 125 photos de `assets/img/produits/` : 57 portent le logo
 Règle appliquée (`product_photo()`) : si la photo principale porte cette marque, on montre le visuel 3D Symo Print du produit s'il existe, sinon une autre photo de la galerie sans cette marque, et seulement en dernier recours la photo d'origine.
 Elles ne sont jamais utilisées pour : vignettes de rubriques (`CAT_PHOTOS`, `cat_photo_name()`), mosaïque et « Meilleures ventes » de l'accueil, section « Fêtes », images d'aperçu de partage. Elles restent visibles dans la galerie des fiches produits (photos fournies par le propriétaire, non supprimées).
 Visuels 3D Symo Print créés pour les 16 produits qui n'avaient que des photos à cette marque (calendriers muraux et de bureau, affiches à baguettes, bâches barrière et échafaudage, tours de cou, décapsuleurs, porte-clés bambou et sangle, boîtes, sacs shopping, tote bags, sacs à cordelettes, sacs isothermes, chaises de réalisateur, voiles d'ombrage) : plus aucun produit ne montre ce logo en image principale. Recommandation au propriétaire : remplacer progressivement les photos restantes de la galerie par des photos de ses propres réalisations.
+
+## Lot « contenu et technique » (28 nov. 2026, pas encore en ligne)
+Objectif : répondre à ce que Google regarde (contenu utile et vrai, pages rapides, données structurées, accessibilité), sans rien inventer.
+
+| Élément | Détail |
+|---|---|
+| Textes des fiches | `_app/lib/seo_texts.php` : 48 produits (usages, conseils de choix, « Idéal pour »). Affichés seulement si la fiche n'a pas déjà une description rédigée dans l'administration (≥ 280 caractères) : le texte du propriétaire passe toujours en premier. Aucun prix, chiffre ni avis dans ces textes. |
+| Caractéristiques | tableau généré en direct depuis la configuration de prix (`product_specs()`) : options, quantité minimale, délais, prix « à partir de » ou « sur devis », livraison. Toujours exact, même si le propriétaire change ses options. |
+| Questions fréquentes de chaque fiche | `product_faq()` : prix, quantité minimale, délai, livraison, création de maquette, fichiers. Réponses calculées depuis le catalogue ; mêmes textes en données structurées `FAQPage`. |
+| Textes des rubriques | 24 rubriques : titre « … à Abidjan », présentation et liens vers les produits phares (maillage interne). Première page non filtrée seulement. |
+| Accueil | bloc « Symo Print, votre imprimerie à Abidjan » (atelier d'Abobo, devis, BAT, studio, livraison) + liens vers les 12 produits les plus recherchés ; données `WebSite` (nom du site dans Google). |
+| Fil d'Ariane structuré | `breadcrumb_jsonld()` : « Accueil » + adresse de chaque étape (Google l'exige). |
+| Descriptions produit | accroche + « Dès <prix> à Abidjan » (ou « Sur devis à Abidjan ») + l'action possible. |
+| Textes des images | photos de rubriques : nom de la rubrique (au lieu d'un texte vide). |
+| Vitesse (Core Web Vitals) | l'accueil ne déclarait aucun « plus grand affichage » (LCP) : le carrousel des catégories se recalait de 2 px au chargement (`scroll-snap`), ce que Chrome compte comme un défilement. Corrigé par `scroll-padding-inline:2px` sur `.cv`. |
+| Accessibilité | icônes Connexion/Aide/Favoris nommées (téléphone), titres du pied de page dans l'ordre (h2), onglets de la fiche conformes (`role=tab`, `aria-selected`), contraste des suppléments d'option. |
+| IndexNow (Bing, Copilot, ChatGPT…) | clé publique servie à `/indexnow-key.txt` (dérivée de la clé de l'application, rien à stocker). Après une mise en ligne : `php _app/cli/indexnow.php --send` (sans `--send` : aperçu). |

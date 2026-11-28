@@ -24,8 +24,8 @@ route('GET', '/', function () {
     $new = DB::all('SELECT * FROM products WHERE active=1 AND is_new=1 ORDER BY id DESC LIMIT 4');
     $tests = DB::all('SELECT * FROM testimonials WHERE active=1 ORDER BY sort, id LIMIT 6');
     $vitrine = vitrine_products();
-    $ld = [business_jsonld()];
-    page('shop/home', compact('banners', 'cats', 'best', 'pop', 'promo', 'new', 'tests', 'vitrine'), ['jsonld' => $ld, 'body' => 'home', 'scripts' => []]);   // araignée 3D retirée à la demande du propriétaire (9 nov. 2026) ; fichiers conservés, inactifs
+    $ld = [business_jsonld(), ['@context' => 'https://schema.org', '@type' => 'WebSite', 'name' => shop('shop_name'), 'url' => abs_url('/'), 'inLanguage' => 'fr']];   // WebSite : nom du site affiché par Google
+    page('shop/home', compact('banners', 'cats', 'best', 'pop', 'promo', 'new', 'tests', 'vitrine'), ['title' => 'Imprimerie à Abidjan : flyers, cartes de visite, bâches', 'jsonld' => $ld, 'body' => 'home', 'scripts' => []]);   // araignée 3D retirée à la demande du propriétaire (9 nov. 2026) ; fichiers conservés, inactifs
 });
 
 route('GET', '/catalogue', function () {
@@ -52,15 +52,18 @@ route('GET', '/c/{slug}', function ($a) {
     $sub = get('sub'); if ($sub && ($sc = DB::row('SELECT id FROM categories WHERE slug=? AND parent_id=?', [$sub, $c['id']]))) $ids = [(int) $sc['id']];
     [$w, $p] = filter_sql(); [$rows, $total, $pg, $pages] = product_list('category_id IN (' . DB::in($ids) . ') AND ' . $w, [...$ids, ...$p], get('sort'), (int) get('page', 1));
     $crumbs = [['Catalogue', '/catalogue']]; if ($parent) $crumbs[] = [$parent['name'], '/c/' . $parent['slug']]; $crumbs[] = [$c['name'], ''];
-    $ld = [['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($x, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $x[0]], $crumbs, array_keys($crumbs))]];
+    $ld = [breadcrumb_jsonld($crumbs)];
     // colonne de rubriques : celles de la catégorie, ou ses rubriques sœurs quand on est déjà dans une rubrique
     $side = $subs ? ['title' => $c['name'], 'url' => '/c/' . $c['slug'], 'items' => $subs, 'current' => ''] : ($parent ? ['title' => $parent['name'], 'url' => '/c/' . $parent['slug'], 'items' => DB::all('SELECT * FROM categories WHERE parent_id=? AND active=1 ORDER BY sort, name', [$parent['id']]), 'current' => $c['slug']] : null);
     // guides de choix (formats, papiers) : seulement sur la 1re page non filtrée, calculés depuis les vrais produits de la catégorie
     $plain = $pg === 1 && !$sub && get('sort') === '' && get('max') === '' && !get('promo') && !get('new') && !get('best');
     $guides = $plain ? category_guides(DB::all('SELECT * FROM products WHERE active=1 AND category_id IN (' . DB::in($ids) . ') ORDER BY bestseller DESC, featured DESC, sort, name LIMIT 12', $ids)) : null;
     $faqs = $plain ? DB::all('SELECT * FROM faqs WHERE active=1 ORDER BY sort, id LIMIT 4') : [];
-    page('shop/list', ['title' => $c['name'], 'intro' => $c['short_desc'] ?: $c['description'], 'crumbs' => $crumbs, 'tiles' => $subs, 'rows' => $rows, 'total' => $total, 'pg' => $pg, 'pages' => $pages, 'cat' => $c, 'subs' => $subs, 'sub' => $sub, 'base' => '/c/' . $c['slug'], 'side' => $side, 'guides' => $guides, 'faqs' => $faqs],
-        ['title' => $c['seo_title'] ?: $c['name'], 'desc' => $c['seo_desc'] ?: meta_desc((string) $c['short_desc']), 'jsonld' => $ld, 'og_image' => og_path('c', $c)]);
+    $allIds = [(int) $c['id'], ...array_map(fn($s) => (int) $s['id'], $subs)];   // texte de rubrique : liens vers ses produits phares (maillage interne)
+    $seoTxt = $plain && !has_owner_text($c) ? seo_text('c', (string) $c['slug']) : null;
+    $catLinks = $seoTxt ? DB::all('SELECT name, slug FROM products WHERE active=1 AND category_id IN (' . DB::in($allIds) . ') ORDER BY bestseller DESC, featured DESC, sort, name LIMIT 10', $allIds) : [];
+    page('shop/list', ['seoTxt' => $seoTxt, 'catLinks' => $catLinks, 'title' => $c['name'], 'intro' => $c['short_desc'] ?: $c['description'], 'crumbs' => $crumbs, 'tiles' => $subs, 'rows' => $rows, 'total' => $total, 'pg' => $pg, 'pages' => $pages, 'cat' => $c, 'subs' => $subs, 'sub' => $sub, 'base' => '/c/' . $c['slug'], 'side' => $side, 'guides' => $guides, 'faqs' => $faqs],
+        ['title' => $c['seo_title'] ?: seo_title_for((string) $c['name'], false), 'desc' => $c['seo_desc'] ?: meta_desc((string) $c['short_desc']), 'jsonld' => $ld, 'og_image' => og_path('c', $c)]);
 });
 
 route('GET', '/recherche', function () {
@@ -89,11 +92,14 @@ route('GET', '/p/{slug}', function ($a) {
     $img = ($pn = product_photo($p)) !== '' ? 'assets/img/produits/' . $pn . '.webp' : null;   // vraie photo, sinon visuel 3D
     $ld = [['@context' => 'https://schema.org', '@type' => 'Product', 'name' => $p['name'], 'description' => $p['short_desc'], 'sku' => 'SP-' . $p['id'], 'brand' => ['@type' => 'Brand', 'name' => shop('shop_name')],
             'image' => $img ? [abs_url($img)] : [abs_url('assets/img/og.png')], ] + (price_on_request($p) ? [] : ['offers' => ['@type' => 'Offer', 'priceCurrency' => 'XOF', 'price' => (int) $p['price_from'], 'availability' => 'https://schema.org/InStock', 'url' => abs_url('/p/' . $p['slug']), 'seller' => ['@type' => 'Organization', 'name' => shop('shop_name')]]]),
-        ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => array_map(fn($c2, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $c2[0]], $crumbs, array_keys($crumbs))]];
+        breadcrumb_jsonld($crumbs)];
+    if (price_on_request($p)) array_shift($ld);   // produit sur devis : pas de fiche « Product » sans prix (Google la signalerait comme incomplète dans la Search Console)
+    $faq = product_faq($p, $x); $ld[] = faq_jsonld($faq);   // questions affichées sur la fiche (mêmes textes)
     $gal = array_values(array_filter(array_merge([$p['image']], feature('catalog.gallery') ? jd($p['gallery']) : [])));
     if (!$gal && !isset(PRODUCT_VISUALS[$p['slug']]) && ($r3d = product_render($p)) !== '') $gal = [$r3d];   // produit sans photo : visuel 3D de présentation
     $seen = recent_products((int) $p['id']); recent_seen((int) $p['id']);
-    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal', 'seen'), ['title' => $p['seo_title'] ?: $p['name'] . ' : impression personnalisée à Abidjan', 'desc' => $p['seo_desc'] ?: meta_desc((string) $p['short_desc']), 'jsonld' => $ld, 'og_image' => og_path('p', $p) ?? $img, 'mobbar' => feature('customization') && !price_on_request($p), 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', ]);   // image d'aperçu : og_path() (carte JPEG 1200 × 630), plus haut
+    $pdesc = rtrim(trim((string) $p['short_desc']), '.') . (price_on_request($p) ? '. Sur devis à Abidjan' : '. Dès ' . money($p['price_from']) . ' à Abidjan');
+    page('shop/product', compact('p', 'x', 'cfg', 'q', 'cat', 'related', 'crumbs', 'gal', 'seen', 'faq'), ['title' => $p['seo_title'] ?: seo_title_for((string) $p['name']), 'desc' => $p['seo_desc'] ?: meta_desc($pdesc), 'jsonld' => $ld, 'og_image' => og_path('p', $p) ?? $img, 'mobbar' => feature('customization') && !price_on_request($p), 'scripts' => feature('customization') ? ['js/product.js', 'js/configurator.js'] : ['js/product.js'], 'body' => feature('customization') ? 'has-mob' : '', ]);   // image d'aperçu : og_path() (carte JPEG 1200 × 630), plus haut
 });
 
 // ---------------- API : prix (calcul serveur), fichiers, favoris
@@ -182,6 +188,7 @@ route('GET', '/og/{kind}/{file}', function ($a) {   // image d'aperçu d'un prod
 route('GET', '/robots.txt', function () {
     header('Content-Type: text/plain; charset=utf-8'); echo "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /compte\nDisallow: /panier\nDisallow: /commande\nDisallow: /api\nDisallow: /recherche\nDisallow: /go\n\nSitemap: " . abs_url('/sitemap.xml') . "\n"; exit;
 });
+route('GET', '/indexnow-key.txt', function () { header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: public, max-age=86400'); echo indexnow_key(); exit; });   // fichier de clé IndexNow (public par nature)
 route('GET', '/sitemap.xml', function () {
     header('Content-Type: application/xml; charset=utf-8'); $u = [['/', '1.0'], ['/catalogue', '0.9'], ['/produits-a-z', '0.6'], ['/devis', '0.8'], ['/contact', '0.5'], ['/faq', '0.5'], ['/a-propos', '0.4'], ['/nos-services', '0.6']];
     foreach (DB::all('SELECT slug FROM categories WHERE active=1') as $c) $u[] = ['/c/' . $c['slug'], '0.8'];

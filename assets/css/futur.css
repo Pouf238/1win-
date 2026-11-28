@@ -154,7 +154,7 @@ img[src*="/r3d-"]{mix-blend-mode:normal!important}
 .pf-in .btn-ghost:hover{background:rgba(255,255,255,.14)!important;border-color:var(--fx-cyan)!important}
 .footer{background:var(--fx-night)!important;color:#B9CDD2!important}
 .footer::before{opacity:.55}
-.footer h4{color:#fff!important;font-family:var(--hd)!important;letter-spacing:-.01em}
+.footer :is(h2,h4){color:#fff!important;font-family:var(--hd)!important;letter-spacing:-.01em}
 .footer a{color:#D8E8EB!important}
 .footer a:hover{color:var(--fx-orange)!important}
 .footer p{color:#A9C0C5!important}
@@ -219,3 +219,27 @@ img[src*="/r3d-"]{mix-blend-mode:normal!important}
 
 /* tuiles de l'accueil : fond blanc opaque (les photos à fond blanc s'y fondent sans rectangle visible) */
 .px-tile:not(.px-conf):not(.px-cal),.px-why{background:#fff!important;backdrop-filter:none!important}
+
+/* --- contenu utile pour les clients et Google (27 nov. 2026) : caractéristiques, questions, textes de rubrique et d'accueil --- */
+.pspec,.pfaq{margin:clamp(26px,3vw,40px) 0 0}
+.pspec>h2,.pfaq>h2,.cg-txt h2,.seo-home h2{font-size:clamp(21px,2.1vw,27px);font-weight:500;margin:0 0 14px;color:var(--pxink)}
+.spec{margin:0;border:1px solid var(--pxline);border-radius:var(--pxr);background:#fff;overflow:hidden}
+.spec>div{display:grid;grid-template-columns:minmax(130px,30%) 1fr;gap:16px;padding:12px 18px;border-top:1px solid var(--pxline)}
+.spec>div:first-child{border-top:0}.spec>div:nth-child(even){background:#FBFAF7}
+.spec dt{font-weight:600;color:var(--pxink);font-size:14.5px}.spec dd{margin:0;color:#3B4A4F;font-size:14.5px;line-height:1.55}
+.pfaq .ans a{color:var(--p7);font-weight:600}
+.cg-txt{max-width:78ch}.cg-txt p{color:#3B4A4F;font-size:15.5px;line-height:1.7;margin:0 0 12px}
+.cg-links{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;padding:0;list-style:none}
+.cg-links a{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border:1px solid #D7D2C8;border-radius:999px;background:#fff;color:var(--pxink);font-size:14px;font-weight:600;transition:border-color .2s,color .2s}
+.cg-links a:hover{border-color:var(--p);color:var(--p7)}
+.seo-home{padding:clamp(30px,4vw,56px) 0 0}
+.seo-home .sh-in{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:start}
+.seo-home p{color:#3B4A4F;font-size:15.5px;line-height:1.7;margin:0 0 12px}
+.seo-home .sh-side{padding:18px 20px;border:1px solid var(--pxline);border-radius:var(--pxr);background:#fff}
+.seo-home .sh-list{margin:0;padding:0;list-style:none;columns:2;column-gap:20px}
+.seo-home .sh-list li{break-inside:avoid;padding:5px 0}.seo-home .sh-list a{color:var(--pxink);font-weight:600;font-size:14.5px}.seo-home .sh-list a:hover{color:var(--p7)}
+.seo-home .sh-side h3{font-size:15px;font-weight:600;margin:0 0 8px;color:var(--pxmut)}
+@media (max-width:860px){.seo-home .sh-in{grid-template-columns:1fr}.spec>div{grid-template-columns:1fr;gap:2px;padding:11px 14px}}
+@media (max-width:420px){.seo-home .sh-list{columns:1}}
+/* photos à fond blanc dans les tuiles de rubriques : le blanc se fond dans le fond de la tuile (plus de carré blanc visible), comme sur les cartes produits */
+.px-find-im img:not([src*="/r3d-"]),.cats .cat-tile .ct-im img:not([src*="/r3d-"]),.px-cat-im img:not([src*="/r3d-"]){mix-blend-mode:multiply}

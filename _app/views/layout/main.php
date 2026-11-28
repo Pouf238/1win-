@@ -41,9 +41,9 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
     <button type="submit" aria-label="Rechercher"><?= ic('search') ?></button><div class="suggest" id="suggest" role="listbox"></div>
   </form>
   <div class="hact">
-    <a href="<?= $u ? '/compte' : '/compte/connexion' ?>"><?= ic('user') ?><span><?= $u ? e(explode(' ', trim($u['name'] ?: 'Compte'))[0]) : 'Connexion' ?></span></a>
-    <a href="/faq"><?= ic('help') ?><span>Aide</span></a>
-    <a href="/compte/favoris"><?= ic('heart') ?><span>Favoris</span></a>
+    <a href="<?= $u ? '/compte' : '/compte/connexion' ?>" aria-label="<?= $u ? 'Mon compte' : 'Connexion' ?>"><?= ic('user') ?><span><?= $u ? e(explode(' ', trim($u['name'] ?: 'Compte'))[0]) : 'Connexion' ?></span></a>
+    <a href="/faq" aria-label="Aide"><?= ic('help') ?><span>Aide</span></a>
+    <a href="/compte/favoris" aria-label="Favoris"><?= ic('heart') ?><span>Favoris</span></a>
     <?php if (feature('orders')): ?><a href="/panier" aria-label="Panier, <?= $cartN ?> article(s)"><?= ic('cart') ?><span>Panier</span><i class="cnt" data-cart-count data-n="<?= $cartN ?>"><?= $cartN ?: '' ?></i></a><?php endif; ?>
   </div>
 </div></div>
@@ -83,11 +83,11 @@ $tree = nav_tree(); $cartN = Cart::count(); $u = user(); $favN = count(user_favs
     <?php if (shop('email')): ?><li><?= ic('mail') ?><a href="mailto:<?= e(shop('email')) ?>"><?= e(shop('email')) ?></a></li><?php endif; ?>
     <li><?= ic('pin') ?><span><?= e(shop('address')) ?><br><?= e(shop('city')) ?>, <?= e(shop('country')) ?></span></li>
     <?php if (shop('hours')): ?><li><?= ic('clock') ?><span><?= e(shop('hours')) ?></span></li><?php endif; ?></ul></div>
-  <div><h4>Catalogue</h4><ul><?php foreach ($tree as $c): ?><li><a href="/c/<?= e($c['slug']) ?>"><?= e($c['name']) ?></a></li><?php endforeach; ?><li><a href="/catalogue">Tous nos produits</a></li><li><a href="/produits-a-z">Produits de A à Z</a></li></ul></div>
-  <div><h4>Informations</h4><ul><?php if (feature('quotes')): ?><li><a href="/devis">Demander un devis</a></li><?php endif; ?><?php if (feature('tracking.lookup')): ?><li><a href="/suivi">Suivre ma commande</a></li><?php endif; ?><li><a href="/nos-services">Nos services</a></li><li><a href="/guide-fichiers">Guide des fichiers</a></li><li><a href="/guide-papiers">Papiers et matériaux</a></li><li><a href="/faq">Aide et questions fréquentes</a></li><li><a href="/livraison">Livraison</a></li><li><a href="/remboursement">Remboursement</a></li><li><a href="/a-propos">À propos</a></li><li><a href="/contact">Contact</a></li></ul></div>
-  <div class="fnews"><h4>Restez informé</h4><p>Nouveautés, promotions et conseils d'impression, directement dans votre boîte mail.</p>
+  <div><h2>Catalogue</h2><ul><?php foreach ($tree as $c): ?><li><a href="/c/<?= e($c['slug']) ?>"><?= e($c['name']) ?></a></li><?php endforeach; ?><li><a href="/catalogue">Tous nos produits</a></li><li><a href="/produits-a-z">Produits de A à Z</a></li></ul></div>
+  <div><h2>Informations</h2><ul><?php if (feature('quotes')): ?><li><a href="/devis">Demander un devis</a></li><?php endif; ?><?php if (feature('tracking.lookup')): ?><li><a href="/suivi">Suivre ma commande</a></li><?php endif; ?><li><a href="/nos-services">Nos services</a></li><li><a href="/guide-fichiers">Guide des fichiers</a></li><li><a href="/guide-papiers">Papiers et matériaux</a></li><li><a href="/faq">Aide et questions fréquentes</a></li><li><a href="/livraison">Livraison</a></li><li><a href="/remboursement">Remboursement</a></li><li><a href="/a-propos">À propos</a></li><li><a href="/contact">Contact</a></li></ul></div>
+  <div class="fnews"><h2>Restez informé</h2><p>Nouveautés, promotions et conseils d'impression, directement dans votre boîte mail.</p>
     <form action="/newsletter" method="post"><?= csrf_field() ?><div class="hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div><label class="sr" for="nl">Votre e-mail</label><input id="nl" type="email" name="email" placeholder="Votre adresse e-mail" required><button class="btn btn-a" type="submit" aria-label="S'inscrire à la newsletter"><?= ic('arrow') ?></button></form>
-    <?php if (feature('payments')): ?><h4 class="fpay">Moyens de paiement</h4><div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Moov Money</span><span>Wave</span></div><?php endif; ?></div>
+    <?php if (feature('payments')): ?><h2 class="fpay">Moyens de paiement</h2><div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Moov Money</span><span>Wave</span></div><?php endif; ?></div>
 </div>
 <div class="legal"><div class="wrap"><span>© <?= date('Y') ?> <?= e($name) ?>. Tous droits réservés.</span><span><a href="/cgv">CGV</a> · <a href="/mentions-legales">Mentions légales</a> · <a href="/confidentialite">Confidentialité</a></span></div></div>
 </footer>

@@ -64,3 +64,82 @@ function business_jsonld(): array {
         + ($wa !== '' ? ['contactPoint' => ['@type' => 'ContactPoint', 'telephone' => '+' . $wa, 'contactType' => 'customer service', 'availableLanguage' => 'French']] : [])
         + ($same ? ['sameAs' => $same] : []);
 }
+
+// ---------------------------------------------------------------- contenu utile des fiches et rubriques (27 nov. 2026)
+// Tout vient du catalogue en direct (options, quantités, délais, prix) ou de _app/lib/seo_texts.php (textes relus, sans prix ni chiffre inventé).
+function seo_texts(): array { static $t = null; return $t ??= (array) require __DIR__ . '/seo_texts.php'; }
+/** Texte rédigé d'un produit ('p') ou d'une rubrique ('c'), ou null. */
+function seo_text(string $kind, string $slug): ?array { $t = seo_texts()[$kind][$slug] ?? null; return is_array($t) ? $t : null; }
+/** La fiche a-t-elle déjà une vraie description rédigée dans l'administration ? (elle passe alors avant nos textes) */
+function has_owner_text(array $row): bool { return mb_strlen(trim(strip_tags((string) ($row['description'] ?? '')))) >= 280; }
+function nb(int $n): string { return number_format($n, 0, ',', "\u{202F}"); }
+/** « 2 à 3 jours ouvrés », « 1 jour ouvré ». */
+function days_label(array $d): string { [$a, $b] = [(int) ($d[0] ?? 0), (int) ($d[1] ?? $d[0] ?? 0)]; return $a === $b ? $a . ($a > 1 ? ' jours ouvrés' : ' jour ouvré') : "$a à $b jours ouvrés"; }
+function delays_label(array $x): string { return implode(' · ', array_map(fn($d) => $d['label'] . ' : ' . days_label((array) $d['days']), $x['delays'] ?? [])); }
+/** Libellés des choix d'option affichables (hors vérification de fichier, création graphique et champs libres). */
+function spec_groups(array $x): array {
+    $out = [];
+    foreach ($x['groups'] ?? [] as $g) {
+        if (in_array($g['key'] ?? '', ['verif', 'creation'], true)) continue;
+        $ch = array_values(array_filter(array_map(fn($c) => trim((string) ($c['label'] ?? '')), (array) ($g['choices'] ?? []))));
+        if (count($ch) >= 1 && ($g['label'] ?? '') !== '') $out[] = [$g['label'], implode(' · ', $ch)];
+    }
+    return $out;
+}
+/** Tableau « Caractéristiques » d'un produit : [libellé, valeur]. */
+function product_specs(array $p, array $x): array {
+    $rows = spec_groups($x); $q = $x['qty'] ?? [];
+    if (!empty($q['min'])) $rows[] = ['Quantité minimale', nb((int) $q['min']) . ' ' . $q['unit']];
+    if (!empty($x['delays'])) $rows[] = ['Délai de fabrication', delays_label($x)];
+    $rows[] = ['Prix', price_on_request($p) ? 'Sur devis : notre équipe vous confirme le prix en FCFA' : 'À partir de ' . money($p['price_from']) . (feature('customization') ? ', calculé en direct selon vos options' : '')];
+    $rows[] = ['Livraison', "Abidjan : 1 à 3 jours ouvrés · Intérieur du pays : 3 à 6 jours · Retrait gratuit à l'atelier d'Abobo"];
+    return $rows;
+}
+/** Questions fréquentes d'un produit, construites à partir de ses vraies données : [[question, réponse texte, lien facultatif], …]. */
+function product_faq(array $p, array $x): array {
+    $n = $p['name']; $q = $x['qty'] ?? []; $min = (int) ($q['min'] ?? 1); $unit = (string) ($q['unit'] ?? '');
+    $tiers = (array) ($x['pricing']['tiers'] ?? []); $degressive = count($tiers) > 1 && (float) end($tiers)[1] < (float) reset($tiers)[1];
+    $presets = (array) ($q['presets'] ?? []); $for = $presets ? (int) min($presets) : $min;
+    $hasCreation = (bool) array_filter($x['groups'] ?? [], fn($g) => ($g['key'] ?? '') === 'creation');
+    $f = [];
+    $f[] = [$n . ' : quel est le prix ?', price_on_request($p)
+        ? "Ce produit est vendu sur devis. Indiquez la quantité et votre visuel : notre équipe vous confirme le prix en FCFA sur WhatsApp ou par e-mail, avant toute production."
+        : 'À partir de ' . money($p['price_from']) . ($for > 1 && ($p['pricing_model'] ?? '') !== 'area' ? ' pour ' . nb($for) . ' ' . $unit : '') . ' avec les options de base.' . (feature('customization') ? " Le prix exact s'affiche en direct quand vous choisissez vos options et la quantité ;" : ' Le prix exact dépend de vos options et de la quantité ;') . " il est confirmé par notre équipe avant la production."];
+    $f[] = ['Quelle quantité minimale puis-je commander ?', nb($min) . ' ' . rtrim($unit, '.') . '.' . ($degressive ? ' Plus la quantité est grande, plus le prix unitaire baisse.' : '')];
+    if (!empty($x['delays'])) $f[] = ['Quel est le délai de fabrication ?', delays_label($x) . ". Le délai démarre à la validation de votre fichier (bon à tirer) ; la livraison s'ajoute."];
+    $f[] = ['Livrez-vous partout en Côte d\'Ivoire ?', "Oui. Comptez en général 1 à 3 jours ouvrés à Abidjan selon la commune, et 3 à 6 jours vers l'intérieur du pays. Le retrait à notre atelier d'Abobo est gratuit."];
+    $f[] = ['Je n\'ai pas de maquette : pouvez-vous la créer ?', 'Oui, notre studio de création réalise votre visuel' . ($hasCreation && feature('customization') ? ' : choisissez l\'option « Création graphique » en configurant le produit.' : ' : précisez-le dans votre demande de devis ou sur WhatsApp.')];
+    $f[] = ['Quel fichier dois-je envoyer ?', "Un PDF en haute définition de préférence (JPG, PNG, AI, EPS ou SVG sont aussi acceptés). Chaque fichier est vérifié par notre équipe et un bon à tirer est validé avec vous avant l'impression.", '/guide-fichiers'];
+    return $f;
+}
+/** Données structurées FAQPage (texte seul, identique à ce qui est affiché). */
+function faq_jsonld(array $faq): array {
+    return ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => array_map(fn($f) => ['@type' => 'Question', 'name' => $f[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f[1]]], $faq)];
+}
+/** Titre de page « mot-clé d'abord » : « Cartes de visite à Abidjan : prix en FCFA ». */
+function seo_title_for(string $name, bool $price = true): string { $t = $name . ' à Abidjan'; return $price && mb_strlen($t) <= 36 ? $t . ' : prix en FCFA' : $t; }
+/** Fil d'Ariane structuré (Google demande l'adresse de chaque étape sauf la dernière) : Accueil > … > page courante. */
+function breadcrumb_jsonld(array $crumbs): array {
+    $all = array_merge([['Accueil', '/']], $crumbs); $items = [];
+    foreach (array_values($all) as $i => [$name, $url]) $items[] = ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $name] + ($url !== '' ? ['item' => abs_url($url)] : []);
+    return ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $items];
+}
+
+// ---------------------------------------------------------------- IndexNow : prévenir Bing (et les moteurs partenaires, dont ceux qu'utilisent Copilot et ChatGPT) des pages nouvelles ou modifiées
+/** Clé publique IndexNow (32 caractères hexadécimaux), dérivée de la clé de l'application : stable, rien à stocker. Ce n'est pas un secret : elle est publiée à /indexnow-key.txt. */
+function indexnow_key(): string { return substr(hash_hmac('sha256', 'indexnow|symoprint', app_key()), 0, 32); }
+/** Adresses publiques du site (mêmes que le plan du site). */
+function public_urls(): array {
+    $u = ['/', '/catalogue', '/produits-a-z', '/contact', '/faq', '/a-propos', '/nos-services'];
+    foreach (DB::all('SELECT slug FROM categories WHERE active=1 ORDER BY id') as $c) $u[] = '/c/' . $c['slug'];
+    foreach (DB::all('SELECT slug FROM products WHERE active=1 ORDER BY id') as $p) $u[] = '/p/' . $p['slug'];
+    return array_map('abs_url', $u);
+}
+/** Envoie la liste à IndexNow ; renvoie le code HTTP (200/202 = accepté) ou 0 en cas d'échec réseau. */
+function indexnow_submit(array $urls): int {
+    $host = (string) parse_url(abs_url('/'), PHP_URL_HOST); if ($host === '' || !$urls || !function_exists('curl_init')) return 0;
+    $body = json_encode(['host' => $host, 'key' => indexnow_key(), 'keyLocation' => abs_url('/indexnow-key.txt'), 'urlList' => array_values(array_slice($urls, 0, 10000))], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $c = curl_init('https://api.indexnow.org/indexnow');
+    curl_setopt_array($c, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $body, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_HTTPHEADER => ['Content-Type: application/json; charset=utf-8', 'User-Agent: SymoPrint-IndexNow'], CURLOPT_PROTOCOLS => CURLPROTO_HTTPS, CURLOPT_FOLLOWLOCATION => false]);
+    curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_RESPONSE_CODE); curl_close($c); return $code;
+}

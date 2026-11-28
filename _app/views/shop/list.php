@@ -2,7 +2,7 @@
 <section class="phead"><div class="wrap"><?= crumbs($crumbs) ?><div class="ph-in<?= $vis ? '' : ' ph-solo' ?>"><div><h1><?= e($title) ?></h1><?php if ($intro): ?><p><?= e(mb_strimwidth(strip_tags($intro), 0, 260, '…')) ?></p><?php endif; ?></div><?php if ($vis): ?><div class="ph-vis" aria-hidden="true"><?= !empty($cat) ? $vis : '<div class="ph-photo cm">' . $vis . '</div>' ?></div><?php endif; ?></div></div></section>
 <div class="wrap">
 <?php if (empty($cat) && empty($search)): ?><p class="az-link"><a href="/produits-a-z"><?= ic('list') ?>Voir tous nos produits de A à Z</a></p><?php endif; ?>
-<?php if (!empty($tiles) && empty($search)): ?><div class="cats mt" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))"><?php foreach ($tiles as $t): ?><a class="cat-tile" href="/c/<?= e($t['slug']) ?>"><div class="ct-im"><?= cat_photo($t) ?></div><h3><?= e($t['name']) ?></h3><?php if (!empty($t['children'])): ?><p><?= count($t['children']) ?> rubriques</p><?php endif; ?></a><?php endforeach; ?></div><?php endif; ?>
+<?php if (!empty($tiles) && empty($search)): ?><h2 class="sr">Rubriques</h2><div class="cats mt" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))"><?php foreach ($tiles as $t): ?><a class="cat-tile" href="/c/<?= e($t['slug']) ?>"><div class="ct-im"><?= cat_photo($t) ?></div><h3><?= e($t['name']) ?></h3><?php if (!empty($t['children'])): ?><p><?= count($t['children']) ?> rubriques</p><?php endif; ?></a><?php endforeach; ?></div><?php endif; ?>
 <div class="shop">
   <aside class="filters" aria-label="Filtres"><form method="get" action="<?= e($base) ?>" id="filters">
     <?php if (!empty($search)): ?><input type="hidden" name="q" value="<?= e(get('q')) ?>"><?php endif; ?>
@@ -22,6 +22,11 @@
     <?php else: ?><div class="panel center"><h2>Aucun produit trouvé</h2><p class="muted">Modifiez vos filtres<?= feature('quotes') ? ' ou demandez-nous un devis pour un produit sur mesure' : '' ?>.</p><?php if (feature('quotes')): ?><a class="btn btn-a" href="/devis">Demander un devis</a><?php endif; ?></div><?php endif; ?>
   </section>
 </div>
+<?php if (!empty($seoTxt)): ?>
+<section class="cg cg-txt" aria-labelledby="cg-t"><h2 id="cg-t"><?= e($seoTxt[0]) ?></h2><p><?= e($seoTxt[1]) ?></p>
+  <p>Configurez votre produit pour voir le prix en FCFA, puis demandez votre devis gratuit sur le site ou sur WhatsApp. Livraison à Abidjan et dans toute la Côte d'Ivoire, retrait gratuit à notre atelier d'Abobo.</p>
+  <?php if (!empty($catLinks)): ?><ul class="cg-links"><?php foreach ($catLinks as $l): ?><li><a href="/p/<?= e($l['slug']) ?>"><?= e($l['name']) ?></a></li><?php endforeach; ?></ul><?php endif; ?></section>
+<?php endif; ?>
 <?php if (!empty($guides['formats'])): $F = $guides['formats']; $mw = max(array_column($F, 'w')); $mh = max(array_column($F, 'h')); ?>
 <section class="cg" aria-labelledby="cg-f"><h2 id="cg-f">Les formats les plus demandés</h2><p class="cg-sub">Dessinés à la même échelle, pour comparer d'un coup d'œil (<?= e($F[0]['product']) ?>).</p>
   <div class="cg-formats"><?php foreach ($F as $f): $sw = round(84 * $f['w'] / $mw, 1); $sh = round(84 * $f['h'] / $mw, 1); $fh = round(84 * $mh / $mw, 1); ?>
