@@ -30,7 +30,7 @@ Règle appliquée (`product_photo()`) : si la photo principale porte cette marqu
 Elles ne sont jamais utilisées pour : vignettes de rubriques (`CAT_PHOTOS`, `cat_photo_name()`), mosaïque et « Meilleures ventes » de l'accueil, section « Fêtes », images d'aperçu de partage. Elles restent visibles dans la galerie des fiches produits (photos fournies par le propriétaire, non supprimées).
 Visuels 3D Symo Print créés pour les 16 produits qui n'avaient que des photos à cette marque (calendriers muraux et de bureau, affiches à baguettes, bâches barrière et échafaudage, tours de cou, décapsuleurs, porte-clés bambou et sangle, boîtes, sacs shopping, tote bags, sacs à cordelettes, sacs isothermes, chaises de réalisateur, voiles d'ombrage) : plus aucun produit ne montre ce logo en image principale. Recommandation au propriétaire : remplacer progressivement les photos restantes de la galerie par des photos de ses propres réalisations.
 
-## Lot « contenu et technique » (28 nov. 2026, pas encore en ligne)
+## Lot « contenu et technique » (EN LIGNE depuis le 28 nov. 2026, 00:27 UTC — `0dc4775`)
 Objectif : répondre à ce que Google regarde (contenu utile et vrai, pages rapides, données structurées, accessibilité), sans rien inventer.
 
 | Élément | Détail |
